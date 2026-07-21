@@ -113,6 +113,64 @@ This file records OnlyBoth’s current implementation state and development hand
 
 ---
 
+## 2026-07-21 — Feature branch merged to main and Railway redeployed
+
+**Status:** Complete
+
+### Goal
+
+Integrate the complete `feat/ui-ux-optimization` progress into `main`, preserve an auditable merge
+boundary, and redeploy the merged application to the existing Railway environment.
+
+### Actual outcome
+
+- Committed the previously verified feature work as `474270c` (`feat: complete CareerMutual build
+week vertical`).
+- Merged the feature branch into local `main` with non-fast-forward merge commit `7e96f54`
+  (`merge: integrate CareerMutual build week vertical`). The feature commit is an ancestor of
+  `main`, and the merge completed without conflicts.
+- Redeployed both Railway code services from the merged `main` tree:
+  - Web deployment `db59da2b-78fc-4ef7-bf06-c63e0082898b`: `SUCCESS`.
+  - Worker deployment `6a228243-d7c7-4543-bc86-65e3cde53b64`: `SUCCESS`.
+- Web startup reapplied idempotent migrations and reached Next.js Ready. The continuous Worker
+  started independently.
+- Public smoke verification retained the CareerMutual Home/Login pages, signed Candidate 42 Feed
+  V3, and Sarah's 27 persisted JobPosts.
+
+### Repository and deployment boundary
+
+- No Git remote is configured in this local repository, so the completed `main` merge could not be
+  pushed. Railway deployment used the checked-out merged `main` working tree through the Railway
+  CLI.
+- No credential, Cookie, database URL, Bucket secret, or OpenAI key was committed or written to the
+  report.
+- The Railway environment remains synthetic `DEMO_MODE=true` / `GOLDEN_REPLAY`; LIVE AI remains
+  deliberately unavailable without a Worker-only key.
+
+### Verification
+
+- Secret-pattern and abnormal-untracked-file preflight: passed; ignored `.env.local` and
+  `.railway/` remained outside Git.
+- Staged `git diff --check`: passed before the feature commit.
+- Merge ancestor check: passed.
+- Railway Web and Worker: `SUCCESS`.
+- Public `/` and `/login`: HTTP 200 with CareerMutual branding.
+- Candidate session/feed: HTTP 201/200, `candidate-opportunity-feed@3`.
+- Employer session/dashboard: HTTP 201/200, `employer-job-dashboard@1`, 27 JobPosts.
+- The first post-merge Gate stopped on `HANDOFF.md` formatting; Prettier corrected the wrapping and
+  the complete Gate then passed.
+- Post-merge `pnpm check`: passed.
+- Final `git diff --check`: passed; prohibited `.only/.skip` marker scan found none.
+- Full evidence:
+  `test-reports/20260721T201619Z-main-merge-railway-redeploy.log`.
+
+### Next action
+
+Add an authorized Git remote and push `main` if the repository must also be synchronized to a Git
+host. This was not possible from the current repository because no remote exists.
+
+---
+
 ## 2026-07-21 — Railway synthetic environment deployment
 
 **Status:** Complete

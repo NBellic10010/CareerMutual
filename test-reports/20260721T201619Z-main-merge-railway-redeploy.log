@@ -1,0 +1,63 @@
+CareerMutual main merge and Railway redeployment report
+Timestamp: 2026-07-21T20:16:19Z
+Result: PASS
+
+REPOSITORY PRECHECK
+- Starting branch: feat/ui-ux-optimization
+- Starting feature HEAD: 2f0ae15
+- Starting main HEAD: 38f43f2
+- Git remote: none configured
+- Ignored local state verified: .env.local and .railway/config.json
+- Secret-pattern preflight: no committed runtime credential found
+- Largest new assets: WebP brand illustrations, all below 207 KB
+
+FEATURE COMMIT
+- Commit: 474270c185cec1f1c9de028a7f9ed526ed8a904e
+- Subject: feat: complete CareerMutual build week vertical
+- Staged diff check: PASS
+- Scope: 134 files, 10,456 insertions, 631 deletions
+
+MAIN MERGE
+- Merge commit: 7e96f54513f24667f8df0240204c1a783c5ae7d6
+- Subject: merge: integrate CareerMutual build week vertical
+- Strategy: ort, non-fast-forward
+- Conflicts: none
+- git merge-base --is-ancestor feat/ui-ux-optimization main: PASS
+- The merged main tree matched the feature branch tree before this operational report was added.
+- Push: NOT RUN; this repository has no configured Git remote.
+
+RAILWAY REDEPLOYMENT FROM MERGED MAIN
+- Web deployment: db59da2b-78fc-4ef7-bf06-c63e0082898b — SUCCESS
+- Worker deployment: 6a228243-d7c7-4543-bc86-65e3cde53b64 — SUCCESS
+- Web deployment log: migrations_applied, Next.js Ready on Railway PORT
+- Worker deployment log: continuous Worker process started
+- Runtime: DEMO_MODE=true, RUNTIME_MODE=GOLDEN_REPLAY
+- OpenAI key: not configured; LIVE AI remains BLOCKED by design
+
+PUBLIC SMOKE
+- GET /: 200; CareerMutual brand present
+- GET /login: 200; CareerMutual brand present
+- Candidate demo session: 201, allowlisted candidate-42
+- Candidate Feed: 200, candidate-opportunity-feed@3, 1 visible role
+- Employer demo session: 201, allowlisted reviewer-sarah-chen
+- Employer dashboard: 200, employer-job-dashboard@1, 27 persisted JobPosts
+- No Cookie, session token, database URL, Object Store credential, or API key retained
+
+POST-MERGE QUALITY GATE
+- Initial gate: FAILED at format:check because the new HANDOFF entry required Prettier wrapping.
+- Correction: formatted HANDOFF.md and reran the complete gate; no source behavior changed.
+- pnpm check: PASS
+  - Formatting: passed
+  - ESLint: passed
+  - TypeScript: passed
+  - Unit: 259/259 passed
+  - Integration: 46 passed, 2 conditional skips
+  - Security: 25/25 passed
+  - Replay: 7/7 passed
+  - Documentation contracts: 49/49 + 40/40 + 87/87 passed
+- git diff --check: PASS
+- Prohibited .only/.skip marker scan: none found
+
+BOUNDARY
+- The feature progress is merged into local main and the merged runtime is deployed.
+- Synchronizing main to GitHub or another host remains unavailable until a Git remote is provided.
