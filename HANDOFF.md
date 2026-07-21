@@ -113,6 +113,71 @@ This file records OnlyBoth’s current implementation state and development hand
 
 ---
 
+## 2026-07-21 — GitHub main publication
+
+**Status:** Complete
+
+### Goal
+
+Publish the current local `main` branch to the user-authorized
+`NBellic10010/CareerMutual` GitHub repository without overwriting existing remote history or
+exposing local secrets.
+
+### Actual outcome
+
+- Confirmed the target repository had no branch or tag refs before publication.
+- Reviewed the only untracked file, `DEVPOST.md`, as project-relevant documentation; its scoped
+  credential-pattern scan was clean, and it was committed as `cd50b0b`.
+- Added `origin` as `https://github.com/NBellic10010/CareerMutual.git` and pushed `main` through the
+  existing Git credential path.
+- Established `main` as the upstream-tracking branch for `origin/main`.
+- Verified the remote `main` ref exactly matched the locally published commit after the initial
+  push. No force push, history rewrite, tag mutation, or unrelated remote-file replacement was
+  used.
+
+### Files changed
+
+- `DEVPOST.md`
+- `HANDOFF.md`
+- `test-reports/20260721T210226Z-github-main-push.log`
+
+### Product and engineering decisions
+
+- This was a repository-publication operation only. Product semantics, APIs, schemas, migrations,
+  runtime configuration, Railway services, and AI model settings were unchanged.
+- The existing local Git-generated author identity was retained; no Git history was rewritten.
+
+### Tests and verification
+
+- `pnpm exec prettier --check DEVPOST.md`: passed.
+- Scoped secret-pattern scan for `DEVPOST.md`: passed with no matches.
+- `git diff --cached --check`: passed before the content commit.
+- Initial `git push -u origin main`: passed.
+- `git ls-remote origin refs/heads/main`: matched `cd50b0b` after the initial push.
+- `pnpm format:check`: passed.
+- `pnpm test:docs`: passed, with 49 Agent-contract, 40 AI-design, and 87 product-spirit checks.
+- `git diff --check`: passed.
+- Prohibited `.only/.skip` marker scan: clean.
+- Full evidence: `test-reports/20260721T210226Z-github-main-push.log`.
+
+### Checks not run
+
+- Application unit, integration, security, E2E, PostgreSQL, MinIO, Replay, and LIVE AI suites were
+  not rerun because this task changed only publication metadata and project documentation, not
+  application behavior.
+
+### Known issues, risks, and blockers
+
+- No publication blocker remains. Existing LIVE model-specific semantic risks remain recorded in
+  the Current state section and were not changed or reassessed here.
+- No environment variable or migration changed.
+
+### Next action
+
+Use `origin/main` as the shared integration branch for subsequent development and deployment work.
+
+---
+
 ## 2026-07-21 — Railway LIVE Eligibility and Employer Analyst enabled
 
 **Status:** Complete

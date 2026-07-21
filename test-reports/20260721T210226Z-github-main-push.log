@@ -1,0 +1,73 @@
+Timestamp (UTC): 2026-07-21T21:02:26Z
+Scope: Publish the current CareerMutual main branch to the authorized GitHub repository.
+Git branch / commit: main / cd50b0b98b03b69d66d8c952215f405e2a72dc5a
+Environment / runtime mode: local macOS Git client; repository publication only; no application runtime invoked.
+
+Command: git ls-remote --heads --tags https://github.com/NBellic10010/CareerMutual.git
+Exit code: 0
+Relevant output: none; the target repository had no refs before publication.
+
+Command: pnpm exec prettier --check DEVPOST.md
+Exit code: 0
+Relevant output:
+Checking formatting...
+All matched files use Prettier code style!
+
+Command: secret-pattern scan limited to DEVPOST.md
+Exit code: 0
+Relevant output: no OpenAI key, GitHub token, or matching credential pattern found.
+
+Command: git diff --cached --check
+Exit code: 0
+Relevant output: none.
+
+Command: git commit -m "docs: add Devpost submission narrative"
+Exit code: 0
+Relevant output:
+[main cd50b0b] docs: add Devpost submission narrative
+1 file changed, 82 insertions(+)
+create mode 100644 DEVPOST.md
+
+Command: git remote add origin https://github.com/NBellic10010/CareerMutual.git && git fetch origin --prune && git push -u origin main
+Exit code: 0
+Relevant output:
+To github.com:NBellic10010/CareerMutual.git
+ * [new branch] main -> main
+branch 'main' set up to track 'origin/main'.
+
+Command: git ls-remote origin refs/heads/main
+Exit code: 0
+Relevant output:
+cd50b0b98b03b69d66d8c952215f405e2a72dc5a refs/heads/main
+
+Command: pnpm format:check
+Exit code: 0
+Relevant output:
+Checking formatting...
+All matched files use Prettier code style!
+
+Command: pnpm test:docs
+Exit code: 0
+Relevant output:
+AGENTS contract: 49 passed, 0 failed
+AI engineering design contract: 40 passed, 0 failed
+Product spirit contract: 87 passed, 0 failed
+
+Command: git diff --check
+Exit code: 0
+Relevant output: none.
+
+Command: rg -n '\.(only|skip)\(' tests apps packages
+Exit code: 1, interpreted as the expected clean scan result.
+Relevant output: No prohibited .only/.skip markers found.
+
+Summary:
+- Passed: target-ref preflight, DEVPOST formatting, scoped secret scan, staged diff check,
+  initial GitHub push, remote-head verification, repository formatting, documentation contracts,
+  final diff check, and prohibited test-marker scan.
+- Failed: none.
+- Skipped: application unit, integration, security, E2E, database, object-store, Replay, and LIVE AI
+  suites; no application behavior, schema, runtime configuration, or deployment was changed.
+- Blocked: none.
+- Known pre-existing failures: none relevant to repository publication. Existing semantic LIVE-model
+  risks remain documented in HANDOFF.md and were not re-evaluated by this publication task.
