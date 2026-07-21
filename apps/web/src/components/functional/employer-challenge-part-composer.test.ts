@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   validateEmployerChallengeFile,
+  validateEmployerChallengePartCopy,
   verifiedChallengeParts,
   type EmployerChallengeMediaPartDraft,
 } from "./employer-challenge-part-composer";
@@ -83,5 +84,20 @@ describe("Employer Critical Challenge Part Composer", () => {
         asset: expect.objectContaining({ asset_ref: "challenge-asset:visual-01" }),
       }),
     ]);
+  });
+
+  it("rejects media Part copy that would invalidate the containing JobPost command", () => {
+    expect(
+      validateEmployerChallengePartCopy({ title: "", instructions: "Complete response." }),
+    ).toBe("Part title must contain 2–200 characters.");
+    expect(validateEmployerChallengePartCopy({ title: "Image", instructions: "short" })).toBe(
+      "Candidate instructions must contain 10–2,000 characters.",
+    );
+    expect(
+      validateEmployerChallengePartCopy({
+        title: "Image",
+        instructions: "Use the attached image in the bounded response.",
+      }),
+    ).toBeNull();
   });
 });

@@ -16,6 +16,7 @@ import {
   verifiedChallengeParts,
   type EmployerChallengeMediaPartDraft,
 } from "./employer-challenge-part-composer";
+import { commandResponseError, parseCreateJobPostDraftCommand } from "./employer-job-post-command";
 
 const CATEGORY_LABELS: Record<RoleCategory, string> = {
   TECHNOLOGY: "Technology",
@@ -247,10 +248,7 @@ export function EmployerDashboard({
       body: JSON.stringify(body),
     });
     const result = (await response.json()) as Record<string, unknown>;
-    if (!response.ok)
-      throw new Error(
-        String((result.error as { code?: string } | undefined)?.code ?? "COMMAND_FAILED"),
-      );
+    if (!response.ok) throw new Error(commandResponseError(result));
     return result;
   }
 
@@ -260,7 +258,7 @@ export function EmployerDashboard({
     try {
       if (!challengeUploadsReady) throw new Error("CHALLENGE_PART_UPLOAD_INCOMPLETE");
       const challengeId = crypto.randomUUID();
-      await call("/api/v1/employer/job-posts/drafts", {
+      const command = parseCreateJobPostDraftCommand({
         schema_version: "create-job-post-draft-command@1",
         expected_wallet_version: initialDashboard.wallet.version,
         draft: {
@@ -309,6 +307,7 @@ export function EmployerDashboard({
           ],
         },
       });
+      await call("/api/v1/employer/job-posts/drafts", command);
       closeComposer();
       router.refresh();
     } catch (cause) {

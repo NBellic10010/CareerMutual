@@ -57,15 +57,24 @@ export function functionalErrorResponse(error: unknown): NextResponse {
   if (error instanceof FunctionalRouteError) {
     return NextResponse.json({ error: { code: error.code } }, { status: error.status });
   }
+  const zodIssues =
+    error instanceof ZodError
+      ? error.issues
+      : typeof error === "object" &&
+          error !== null &&
+          "issues" in error &&
+          Array.isArray(Reflect.get(error, "issues"))
+        ? Reflect.get(error, "issues")
+        : null;
+  if (zodIssues !== null) {
+    return NextResponse.json(
+      { error: { code: "COMMAND_SCHEMA_INVALID", issues: zodIssues } },
+      { status: 422 },
+    );
+  }
   const details = functionalProductErrorDetails(error);
   if (details !== null) {
     return NextResponse.json({ error: { code: details.code } }, { status: details.httpStatus });
-  }
-  if (error instanceof ZodError) {
-    return NextResponse.json(
-      { error: { code: "COMMAND_SCHEMA_INVALID", issues: error.issues } },
-      { status: 422 },
-    );
   }
   if (error instanceof FunctionalProductApplicationError) {
     return NextResponse.json({ error: { code: error.code } }, { status: error.httpStatus });

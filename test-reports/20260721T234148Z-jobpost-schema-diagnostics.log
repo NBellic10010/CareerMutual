@@ -1,0 +1,69 @@
+CareerMutual — JobPost upload-flow schema diagnostics
+Recorded: 2026-07-21T23:41:48Z
+
+DIAGNOSIS
+- Railway production HTTP sequence observed for the affected browser session:
+  POST /api/v1/employer/challenge-assets/presign  -> 201
+  POST /api/v1/employer/challenge-assets/complete -> 200
+  POST /api/v1/employer/job-posts/drafts           -> 422 (twice)
+- Conclusion: Object Storage upload and server verification completed. The containing JobPost
+  Draft Command failed schema validation. No request body or private Asset content was logged.
+
+INITIAL TARGETED VERIFICATION
+Command:
+  pnpm --filter @onlyboth/web test -- employer-job-post-command.test.ts employer-challenge-part-composer.test.ts
+Result:
+  Test Files 21 passed (21)
+  Tests 63 passed (63)
+
+Command:
+  pnpm --filter @onlyboth/web typecheck
+Result:
+  PASS
+
+FIRST AGGREGATE ATTEMPT — NOT PASSED
+Command:
+  pnpm check
+Result:
+  FAILED at prettier --check because three changed files required formatting.
+Correction:
+  Ran Prettier only on the changed Web files, then reran the complete aggregate check.
+
+FINAL AGGREGATE VERIFICATION
+Command:
+  pnpm check
+Result:
+  PASS
+  Formatting: PASS
+  ESLint: PASS (0 warnings)
+  Workspace and test TypeScript: PASS
+  Unit: 53 files, 267 tests passed
+  Integration: 12 files passed, 1 skipped; 47 tests passed, 2 skipped
+  Security: 6 files, 26 tests passed
+  Replay: 2 files, 7 tests passed
+  Documentation contracts: 52 + 40 + 87 = 179 assertions passed
+
+PRODUCTION BUILD
+Command:
+  pnpm build
+Result:
+  PASS — Next.js production build compiled, typechecked, generated static pages, and enumerated
+  all routes successfully.
+
+FIRST CHALLENGE ASSET E2E ATTEMPT — BLOCKED
+Command:
+  pnpm test:e2e:challenge-assets
+Result:
+  BLOCKED before execution: TEST_DATABASE_URL was not present in the command environment.
+
+FINAL CHALLENGE ASSET E2E
+Command:
+  TEST_DATABASE_URL=postgresql://[local test credentials redacted]@127.0.0.1:5432/onlyboth_test pnpm test:e2e:challenge-assets
+Result:
+  PASS — 1/1
+  Recruiter validates, previews, and seals image, audio, and file Challenge Parts (2.4s)
+
+ADDITIONAL GUARDS
+- git diff --check: PASS
+- OpenAI LIVE calls: NOT RUN (not required for this UI/schema boundary)
+- Railway deployment: pending at the time this report entry was created

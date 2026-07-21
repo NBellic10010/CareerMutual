@@ -117,6 +117,41 @@ This file records CareerMutual’s current implementation state and development 
 
 ---
 
+## 2026-07-21 — JobPost upload-flow schema diagnostics hotfix
+
+**Status:** Complete locally; Railway deployment recorded below after verification.
+
+### Actual outcome
+
+- Railway HTTP evidence showed that the reported upload had already completed: Challenge Asset
+  presign returned `201` and complete returned `200`. The following JobPost Draft request returned
+  `422`, so the failure boundary was whole-command validation rather than Object Storage.
+- The Recruiter UI now parses the complete Draft Command with the authoritative shared Contract
+  before sending it. Invalid values are kept local and reported with a field label such as
+  `Critical Challenge Part 2 Candidate instructions` instead of the generic
+  `COMMAND_SCHEMA_INVALID` code.
+- Media Part title and Candidate-instruction limits now use the same bounds as the Contract, show
+  inline errors, and block upload validation when invalid.
+- Command responses now preserve bounded Zod issue paths across server-bundler module boundaries;
+  the client renders the first actionable issue while retaining closed error codes for non-schema
+  failures. Request values and private upload bodies are not logged.
+
+### Tests and verification
+
+- Added three JobPost command-diagnostic Unit tests and one media-Part-copy validation Unit test.
+- `pnpm check` passed: formatting, lint, all workspace typechecks, 267 Unit, 47 Integration,
+  26 Security, 7 Replay, and all 179 documentation assertions. Two existing Integration tests
+  remain skipped and are not counted as passed.
+- `pnpm build` passed.
+- Dedicated PostgreSQL + MinIO Challenge Asset Playwright passed 1/1, including Image, Audio, and
+  File upload, Draft creation, Publish sealing, and authorized private reads.
+- The first aggregate check stopped at formatting and the first E2E invocation stopped because
+  `TEST_DATABASE_URL` was absent; both non-passes are retained in the report. Formatting was
+  corrected, and E2E was rerun against the dedicated `onlyboth_test` database.
+- Evidence: [test-reports/20260721T234148Z-jobpost-schema-diagnostics.log](test-reports/20260721T234148Z-jobpost-schema-diagnostics.log).
+
+---
+
 ## 2026-07-21 — Challenge Asset uploads merged to main and deployed
 
 **Status:** Complete

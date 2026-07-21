@@ -90,6 +90,20 @@ export function validateEmployerChallengeFile(
   return null;
 }
 
+export function validateEmployerChallengePartCopy(
+  part: Pick<EmployerChallengeMediaPartDraft, "title" | "instructions">,
+): string | null {
+  const titleLength = part.title.trim().length;
+  if (titleLength < 2 || titleLength > 200) {
+    return "Part title must contain 2–200 characters.";
+  }
+  const instructionsLength = part.instructions.trim().length;
+  if (instructionsLength < 10 || instructionsLength > 2_000) {
+    return "Candidate instructions must contain 10–2,000 characters.";
+  }
+  return null;
+}
+
 export function verifiedChallengeParts(
   parts: readonly EmployerChallengeMediaPartDraft[],
 ): readonly CriticalChallengePart[] {
@@ -175,7 +189,9 @@ export function EmployerChallengePartComposer({
 
   async function upload(part: EmployerChallengeMediaPartDraft): Promise<void> {
     if (part.file === null) return;
-    const validation = validateEmployerChallengeFile(part.kind, part.file);
+    const validation =
+      validateEmployerChallengePartCopy(part) ??
+      validateEmployerChallengeFile(part.kind, part.file);
     if (validation !== null) {
       update(part.local_ref, { upload_state: "FAILED", error: validation });
       return;
@@ -301,6 +317,7 @@ export function EmployerChallengePartComposer({
         </li>
         {parts.map((part, index) => {
           const inputId = `challenge-file-${part.local_ref}`;
+          const copyError = validateEmployerChallengePartCopy(part);
           return (
             <li className="challenge-part-ledger-row media-part-editor" key={part.local_ref}>
               <span className="challenge-part-ordinal">{String(index + 2).padStart(2, "0")}</span>
@@ -319,6 +336,9 @@ export function EmployerChallengePartComposer({
                     Part title
                     <input
                       disabled={disabled}
+                      minLength={2}
+                      maxLength={200}
+                      aria-invalid={copyError?.startsWith("Part title") ?? false}
                       value={part.title}
                       onChange={(event) => update(part.local_ref, { title: event.target.value })}
                     />
@@ -327,6 +347,9 @@ export function EmployerChallengePartComposer({
                     Candidate instructions
                     <textarea
                       disabled={disabled}
+                      minLength={10}
+                      maxLength={2_000}
+                      aria-invalid={copyError?.startsWith("Candidate instructions") ?? false}
                       rows={2}
                       value={part.instructions}
                       onChange={(event) =>
@@ -361,6 +384,11 @@ export function EmployerChallengePartComposer({
                     </label>
                   ) : null}
                 </div>
+                {copyError === null ? null : (
+                  <p className="form-error" role="alert">
+                    {copyError}
+                  </p>
+                )}
                 <div className="challenge-file-zone">
                   <label className="challenge-file-trigger" htmlFor={inputId}>
                     <span>{part.file === null ? "Choose source" : "Replace local source"}</span>
