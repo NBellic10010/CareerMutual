@@ -117,6 +117,34 @@ This file records CareerMutual’s current implementation state and development 
 
 ---
 
+## 2026-07-21 — Challenge Asset uploads merged to main and deployed
+
+**Status:** Complete
+
+### Actual outcome
+
+- Committed the verified feature branch as `ac7f745` (`feat: seal multimodal challenge uploads`).
+- Merged it into `main` with non-fast-forward commit `226d746` (`merge: add sealed challenge asset
+uploads`) and pushed `origin/main` from `753ac42` to `226d746`.
+- Deployed both Railway production code services from the merged main tree:
+  - Web `27b7385e-f40d-43d0-804d-717c0a232c49`: `SUCCESS`.
+  - Worker `b467094c-a405-4667-974c-717c29066578`: `SUCCESS`.
+- Web startup ran the registered PostgreSQL migrations and reported `migrations_applied`; Next.js
+  reached Ready. The continuous Worker started independently.
+- Public smoke passed for CareerMutual Login, fail-closed Challenge Asset route authentication,
+  Recruiter session issuance, and the persisted 28-JobPost Employer Dashboard.
+
+### Verification and boundary
+
+- Staged secret-pattern guard and `git diff --check` passed before commit.
+- Feature acceptance remains the preceding `pnpm check`, production build, 48/48 PostgreSQL tests,
+  and 1/1 PostgreSQL + MinIO Challenge Asset Playwright result.
+- No remote reset, seed, environment-variable change, upload object, Draft, or JobPost was created by
+  the public smoke. No secret entered Git or the retained report.
+- Deployment evidence: [test-reports/20260721T233253Z-main-railway-challenge-assets.log](test-reports/20260721T233253Z-main-railway-challenge-assets.log).
+
+---
+
 ## 2026-07-21 — Recruiter Critical Challenge Asset uploads
 
 **Status:** Complete on `feat/challenge-asset-uploads`; full legacy functional E2E remains blocked by an unrelated stale recorded-LIVE Eligibility pin.

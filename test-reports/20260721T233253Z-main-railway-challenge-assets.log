@@ -1,0 +1,46 @@
+CareerMutual main merge and Railway deployment report
+Timestamp: 2026-07-21T23:32:53Z
+Result: PASS
+
+REPOSITORY
+- Feature branch: feat/challenge-asset-uploads
+- Feature commit: ac7f745 (feat: seal multimodal challenge uploads)
+- Main merge commit: 226d746 (merge: add sealed challenge asset uploads)
+- Merge strategy: non-fast-forward, ort, no conflicts
+- Feature ancestry check: PASS
+- GitHub push: origin/main advanced from 753ac42 to 226d746
+- Secret-pattern staged-diff guard: PASS
+- Staged git diff --check: PASS
+
+PRE-DEPLOY ACCEPTANCE REUSED FROM THE FEATURE COMMIT
+- pnpm check: PASS
+- Next.js production build: PASS
+- PostgreSQL: 48/48 PASS
+- Dedicated PostgreSQL + MinIO Challenge Asset Playwright: 1/1 PASS
+- Full details: test-reports/20260721T231549Z-challenge-asset-uploads.log
+
+RAILWAY DEPLOYMENT
+- Project/environment: CareerMutual / production
+- Web deployment: 27b7385e-f40d-43d0-804d-717c0a232c49 — SUCCESS
+- Worker deployment: b467094c-a405-4667-974c-717c29066578 — SUCCESS
+- Web startup: scripts/start-railway.mjs ran PostgreSQL migrations, emitted
+  outcome=migrations_applied, then Next.js 16.2.10 became Ready on PORT 8080.
+- Worker startup: scripts/start-railway.mjs launched the continuous Worker.
+- Upload source: checked-out merged main tree through railway up for both services.
+- No secret value, Cookie, database URL, Bucket credential, or API key is retained here.
+
+PUBLIC SMOKE
+- GET https://web-production-c1a5.up.railway.app/login: HTTP 200; CareerMutual present.
+- Unauthenticated POST /api/v1/employer/challenge-assets/presign: HTTP 401, proving the new route
+  is deployed and remains fail-closed without a Recruiter Session.
+- Demo Recruiter session: HTTP 201; role EMPLOYER.
+- GET /api/v1/employer/job-posts: HTTP 200; employer-job-dashboard@1; 28 persisted JobPosts.
+- The smoke did not create a remote upload intent, object, Draft, or JobPost.
+
+BOUNDARIES
+- The public environment remains synthetic DEMO_MODE scope.
+- No destructive remote reset or seed was performed.
+- No Railway variable, OpenAI key, database credential, or Object Store credential changed.
+- Full legacy functional E2E remains separately blocked by its stale RECORDED_LIVE Eligibility pin;
+  the dedicated Challenge Asset PostgreSQL + MinIO E2E passed and is the acceptance surface for
+  this feature.
