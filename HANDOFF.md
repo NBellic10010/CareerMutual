@@ -141,6 +141,8 @@ and publish the resulting `main` branch to GitHub.
 - Current authoritative Markdown and document-contract scripts contain no Han-script prose, legacy
   uppercase project-brand prose, or active references to the deleted Chinese filenames. Immutable
   historical test reports were intentionally not rewritten.
+- Committed the documentation migration as `bd17746` and pushed it to `origin/main`; the remote ref
+  was verified byte-for-byte against the local commit before this publication-record update.
 
 ### Files changed
 
