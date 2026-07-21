@@ -11,6 +11,11 @@ import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 
 import { RoleHomeArtwork } from "./role-home-artwork";
+import {
+  EmployerChallengePartComposer,
+  verifiedChallengeParts,
+  type EmployerChallengeMediaPartDraft,
+} from "./employer-challenge-part-composer";
 
 const CATEGORY_LABELS: Record<RoleCategory, string> = {
   TECHNOLOGY: "Technology",
@@ -175,6 +180,9 @@ export function EmployerDashboard({
   const [title, setTitle] = useState<string>(DEFAULT_DRAFT.title);
   const [draftCategory, setDraftCategory] = useState<RoleCategory>(DEFAULT_DRAFT.role_category);
   const [question, setQuestion] = useState<string>(DEFAULT_DRAFT.critical_question);
+  const [challengeMediaParts, setChallengeMediaParts] = useState<
+    readonly EmployerChallengeMediaPartDraft[]
+  >([]);
   const [slots, setSlots] = useState(2);
   const [aiReviewPolicy, setAiReviewPolicy] = useState<
     "OFF" | "ANSWER_ONLY" | "ANSWER_PLUS_PROCESS"
@@ -216,6 +224,17 @@ export function EmployerDashboard({
   const visibleEligibilityTags = ELIGIBILITY_BACKGROUND_TAG_CATALOG.filter((tag) =>
     `${tag.public_name} ${tag.tag_kind}`.toLowerCase().includes(tagQuery.trim().toLowerCase()),
   );
+  const challengeUploadsReady = challengeMediaParts.every(
+    ({ upload_state }) => upload_state === "VERIFIED",
+  );
+
+  function closeComposer(): void {
+    for (const part of challengeMediaParts) {
+      if (part.preview_url !== null) URL.revokeObjectURL(part.preview_url);
+    }
+    setChallengeMediaParts([]);
+    setComposer(false);
+  }
 
   async function call(path: string, body: unknown) {
     const response = await fetch(path, {
@@ -239,6 +258,7 @@ export function EmployerDashboard({
     setBusy(true);
     setError(null);
     try {
+      if (!challengeUploadsReady) throw new Error("CHALLENGE_PART_UPLOAD_INCOMPLETE");
       const challengeId = crypto.randomUUID();
       await call("/api/v1/employer/job-posts/drafts", {
         schema_version: "create-job-post-draft-command@1",
@@ -258,6 +278,7 @@ export function EmployerDashboard({
                 part_ref: `challenge-part:composer-${challengeId}:text`,
                 text_content: question,
               },
+              ...verifiedChallengeParts(challengeMediaParts),
             ],
           },
           answer_review_wip: slots,
@@ -288,7 +309,7 @@ export function EmployerDashboard({
           ],
         },
       });
-      setComposer(false);
+      closeComposer();
       router.refresh();
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Draft could not be created.");
@@ -538,6 +559,12 @@ export function EmployerDashboard({
                 onChange={(event) => setQuestion(event.target.value)}
               />
             </label>
+            <EmployerChallengePartComposer
+              parts={challengeMediaParts}
+              onChange={setChallengeMediaParts}
+              csrfToken={csrfToken}
+              disabled={busy}
+            />
             <label>
               Reusable concurrent review Slots
               <input
@@ -680,20 +707,28 @@ export function EmployerDashboard({
               completes Sarah&apos;s review form.
             </p>
             <div className="commitment-preview">
-              <span>Publish commitment · TEXT Challenge manifest</span>
+              <span>
+                Publish commitment · TEXT
+                {challengeMediaParts.map(({ kind }) => ` + ${kind}`).join("")} Challenge manifest
+              </span>
               <strong>{slots} Attention Credits held</strong>
               <small>
                 6 minute answer · 24h human review SLA · no résumé before answer review · media
                 parts are sealed into the same ordered Challenge manifest
               </small>
             </div>
+            {error === null ? null : (
+              <p className="form-error" role="alert">
+                {error}
+              </p>
+            )}
             <div className="modal-actions">
-              <button className="secondary-button" type="button" onClick={() => setComposer(false)}>
+              <button className="secondary-button" type="button" onClick={closeComposer}>
                 Cancel
               </button>
               <button
                 className="primary-button"
-                disabled={busy}
+                disabled={busy || !challengeUploadsReady}
                 type="button"
                 onClick={() => void createDraft()}
               >

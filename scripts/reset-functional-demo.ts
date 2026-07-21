@@ -141,6 +141,7 @@ try {
   const employer = {
     actor: { role: "EMPLOYER" as const, actorId: "reviewer-sarah-chen" },
     correlationId: "functional-demo:job-post",
+    trustedSyntheticFixtureWrite: true,
   };
   const draft = await service.createJobPostDraft(
     { ...employer, idempotencyKey: "functional-demo:create-draft" },

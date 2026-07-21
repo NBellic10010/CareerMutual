@@ -91,6 +91,11 @@ const MIGRATIONS: readonly MigrationDefinition[] = [
     upUrl: new URL("../migrations/0014_eligibility_policy_hash_scope.sql", import.meta.url),
     downUrl: new URL("../migrations/0014_eligibility_policy_hash_scope.down.sql", import.meta.url),
   },
+  {
+    version: "0015_employer_challenge_assets",
+    upUrl: new URL("../migrations/0015_employer_challenge_assets.sql", import.meta.url),
+    downUrl: new URL("../migrations/0015_employer_challenge_assets.down.sql", import.meta.url),
+  },
 ];
 
 async function ensureMigrationTable(client: PoolClient): Promise<void> {

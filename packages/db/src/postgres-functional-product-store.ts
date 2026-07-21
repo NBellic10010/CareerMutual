@@ -8,11 +8,13 @@ import {
   type CandidateAssistantContext,
   type CompleteAnswerArtifactUploadReceipt,
   type CreateArtifactUploadIntentInput,
+  type CreateEmployerChallengeAssetUploadIntentInput,
   type CreateJobPostDraftStoreInput,
   type FunctionalActor,
   type FunctionalProductIdFactory,
   type FunctionalProductStore,
   type FunctionalProductWorkerStore,
+  type EmployerChallengeAssetRecord,
   type PersistRichTextDraftInput,
   type PublishJobPostReceipt,
   type PublishJobPostStoreInput,
@@ -23,6 +25,7 @@ import {
   type SubmitFunctionalAnswerStoreInput,
   type UpdateJobPostDraftStoreInput,
   type VerifyArtifactUploadInput,
+  type VerifyEmployerChallengeAssetUploadInput,
   type VoiceTranscriptionContext,
   type ObjectStorePort,
 } from "@onlyboth/application";
@@ -39,6 +42,7 @@ import {
   CandidateOpportunityFeedSchema,
   CriticalChallengeSchema,
   EmployerAttentionWalletProjectionSchema,
+  EmployerChallengeAssetVerifiedReceiptSchema,
   AnswerProcessEvidenceSchema,
   AnswerEvidenceEdgeDraftSchema,
   EmployerAiReviewProjectionSchema,
@@ -99,6 +103,25 @@ interface ArtifactRow {
   readonly state: AnswerArtifactRecord["state"];
   readonly revision: number;
   readonly metadata_json: unknown;
+  readonly created_at: Date;
+}
+
+interface EmployerChallengeAssetRow {
+  readonly asset_ref: string;
+  readonly owner_ref: string;
+  readonly draft_ref: string | null;
+  readonly opportunity_ref: string | null;
+  readonly part_kind: EmployerChallengeAssetRecord["partKind"];
+  readonly file_name: string;
+  readonly object_key: string;
+  readonly content_type: string;
+  readonly content_length: number;
+  readonly sha256: string | null;
+  readonly alt_text: string | null;
+  readonly transcript_excerpt: string | null;
+  readonly state: EmployerChallengeAssetRecord["state"];
+  readonly verified_at: Date | null;
+  readonly sealed_at: Date | null;
   readonly created_at: Date;
 }
 
@@ -224,6 +247,113 @@ function artifactRecord(row: ArtifactRow): AnswerArtifactRecord {
     metadata: isRecord(row.metadata_json) ? row.metadata_json : {},
     createdAt: row.created_at.toISOString(),
   };
+}
+
+function employerChallengeAssetRecord(
+  row: EmployerChallengeAssetRow,
+): EmployerChallengeAssetRecord {
+  return {
+    assetRef: row.asset_ref,
+    ownerRef: row.owner_ref,
+    draftRef: row.draft_ref,
+    opportunityRef: row.opportunity_ref,
+    partKind: row.part_kind,
+    fileName: row.file_name,
+    objectKey: row.object_key,
+    contentType: row.content_type,
+    contentLength: row.content_length,
+    sha256: row.sha256,
+    altText: row.alt_text,
+    transcriptExcerpt: row.transcript_excerpt,
+    state: row.state,
+    createdAt: row.created_at.toISOString(),
+    verifiedAt: row.verified_at?.toISOString() ?? null,
+    sealedAt: row.sealed_at?.toISOString() ?? null,
+  };
+}
+
+function employerUploadAssets(draft: JobPostDraftInput, trustedSyntheticFixtureWrite = false) {
+  if (
+    !trustedSyntheticFixtureWrite &&
+    draft.critical_challenge.parts.some(
+      (part) => part.kind !== "TEXT" && part.asset?.source_kind !== "EMPLOYER_UPLOAD",
+    )
+  ) {
+    throw new FunctionalProductApplicationError(
+      "ARTIFACT_INVALID",
+      "Every media or file Part in an Employer-authored JobPost must use a verified Employer upload.",
+    );
+  }
+  return draft.critical_challenge.parts.flatMap((part) =>
+    part.asset?.source_kind === "EMPLOYER_UPLOAD"
+      ? [{ partKind: part.kind, asset: part.asset }]
+      : [],
+  );
+}
+
+async function bindEmployerChallengeAssets(
+  client: PoolClient,
+  ownerRef: string,
+  draftRef: string,
+  draft: JobPostDraftInput,
+  now: Date,
+  trustedSyntheticFixtureWrite = false,
+): Promise<void> {
+  const uploads = employerUploadAssets(draft, trustedSyntheticFixtureWrite);
+  const refs = uploads.map(({ asset }) => asset.asset_ref);
+  if (new Set(refs).size !== refs.length) {
+    throw new FunctionalProductApplicationError(
+      "ARTIFACT_INVALID",
+      "Each uploaded Challenge Asset may appear only once in a JobPost Draft.",
+    );
+  }
+  const result = await client.query<EmployerChallengeAssetRow>(
+    `SELECT asset_ref, owner_ref, draft_ref, opportunity_ref, part_kind, file_name,
+            object_key, content_type, content_length, sha256, alt_text,
+            transcript_excerpt, state, verified_at, sealed_at, created_at
+       FROM employer_challenge_assets
+      WHERE asset_ref = ANY($1::text[])
+      FOR UPDATE`,
+    [refs],
+  );
+  const rows = new Map(result.rows.map((row) => [row.asset_ref, row]));
+  for (const upload of uploads) {
+    const row = rows.get(upload.asset.asset_ref);
+    if (
+      row === undefined ||
+      row.owner_ref !== ownerRef ||
+      row.state !== "VERIFIED" ||
+      (row.draft_ref !== null && row.draft_ref !== draftRef) ||
+      row.part_kind !== upload.partKind ||
+      row.file_name !== upload.asset.file_name ||
+      row.content_type !== upload.asset.content_type ||
+      row.content_length !== upload.asset.content_length ||
+      row.sha256 !== upload.asset.sha256 ||
+      row.alt_text !== upload.asset.alt_text ||
+      row.transcript_excerpt !== upload.asset.transcript_excerpt
+    ) {
+      throw new FunctionalProductApplicationError(
+        "ARTIFACT_INVALID",
+        "The JobPost Draft references an unverified, mismatched, or unauthorized Challenge Asset.",
+      );
+    }
+  }
+  await client.query(
+    `UPDATE employer_challenge_assets
+        SET draft_ref = NULL, updated_at = $1
+      WHERE draft_ref = $2 AND state = 'VERIFIED'
+        AND NOT (asset_ref = ANY($3::text[]))`,
+    [now, draftRef, refs],
+  );
+  if (refs.length > 0) {
+    await client.query(
+      `UPDATE employer_challenge_assets
+          SET draft_ref = $1, updated_at = $2
+        WHERE owner_ref = $3 AND state = 'VERIFIED'
+          AND asset_ref = ANY($4::text[])`,
+      [draftRef, now, ownerRef, refs],
+    );
+  }
 }
 
 function objectText(body: Uint8Array): string {
@@ -799,6 +929,63 @@ export class PostgresFunctionalProductStore
     return authorized ? artifactRecord(row) : null;
   }
 
+  public async getAuthorizedEmployerChallengeAsset(
+    actor: FunctionalActor,
+    assetRef: string,
+  ): Promise<EmployerChallengeAssetRecord | null> {
+    const result = await this.pool.query<
+      EmployerChallengeAssetRow & {
+        readonly opportunity_status: string | null;
+        readonly access_mode: string | null;
+        readonly active_journey: boolean;
+        readonly positive_match: boolean;
+      }
+    >(
+      `SELECT asset.*,
+              opportunity.status AS opportunity_status,
+              policy.access_mode,
+              EXISTS (
+                SELECT 1 FROM candidate_interests AS interest
+                 WHERE interest.candidate_ref = $2
+                   AND interest.opportunity_ref = asset.opportunity_ref
+                   AND interest.status IN (
+                     'WAITING_FOR_BACKED_SLOT', 'BACKED_OFFERED', 'APPLICATION_ACTIVE',
+                     'APPLICATION_SUBMITTED', 'REVIEWED', 'EMPLOYER_BREACH'
+                   )
+              ) AS active_journey,
+              EXISTS (
+                SELECT 1
+                  FROM candidate_eligibility_projections AS projection
+                  JOIN candidate_job_eligibility_matches AS match
+                    ON match.candidate_ref = projection.candidate_ref
+                   AND match.passport_snapshot_ref = projection.passport_snapshot_ref
+                  JOIN opportunities AS current_opportunity
+                    ON current_opportunity.id = match.opportunity_ref
+                 WHERE projection.candidate_ref = $2
+                   AND match.opportunity_ref = asset.opportunity_ref
+                   AND match.state = 'POSITIVE_EVIDENCE'
+                   AND match.opportunity_version = current_opportunity.version
+                   AND match.contract_version_ref = current_opportunity.current_contract_version_ref
+              ) AS positive_match
+         FROM employer_challenge_assets AS asset
+         LEFT JOIN opportunities AS opportunity ON opportunity.id = asset.opportunity_ref
+         LEFT JOIN job_eligibility_match_policies AS policy
+           ON policy.opportunity_ref = asset.opportunity_ref
+        WHERE asset.asset_ref = $1`,
+      [assetRef, actor.actorId],
+    );
+    const row = result.rows[0];
+    if (row === undefined) return null;
+    const authorized =
+      actor.role === "SYSTEM" ||
+      (actor.role === "EMPLOYER" && row.owner_ref === actor.actorId) ||
+      (actor.role === "CANDIDATE" &&
+        row.state === "SEALED" &&
+        row.opportunity_status === "OPEN" &&
+        (row.access_mode === "OPEN_TO_ALL" || row.positive_match || row.active_journey));
+    return authorized ? employerChallengeAssetRecord(row) : null;
+  }
+
   public async getCandidateAnswerSession(
     candidateRef: string,
     answerSessionRef: string,
@@ -1254,6 +1441,173 @@ export class PostgresFunctionalProductStore
     });
   }
 
+  public async createEmployerChallengeAssetUploadIntent(
+    input: CreateEmployerChallengeAssetUploadIntentInput,
+  ): Promise<{ readonly assetRef: string; readonly objectKey: string }> {
+    requireRole(input.actor, "EMPLOYER");
+    const fingerprint = commandFingerprint({
+      partKind: input.partKind,
+      fileName: input.fileName,
+      contentType: input.contentType,
+      contentLength: input.contentLength,
+      altText: input.altText,
+      transcriptExcerpt: input.transcriptExcerpt,
+    });
+    return runTransaction(this.pool, async (client, now) => {
+      const existing = await findReceipt(
+        client,
+        input.actor.actorId,
+        input.idempotencyKey,
+        "CreateEmployerChallengeAssetUpload",
+        fingerprint,
+      );
+      if (existing !== null && isRecord(existing)) {
+        return {
+          assetRef: String(existing.asset_ref),
+          objectKey: String(existing.object_key),
+        };
+      }
+      await client.query(
+        `INSERT INTO employer_challenge_assets (
+           asset_ref, owner_ref, part_kind, file_name, object_key, content_type,
+           content_length, alt_text, transcript_excerpt, state, created_at, updated_at
+         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'UPLOAD_ISSUED', $10, $10)`,
+        [
+          input.assetRef,
+          input.actor.actorId,
+          input.partKind,
+          input.fileName,
+          input.objectKey,
+          input.contentType,
+          input.contentLength,
+          input.altText,
+          input.transcriptExcerpt,
+          now,
+        ],
+      );
+      const receipt = { asset_ref: input.assetRef, object_key: input.objectKey };
+      await insertReceipt(client, {
+        actorRef: input.actor.actorId,
+        idempotencyKey: input.idempotencyKey,
+        commandId: `command:create-challenge-asset:${input.assetRef}`,
+        commandType: "CreateEmployerChallengeAssetUpload",
+        fingerprint,
+        receipt,
+        occurredAt: now,
+      });
+      return { assetRef: input.assetRef, objectKey: input.objectKey };
+    });
+  }
+
+  public async verifyEmployerChallengeAssetUpload(input: VerifyEmployerChallengeAssetUploadInput) {
+    requireRole(input.actor, "EMPLOYER");
+    const fingerprint = commandFingerprint({
+      assetRef: input.assetRef,
+      sha256: input.sha256,
+      contentType: input.contentType,
+      contentLength: input.contentLength,
+    });
+    return runTransaction(this.pool, async (client, now) => {
+      const existing = await findReceipt(
+        client,
+        input.actor.actorId,
+        input.idempotencyKey,
+        "CompleteEmployerChallengeAssetUpload",
+        fingerprint,
+      );
+      if (existing !== null) {
+        return EmployerChallengeAssetVerifiedReceiptSchema.parse(existing);
+      }
+      const result = await client.query<EmployerChallengeAssetRow>(
+        `SELECT asset_ref, owner_ref, draft_ref, opportunity_ref, part_kind, file_name,
+                object_key, content_type, content_length, sha256, alt_text,
+                transcript_excerpt, state, verified_at, sealed_at, created_at
+           FROM employer_challenge_assets WHERE asset_ref = $1 FOR UPDATE`,
+        [input.assetRef],
+      );
+      const row = result.rows[0];
+      if (row === undefined) {
+        throw new FunctionalProductApplicationError(
+          "RESOURCE_NOT_FOUND",
+          "Challenge Asset upload intent not found.",
+        );
+      }
+      if (row.owner_ref !== input.actor.actorId) {
+        throw new FunctionalProductApplicationError(
+          "ROLE_FORBIDDEN",
+          "Challenge Asset belongs to another Employer.",
+        );
+      }
+      if (row.state !== "UPLOAD_ISSUED") {
+        throw new FunctionalProductApplicationError(
+          "INVALID_STATE",
+          "Challenge Asset is not awaiting verification.",
+        );
+      }
+      if (row.content_type !== input.contentType || row.content_length !== input.contentLength) {
+        throw new FunctionalProductApplicationError(
+          "ARTIFACT_INVALID",
+          "Challenge Asset metadata changed during verification.",
+        );
+      }
+      requireOne(
+        await client.query(
+          `UPDATE employer_challenge_assets
+              SET sha256 = $1, state = 'VERIFIED', verified_at = $2, updated_at = $2
+            WHERE asset_ref = $3 AND owner_ref = $4 AND state = 'UPLOAD_ISSUED'`,
+          [input.sha256, now, input.assetRef, input.actor.actorId],
+        ),
+        "Challenge Asset changed before verification.",
+      );
+      const receipt = EmployerChallengeAssetVerifiedReceiptSchema.parse({
+        schema_version: "employer-challenge-asset-verified-receipt@1",
+        state: "VERIFIED",
+        part_kind: row.part_kind,
+        asset: {
+          asset_ref: row.asset_ref,
+          source_kind: "EMPLOYER_UPLOAD",
+          file_name: row.file_name,
+          content_type: row.content_type,
+          content_length: row.content_length,
+          sha256: input.sha256,
+          download_url: `/api/v1/challenge-assets/${encodeURIComponent(row.asset_ref)}`,
+          alt_text: row.alt_text,
+          transcript_excerpt: row.transcript_excerpt,
+        },
+        verified_at: now.toISOString(),
+      });
+      await client.query(
+        `INSERT INTO domain_events (
+           event_id, event_type, event_version, aggregate_type, aggregate_id,
+           aggregate_version, correlation_id, occurred_at, payload
+         ) VALUES ($1, 'EmployerChallengeAssetVerified', 1, 'EmployerChallengeAsset',
+                   $2, 1, $3, $4, $5::jsonb)`,
+        [
+          input.eventId,
+          input.assetRef,
+          input.correlationId,
+          now,
+          JSON.stringify({
+            schema_version: "employer-challenge-asset-verified@1",
+            asset_ref: input.assetRef,
+            part_kind: row.part_kind,
+            sha256: input.sha256,
+          }),
+        ],
+      );
+      await insertReceipt(client, {
+        actorRef: input.actor.actorId,
+        idempotencyKey: input.idempotencyKey,
+        commandId: `command:verify-challenge-asset:${input.assetRef}`,
+        commandType: "CompleteEmployerChallengeAssetUpload",
+        fingerprint,
+        receipt,
+        occurredAt: now,
+      });
+      return receipt;
+    });
+  }
+
   public async createJobPostDraft(
     input: CreateJobPostDraftStoreInput,
   ): Promise<ReturnType<typeof JobPostDraftProjectionSchema.parse>> {
@@ -1283,6 +1637,14 @@ export class PostgresFunctionalProductStore
            draft_ref, owner_ref, state, version, draft_json, created_at, updated_at
          ) VALUES ($1, $2, 'DRAFT', 1, $3::jsonb, $4, $4)`,
         [input.draftRef, input.actor.actorId, JSON.stringify(input.draft), now],
+      );
+      await bindEmployerChallengeAssets(
+        client,
+        input.actor.actorId,
+        input.draftRef,
+        input.draft,
+        now,
+        input.trustedSyntheticFixtureWrite,
       );
       const projection = JobPostDraftProjectionSchema.parse({
         schema_version: "job-post-draft-projection@1",
@@ -1348,6 +1710,14 @@ export class PostgresFunctionalProductStore
         );
       if (row.version !== input.expectedDraftVersion)
         throw new FunctionalProductApplicationError("STALE_VERSION", "Draft changed.");
+      await bindEmployerChallengeAssets(
+        client,
+        input.actor.actorId,
+        input.draftRef,
+        input.draft,
+        now,
+        input.trustedSyntheticFixtureWrite,
+      );
       const nextVersion = row.version + 1;
       requireOne(
         await client.query(
@@ -1425,6 +1795,14 @@ export class PostgresFunctionalProductStore
         throw new FunctionalProductApplicationError("STALE_VERSION", "Draft changed.");
       }
       const draft = JobPostDraftInputSchema.parse(draftRow.draft_json);
+      await bindEmployerChallengeAssets(
+        client,
+        input.actor.actorId,
+        input.draftRef,
+        draft,
+        now,
+        input.trustedSyntheticFixtureWrite,
+      );
       const walletResult = await client.query<{
         available_credits: number;
         committed_credits: number;
@@ -1540,6 +1918,24 @@ export class PostgresFunctionalProductStore
          ) VALUES ($1, $2, $3, $4::jsonb, $5)`,
         [contractRef, opportunityRef, contractHash, JSON.stringify(contractJson), now],
       );
+      const uploadedAssetRefs = employerUploadAssets(draft, input.trustedSyntheticFixtureWrite).map(
+        ({ asset }) => asset.asset_ref,
+      );
+      if (uploadedAssetRefs.length > 0) {
+        const sealedAssets = await client.query(
+          `UPDATE employer_challenge_assets
+              SET state = 'SEALED', opportunity_ref = $1, sealed_at = $2, updated_at = $2
+            WHERE owner_ref = $3 AND draft_ref = $4 AND state = 'VERIFIED'
+              AND asset_ref = ANY($5::text[])`,
+          [opportunityRef, now, input.actor.actorId, input.draftRef, uploadedAssetRefs],
+        );
+        if (sealedAssets.rowCount !== uploadedAssetRefs.length) {
+          throw new FunctionalProductApplicationError(
+            "ARTIFACT_NOT_READY",
+            "Every uploaded Challenge Asset must remain verified until JobPost publication.",
+          );
+        }
+      }
       const eligibilityPolicyRef = `eligibility-policy:${opportunityRef}`;
       const acceptedTags =
         draft.eligibility_match_policy.access_mode === "EVIDENCE_MATCH_REQUIRED"

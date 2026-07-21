@@ -1,0 +1,104 @@
+UTC timestamp: 2026-07-21T23:15:49Z
+Scope: Recruiter Critical Challenge IMAGE/AUDIO/FILE validation, preview, Draft binding, and Publish sealing; VIDEO remains unsupported.
+Branch: feat/challenge-asset-uploads
+Base commit: 753ac42
+Environment: Node 22 / pnpm 11; PostgreSQL 16 and MinIO on loopback; DEMO_MODE synthetic test scope; no OpenAI key used.
+Secrets: database and object-store credentials are redacted from this retained report.
+
+FINAL PASSED CHECKS
+
+1. pnpm check
+Exit code: 0
+Relevant complete summary:
+- Prettier: all matched files use Prettier code style.
+- ESLint: passed with zero warnings.
+- Typecheck: all 14 workspace projects and test TypeScript passed.
+- Unit: 52 files passed; 263 tests passed.
+- Integration: 12 files passed, 1 skipped; 47 tests passed, 2 skipped.
+- Security: 6 files passed; 26 tests passed.
+- Replay: 2 files passed; 7 tests passed.
+- Documentation contracts: 52 Agent/README, 40 AI-design, and 87 doctrine/design assertions passed.
+
+2. pnpm build
+Exit code: 0
+Relevant output:
+- Next.js production compilation succeeded.
+- TypeScript, page data collection, and 10/10 static page generation succeeded.
+- New routes were emitted for /api/v1/employer/challenge-assets/presign,
+  /api/v1/employer/challenge-assets/complete, and /api/v1/challenge-assets/[id].
+
+3. TEST_DATABASE_URL=[REDACTED_TEST_DATABASE] pnpm test:postgres
+Exit code: 0
+Raw summary:
+Test Files  6 passed (6)
+Tests       48 passed (48)
+Duration    15.25s
+
+4. PLAYWRIGHT_PORT=3100 TEST_DATABASE_URL=[REDACTED_TEST_DATABASE] pnpm test:e2e:challenge-assets
+Exit code: 0
+Raw summary:
+Running 1 test using 1 worker
+1 passed (2.5s)
+Scenario: Recruiter validates, previews, and seals image, audio, and file Challenge Parts.
+
+5. pnpm object-store:init
+Exit code: 0
+Raw output: {"outcome":"PRIVATE_OBJECT_BUCKET_READY"}
+
+6. git diff --check
+Exit code: 0
+
+7. rg prohibited .only/.skip markers across apps, packages, tests, and scripts
+Exit code: 0; no matches.
+
+CORRECTED FAILURES PRESERVED
+
+1. Initial pnpm test:postgres
+Exit code: 1
+Relevant error: relation "employer_challenge_assets" does not exist.
+Cause: migration 0015 existed on disk but was not registered in packages/db/src/migrate.ts.
+Resolution: registered up/down migration and updated exact migration-order tests. Final PostgreSQL result is 48/48 passed.
+
+2. Explicit Prettier invocation including SQL paths
+Exit code: 2
+Relevant error: No parser could be inferred for 0015_employer_challenge_assets.sql and its down migration.
+Cause: Prettier does not infer a SQL parser for explicitly named SQL files.
+Resolution: SQL remained manually formatted; repository-level pnpm format:check passed.
+
+3. First full Playwright launch
+Exit code: 1
+Relevant error: http://127.0.0.1:3000 is already used.
+Resolution: preserved the user's running service and moved test Web to isolated port 3100.
+
+4. Full functional Playwright reset after port isolation
+Exit code: 1
+Relevant error: Employer-authored synthetic media was rejected by the new upload boundary.
+Cause: the synthetic reset intentionally publishes disclosed SYNTHETIC_SEED assets through the same service.
+Resolution: added an internal trustedSyntheticFixtureWrite capability used only by the synthetic reset. Web command contexts cannot construct it; the security suite enforces this boundary.
+
+5. Full functional Playwright retry
+Exit code: 1
+Relevant error: RECORDED_LIVE Eligibility fixture pins are stale; re-run the explicit recording script.
+Current computed primary Contract hash: withheld from this report because the failure is already represented by the typed stale-pin error.
+Cause: the repository's recorded LIVE Eligibility fixture is pinned to an older Contract hash. This mismatch predates and is independent of Challenge Asset upload behavior.
+Resolution for this scope: the stale LIVE record was not falsified or silently repinned. A dedicated PostgreSQL + MinIO Playwright suite was added and passed the complete Challenge Asset browser vertical.
+Status: full functional E2E remains FAILED/BLOCKED until a real LIVE Eligibility recording is regenerated.
+
+6. First pnpm check
+Exit code: 1
+Relevant errors:
+- no-control-regex for filename validation;
+- no-case-declarations in audio/mp4 validation;
+- generated playwright-report assets entered ESLint traversal.
+Resolution: replaced the regex with code-point checks, scoped the case block, and ignored generated Playwright HTML reports. Final pnpm check passed.
+
+SKIPPED / BLOCKED / NOT RUN
+
+- Full functional Playwright suite: FAILED/BLOCKED by the stale RECORDED_LIVE Eligibility pin described above; not reported as passed.
+- LIVE OpenAI smoke/evals: not run; this feature has no AI operation and no API key was required.
+- Railway deployment and remote push: not requested and not performed.
+
+KNOWN FOLLOW-UP
+
+- Abandoned Employer Challenge upload intents do not yet have the 24-hour orphan cleanup that answer Artifacts already have.
+- VIDEO remains intentionally absent from schema, MIME allowlists, persistence states, and runtime upload handling.
