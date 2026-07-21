@@ -24,6 +24,14 @@ const breachDownMigration = readFileSync(
   ),
   "utf8",
 );
+const challengeAssetMigration = readFileSync(
+  new URL("../../packages/db/migrations/0015_employer_challenge_assets.sql", import.meta.url),
+  "utf8",
+);
+const challengeAssetDownMigration = readFileSync(
+  new URL("../../packages/db/migrations/0015_employer_challenge_assets.down.sql", import.meta.url),
+  "utf8",
+);
 
 describe("functional product migration contract", () => {
   it("persists wallets, declarations, private Artifact metadata, and disclosed assistant traces", () => {
@@ -61,5 +69,15 @@ describe("functional product migration contract", () => {
     expect(breachMigration).toContain("EMPLOYER_BREACH");
     expect(breachMigration).toContain("BREACH_SETTLED");
     expect(breachDownMigration).toContain("DROP TABLE employer_review_breaches");
+  });
+
+  it("persists owner-bound verified Challenge Assets and makes sealed rows immutable", () => {
+    expect(challengeAssetMigration).toContain("CREATE TABLE employer_challenge_assets");
+    expect(challengeAssetMigration).toContain("part_kind IN ('IMAGE', 'AUDIO', 'FILE')");
+    expect(challengeAssetMigration).toContain(
+      "CREATE TRIGGER employer_challenge_assets_sealed_immutable",
+    );
+    expect(challengeAssetMigration).not.toContain("'VIDEO'");
+    expect(challengeAssetDownMigration).toContain("DROP TABLE IF EXISTS employer_challenge_assets");
   });
 });

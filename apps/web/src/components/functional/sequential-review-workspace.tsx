@@ -200,7 +200,11 @@ export function SequentialReviewWorkspace({
               </div>
               <small>Submitted {new Date(current.submitted_at).toISOString()} UTC</small>
             </div>
-            <CriticalChallengeView challenge={current.critical_challenge} compact />
+            <CriticalChallengeView
+              challenge={current.critical_challenge}
+              compact
+              assetRole="employer"
+            />
             <div className="read-only-answer">
               {current.rich_text_document === null ? (
                 <p>No rich-text Artifact.</p>

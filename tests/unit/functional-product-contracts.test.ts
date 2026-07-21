@@ -1,5 +1,7 @@
 import {
   CandidateAnswerSessionProjectionSchema,
+  CompleteEmployerChallengeAssetUploadCommandSchema,
+  CreateEmployerChallengeAssetUploadCommandSchema,
   CriticalChallengeSchema,
   RecordFunctionalHumanReviewCommandSchema,
   RichTextDocumentSchema,
@@ -7,7 +9,10 @@ import {
   StartBackedApplicationCommandSchema,
   SubmitFunctionalAnswerCommandSchema,
 } from "../../packages/contracts/src/index";
-import { functionalProductErrorDetails } from "../../packages/application/src/index";
+import {
+  challengeAssetContentMatchesMime,
+  functionalProductErrorDetails,
+} from "../../packages/application/src/index";
 import { describe, expect, it } from "vitest";
 
 describe("functional product contracts", () => {
@@ -128,6 +133,77 @@ describe("functional product contracts", () => {
         ],
       }).success,
     ).toBe(false);
+  });
+
+  it("validates Recruiter Challenge Asset uploads and keeps video out of the MVP contract", () => {
+    const image = {
+      schema_version: "create-employer-challenge-asset-upload-command@1",
+      part_kind: "IMAGE",
+      file_name: "direction-board.png",
+      content_type: "image/png",
+      content_length: 4_096,
+      alt_text: "A synthetic three-column visual direction board.",
+      transcript_excerpt: null,
+    } as const;
+    expect(CreateEmployerChallengeAssetUploadCommandSchema.safeParse(image).success).toBe(true);
+    expect(
+      CreateEmployerChallengeAssetUploadCommandSchema.safeParse({
+        ...image,
+        content_type: "video/mp4",
+      }).success,
+    ).toBe(false);
+    expect(
+      CreateEmployerChallengeAssetUploadCommandSchema.safeParse({ ...image, alt_text: null })
+        .success,
+    ).toBe(false);
+    expect(
+      CreateEmployerChallengeAssetUploadCommandSchema.safeParse({
+        ...image,
+        content_length: 10 * 1024 * 1024 + 1,
+      }).success,
+    ).toBe(false);
+    expect(
+      CreateEmployerChallengeAssetUploadCommandSchema.safeParse({
+        ...image,
+        part_kind: "AUDIO",
+        file_name: "brief.mp3",
+        content_type: "audio/mpeg",
+        alt_text: null,
+        transcript_excerpt: "A synthetic customer describes a delayed settlement problem.",
+      }).success,
+    ).toBe(true);
+    expect(
+      CompleteEmployerChallengeAssetUploadCommandSchema.safeParse({
+        schema_version: "complete-employer-challenge-asset-upload-command@1",
+        asset_ref: "challenge-asset:01",
+        sha256: `sha256:${"b".repeat(64)}`,
+      }).success,
+    ).toBe(true);
+    expect(
+      CreateEmployerChallengeAssetUploadCommandSchema.safeParse({
+        ...image,
+        file_name: "direction-board\n.png",
+      }).success,
+    ).toBe(false);
+  });
+
+  it("sniffs Challenge Asset bodies instead of trusting the declared MIME type", () => {
+    expect(
+      challengeAssetContentMatchesMime(
+        "image/png",
+        Uint8Array.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
+      ),
+    ).toBe(true);
+    expect(challengeAssetContentMatchesMime("image/png", new TextEncoder().encode("not png"))).toBe(
+      false,
+    );
+    const audioMp4 = new Uint8Array(36);
+    audioMp4.set(new TextEncoder().encode("ftyp"), 4);
+    audioMp4.set(new TextEncoder().encode("hdlr"), 16);
+    audioMp4.set(new TextEncoder().encode("soun"), 28);
+    expect(challengeAssetContentMatchesMime("audio/mp4", audioMp4)).toBe(true);
+    audioMp4.set(new TextEncoder().encode("vide"), 28);
+    expect(challengeAssetContentMatchesMime("audio/mp4", audioMp4)).toBe(false);
   });
 
   it("requires all versioned declarations before consuming Candidate Credit", () => {

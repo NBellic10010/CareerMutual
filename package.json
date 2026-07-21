@@ -25,6 +25,7 @@
     "test:security": "vitest run --config vitest.security.config.ts",
     "test:postgres": "vitest run --config vitest.postgres.config.ts",
     "test:e2e": "playwright test",
+    "test:e2e:challenge-assets": "playwright test --config playwright.challenge-assets.config.ts",
     "test:e2e:puppeteer": "tsx tests/puppeteer/multi-candidate-live-demo.ts",
     "test:e2e:puppeteer:poor-creative": "tsx tests/puppeteer/poor-creative-candidate-live-demo.ts",
     "test:e2e:live-analyst": "playwright test --config playwright.live-analyst.config.ts",

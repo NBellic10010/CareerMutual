@@ -70,7 +70,12 @@ A JobPost's `CriticalChallenge` is one ordered, versioned whole composed of one 
 manifest. Candidates MUST be able to inspect the complete Challenge before registering Interest or
 spending Credit. Media assets require immutable refs, MIME, bytes, SHA-256, same-origin paths, and
 accessible metadata; synthetic fixtures MUST be disclosed as synthetic. Challenge parts MUST NOT
-be scored, allocated, or treated as independent pre-answer selection opportunities.
+be scored, allocated, or treated as independent pre-answer selection opportunities. Employer media
+MUST enter through an owner-bound private upload intent, exact MIME/size policy, checksum and content
+signature verification, and a `VERIFIED` receipt; Draft and Publish Commands MUST reload that record
+instead of trusting browser metadata. Publish MUST seal all referenced Assets in the same database
+transaction as the Contract. `VIDEO` is unsupported and MUST remain outside schemas, allowlists, and
+runtime upload handling until its own validation policy is approved.
 
 ## 3. Authority and conflict resolution
 

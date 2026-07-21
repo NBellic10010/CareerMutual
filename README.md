@@ -102,7 +102,10 @@ This slice enforces the following boundaries:
   `TEXT`, `AUDIO`, `IMAGE`, and `FILE` parts remain identical in Candidate detail, Answer Session,
   and Recruiter review. The local seed includes one primary engineering role, twenty cross-domain
   synthetic JobPosts, and six technology Match Lab JobPosts used to compare six Candidate-only
-  Eligibility feeds.
+  Eligibility feeds. Recruiters can add private image, audio, or reference-file sources with local
+  preview; the server verifies MIME, byte count, SHA-256, content signature, ownership, and
+  accessibility metadata before Draft binding, then seals the references atomically at Publish.
+  Video is marked as planned and is rejected by the current MVP Contract.
 - The Employer API returns only the earliest outstanding anonymous answer. The next answer is
   unavailable to both the API and the DOM until the current Human Review transaction commits.
 - An `ADVANCE_ELIGIBLE` Review pins the pre-consented Resume version into an immutable,
@@ -160,7 +163,7 @@ flowchart LR
         APP["Application Commands<br/>authorization + idempotency + concurrency"]
         DOMAIN["Domain aggregates<br/>Attention, Credit, Answer, Review, Reveal"]
         WORKER["Continuous Worker<br/>Outbox jobs + deadlines + SLA settlement"]
-        STORE[("Private S3-compatible Object Storage<br/>rich text + voice + transcripts + GPT traces")]
+        STORE[("Private S3-compatible Object Storage<br/>Challenge sources + answers + voice + GPT traces")]
 
         subgraph PG["PostgreSQL 16"]
             STATE[("Aggregate state + immutable ledgers")]
@@ -189,8 +192,9 @@ flowchart LR
 Browsers never connect directly to PostgreSQL, the Private Label Vault, or OpenAI. Web and Worker
 share the same Application Commands for business changes; PostgreSQL transactions keep aggregate
 state, ledgers, events, Outbox messages, and role projections consistent. Object Storage holds
-private answer bodies and media, while PostgreSQL stores their owner-bound immutable references and
-hashes.
+private answer bodies, Voice/GPT artifacts, and Recruiter-uploaded Critical Challenge sources,
+while PostgreSQL stores their owner-bound immutable references, hashes, verification state, Draft
+binding, and Publish-time seal.
 
 ## Product routes
 
@@ -204,6 +208,10 @@ hashes.
 - `/candidate/answer-sessions/:sessionRef` — TipTap rich text, Voice Memo, disclosed GPT, autosave,
   Focus activity receipt, database deadline, recovery deep link, and immutable final submission.
 - `/employer` — JobPost drafts, publish-time Attention backing, wallet state, and review queue.
+- `/api/v1/employer/challenge-assets/presign` and `/complete` — authenticated, CSRF-protected
+  Recruiter upload intent and deterministic private-object verification for `IMAGE | AUDIO | FILE`.
+- `/api/v1/challenge-assets/:assetRef` — authorized private rendering/download for the owning
+  Recruiter or a Candidate who can access the sealed JobPost.
 - `/employer/jobs/:jobPostRef/review` — one anonymous answer at a time and mandatory review.
 
 The temporary issuer exists only when `DEMO_MODE=true`; without a production identity provider,

@@ -394,6 +394,28 @@ test("persistent roles complete the backed application and sequential human-revi
     documentFits: true,
   });
   await employerPage.setViewportSize({ width: 1280, height: 720 });
+  await expect(composer.getByRole("button", { name: "Video · later" })).toBeDisabled();
+  await composer.getByRole("button", { name: "+ image" }).click();
+  await composer
+    .getByLabel("Accessible alt text")
+    .fill("A synthetic one-pixel coral source used to verify the sealed image upload path.");
+  await composer.locator('input[type="file"]').setInputFiles({
+    name: "synthetic-direction-board.png",
+    mimeType: "image/png",
+    buffer: Buffer.from(
+      "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Wl2n9sAAAAASUVORK5CYII=",
+      "base64",
+    ),
+  });
+  const challengeAssetComplete = employerPage.waitForResponse(
+    (response) =>
+      response.url().endsWith("/api/v1/employer/challenge-assets/complete") &&
+      response.request().method() === "POST",
+  );
+  await composer.getByRole("button", { name: "Validate & upload" }).click();
+  expect((await challengeAssetComplete).status()).toBe(200);
+  await expect(composer.getByText("Upload verified")).toBeVisible();
+  await expect(composer.getByText("1/1 uploaded Parts verified.")).toBeVisible();
   await employerPage.getByLabel("Access mode").selectOption("OPEN_TO_ALL");
   await expect(employerPage.getByText("No Passport is required.")).toBeVisible();
   await employerPage.getByLabel("Access mode").selectOption("EVIDENCE_MATCH_REQUIRED");

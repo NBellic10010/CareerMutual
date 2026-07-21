@@ -4,6 +4,8 @@ import type {
   CandidateJobDetail,
   CandidateOpportunityFeed,
   CompleteAnswerArtifactUploadReceiptSchema,
+  EmployerChallengeAssetVerifiedReceipt,
+  EmployerChallengeAssetPartKind,
   EmployerCurrentReviewProjectionSchema,
   EmployerJobDashboardSchema,
   EmployerRevealedCandidatePage,
@@ -51,6 +53,7 @@ export interface FunctionalProductIdFactory {
       | "candidate-credit-ledger"
       | "answer-session"
       | "artifact"
+      | "challenge-asset"
       | "assistant-exchange"
       | "answer-submission"
       | "process-evidence"
@@ -64,6 +67,7 @@ export interface CommandEnvelope {
   readonly actor: FunctionalActor;
   readonly idempotencyKey: string;
   readonly correlationId: string;
+  readonly trustedSyntheticFixtureWrite?: boolean;
 }
 
 export interface CreateJobPostDraftStoreInput extends CommandEnvelope {
@@ -123,6 +127,25 @@ export interface VerifyArtifactUploadInput extends CommandEnvelope {
   readonly outboxId: string;
 }
 
+export interface CreateEmployerChallengeAssetUploadIntentInput extends CommandEnvelope {
+  readonly assetRef: string;
+  readonly objectKey: string;
+  readonly partKind: EmployerChallengeAssetPartKind;
+  readonly fileName: string;
+  readonly contentType: string;
+  readonly contentLength: number;
+  readonly altText: string | null;
+  readonly transcriptExcerpt: string | null;
+}
+
+export interface VerifyEmployerChallengeAssetUploadInput extends CommandEnvelope {
+  readonly assetRef: string;
+  readonly sha256: string;
+  readonly contentType: string;
+  readonly contentLength: number;
+  readonly eventId: string;
+}
+
 export interface QueueAssistantExchangeInput extends CommandEnvelope {
   readonly answerSessionRef: string;
   readonly exchangeRef: string;
@@ -170,6 +193,25 @@ export interface AnswerArtifactRecord {
   readonly createdAt: string;
 }
 
+export interface EmployerChallengeAssetRecord {
+  readonly assetRef: string;
+  readonly ownerRef: string;
+  readonly draftRef: string | null;
+  readonly opportunityRef: string | null;
+  readonly partKind: EmployerChallengeAssetPartKind;
+  readonly fileName: string;
+  readonly objectKey: string;
+  readonly contentType: string;
+  readonly contentLength: number;
+  readonly sha256: string | null;
+  readonly altText: string | null;
+  readonly transcriptExcerpt: string | null;
+  readonly state: "UPLOAD_ISSUED" | "VERIFIED" | "SEALED" | "FAILED";
+  readonly createdAt: string;
+  readonly verifiedAt: string | null;
+  readonly sealedAt: string | null;
+}
+
 export interface FunctionalProductStore {
   getCandidateOpportunityFeed(candidateRef: string): Promise<CandidateOpportunityFeed>;
   getCandidateJobDetail(
@@ -193,6 +235,10 @@ export interface FunctionalProductStore {
     actor: FunctionalActor,
     artifactRef: string,
   ): Promise<AnswerArtifactRecord | null>;
+  getAuthorizedEmployerChallengeAsset(
+    actor: FunctionalActor,
+    assetRef: string,
+  ): Promise<EmployerChallengeAssetRecord | null>;
   createJobPostDraft(input: CreateJobPostDraftStoreInput): Promise<JobPostDraftProjection>;
   updateJobPostDraft(input: UpdateJobPostDraftStoreInput): Promise<JobPostDraftProjection>;
   publishJobPost(input: PublishJobPostStoreInput): Promise<PublishJobPostReceipt>;
@@ -212,6 +258,12 @@ export interface FunctionalProductStore {
   verifyArtifactUpload(
     input: VerifyArtifactUploadInput,
   ): Promise<CompleteAnswerArtifactUploadReceipt>;
+  createEmployerChallengeAssetUploadIntent(
+    input: CreateEmployerChallengeAssetUploadIntentInput,
+  ): Promise<{ readonly assetRef: string; readonly objectKey: string }>;
+  verifyEmployerChallengeAssetUpload(
+    input: VerifyEmployerChallengeAssetUploadInput,
+  ): Promise<EmployerChallengeAssetVerifiedReceipt>;
   queueAssistantExchange(input: QueueAssistantExchangeInput): Promise<{
     readonly ordinal: number;
     readonly createdAt: string;

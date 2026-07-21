@@ -38,6 +38,7 @@ import {
 } from "../../packages/ai/src/index";
 import {
   ELIGIBILITY_BACKGROUND_TAG_CATALOG,
+  type CriticalChallenge,
   type EligibilityMatchPolicy,
 } from "../../packages/contracts/src/index";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
@@ -199,6 +200,7 @@ async function createPublishedJob(
     access_mode: "OPEN_TO_ALL",
     open_reasons: ["NO_BACKGROUND_REQUIRED"],
   },
+  criticalChallenge?: CriticalChallenge,
 ): Promise<string> {
   const draft = await service.createJobPostDraft(
     { ...employer, idempotencyKey: "functional-test:create-draft" },
@@ -228,7 +230,7 @@ async function createPublishedJob(
         capability_areas: ["Payment idempotency", "Failure recovery"],
         critical_question:
           "A provider charge succeeds but Redis fails before acknowledgement. Explain the smallest safe recovery design, invariants, and falsifying tests.",
-        critical_challenge: {
+        critical_challenge: criticalChallenge ?? {
           schema_version: "critical-challenge@1",
           challenge_ref: "critical-challenge:functional-postgres-test@1",
           title: "Recover a charged payment without duplicating it",
@@ -420,6 +422,152 @@ describe.sequential("Functional product PostgreSQL vertical", () => {
 
   afterAll(async () => {
     await pool.end();
+  });
+
+  it("verifies, binds, seals, and authorizes an Employer-uploaded Critical Challenge image", async () => {
+    const png = Uint8Array.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+    const sha256 = `sha256:${createHash("sha256").update(png).digest("hex")}` as const;
+    const upload = await service.createEmployerChallengeAssetUpload(
+      { ...employer, idempotencyKey: "functional-test:challenge-image-presign" },
+      {
+        schema_version: "create-employer-challenge-asset-upload-command@1",
+        part_kind: "IMAGE",
+        file_name: "direction-board.png",
+        content_type: "image/png",
+        content_length: png.byteLength,
+        alt_text: "A synthetic direction board with three contrasting recovery paths.",
+        transcript_excerpt: null,
+      },
+    );
+    const uploadUrl = new URL(upload.upload_url);
+    const objectKey = decodeURIComponent(uploadUrl.pathname.slice(1));
+    await objectStore.putObject({ objectKey, contentType: "image/png", body: png });
+    const verified = await service.completeEmployerChallengeAssetUpload(
+      { ...employer, idempotencyKey: "functional-test:challenge-image-complete" },
+      {
+        schema_version: "complete-employer-challenge-asset-upload-command@1",
+        asset_ref: upload.asset_ref,
+        sha256,
+      },
+    );
+    expect(verified).toMatchObject({
+      state: "VERIFIED",
+      part_kind: "IMAGE",
+      asset: { source_kind: "EMPLOYER_UPLOAD", sha256 },
+    });
+    await expect(
+      service.completeEmployerChallengeAssetUpload(
+        { ...employer, idempotencyKey: "functional-test:challenge-image-complete" },
+        {
+          schema_version: "complete-employer-challenge-asset-upload-command@1",
+          asset_ref: upload.asset_ref,
+          sha256,
+        },
+      ),
+    ).resolves.toEqual(verified);
+    await expect(
+      service.readEmployerChallengeAsset(
+        { role: "EMPLOYER", actorId: "reviewer-not-owner" },
+        upload.asset_ref,
+      ),
+    ).rejects.toMatchObject({ code: "RESOURCE_NOT_FOUND" });
+    await expect(
+      service.readEmployerChallengeAsset(candidate("candidate-42").actor, upload.asset_ref),
+    ).rejects.toMatchObject({ code: "RESOURCE_NOT_FOUND" });
+
+    const challenge = {
+      schema_version: "critical-challenge@1",
+      challenge_ref: "critical-challenge:uploaded-image@1",
+      title: "Resolve a bounded recovery decision",
+      objective:
+        "Use the sealed scenario and visual source to define one safe recovery decision and its falsification test.",
+      parts: [
+        {
+          part_ref: "challenge-part:uploaded-image:text",
+          kind: "TEXT",
+          title: "Recovery scenario",
+          instructions: "State one bounded recovery decision and the invariant that constrains it.",
+          text_content:
+            "A payment attempt is acknowledged by the provider but not by the local retry worker.",
+          asset: null,
+        },
+        {
+          part_ref: "challenge-part:uploaded-image:visual",
+          kind: "IMAGE",
+          title: "Recovery direction board",
+          instructions: "Inspect the three paths and identify which path preserves the invariant.",
+          text_content: null,
+          asset: verified.asset,
+        },
+      ],
+    } satisfies CriticalChallenge;
+    const opportunityRef = await createPublishedJob("OFF", undefined, challenge);
+    const persisted = await pool.query<{
+      state: string;
+      draft_ref: string | null;
+      opportunity_ref: string | null;
+    }>(
+      `SELECT state, draft_ref, opportunity_ref
+         FROM employer_challenge_assets WHERE asset_ref = $1`,
+      [upload.asset_ref],
+    );
+    expect(persisted.rows[0]).toMatchObject({ state: "SEALED", opportunity_ref: opportunityRef });
+    expect(persisted.rows[0]?.draft_ref).not.toBeNull();
+
+    const readable = await service.readEmployerChallengeAsset(
+      candidate("candidate-42").actor,
+      upload.asset_ref,
+    );
+    expect(readable.body).toEqual(png);
+    await expect(
+      pool.query(
+        "UPDATE employer_challenge_assets SET file_name = 'rewritten.png' WHERE asset_ref = $1",
+        [upload.asset_ref],
+      ),
+    ).rejects.toThrow(/immutable/u);
+  });
+
+  it("rejects media Parts that bypass the verified Employer-upload boundary", async () => {
+    const unverifiedChallenge = {
+      schema_version: "critical-challenge@1",
+      challenge_ref: "critical-challenge:unverified-media@1",
+      title: "Inspect an unverified visual source",
+      objective:
+        "Use a visual source in one bounded decision while preserving the sealed upload boundary.",
+      parts: [
+        {
+          part_ref: "challenge-part:unverified-media:text",
+          kind: "TEXT",
+          title: "Decision brief",
+          instructions: "State the decision that the visual source is intended to inform.",
+          text_content:
+            "Choose one reversible action and explain which evidence would invalidate that choice.",
+          asset: null,
+        },
+        {
+          part_ref: "challenge-part:unverified-media:image",
+          kind: "IMAGE",
+          title: "Unverified visual",
+          instructions: "Inspect the visual source before recording the bounded decision.",
+          text_content: null,
+          asset: {
+            asset_ref: "challenge-asset:forged-synthetic-source",
+            source_kind: "SYNTHETIC_SEED",
+            file_name: "forged.png",
+            content_type: "image/png",
+            content_length: 8,
+            sha256: `sha256:${"a".repeat(64)}`,
+            download_url: "/forged.png",
+            alt_text: "A forged source that was never verified by the private object store.",
+            transcript_excerpt: null,
+          },
+        },
+      ],
+    } satisfies CriticalChallenge;
+
+    await expect(createPublishedJob("OFF", undefined, unverifiedChallenge)).rejects.toMatchObject({
+      code: "ARTIFACT_INVALID",
+    });
   });
 
   it("consumes Candidate Credit only after a backed Slot and enforces immutable sequential review", async () => {

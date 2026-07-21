@@ -68,9 +68,13 @@ This file records CareerMutual’s current implementation state and development 
 - Migrations `0013` and `0014` add the exact 100-tag Eligibility taxonomy, sealed per-Job access
   policies, immutable Candidate-only AI match sets, Feed projections, Interest pins, operation
   allowlisting, and the corrected per-Job policy-hash scope.
+- Migration `0015` adds owner-bound Employer Critical Challenge upload intents, verified private
+  Asset metadata, Draft binding, atomic Publish sealing, immutable sealed rows, and authorized
+  Recruiter/Candidate reads. The runtime supports `IMAGE | AUDIO | FILE`; Video remains planned.
 - MinIO is the local `ObjectStorePort` adapter. Presigned and server writes are create-only,
-  owner-bound, MIME/size/SHA-256 verified, and sealed by immutable refs. Orphans are cleaned by the
-  Worker after 24 hours.
+  owner-bound, MIME/size/SHA-256/content-signature verified, and sealed by immutable refs. Answer
+  Artifact orphans are cleaned by the Worker after 24 hours; cleanup for abandoned Employer
+  Challenge upload intents is still pending.
 - Candidate GPT uses Worker-only `gpt-5.6-terra`, low reasoning, `store:false`, and no tools; Voice
   Memo transcription uses `gpt-4o-mini-transcribe`. The original audio remains authoritative and
   a complete independent `GPT_TRACE`, including failures, is disclosed to the reviewer.
@@ -110,6 +114,61 @@ This file records CareerMutual’s current implementation state and development 
   `SYNTHETIC_SOURCE_ATTACHED` or keep the Passport explicitly self-attested for Build Week.
   Completed-cohort allocation and Deep Proof attention remain the next product slice; post-Review
   Resume Reveal is already implemented.
+
+---
+
+## 2026-07-21 — Recruiter Critical Challenge Asset uploads
+
+**Status:** Complete on `feat/challenge-asset-uploads`; full legacy functional E2E remains blocked by an unrelated stale recorded-LIVE Eligibility pin.
+
+### Goal
+
+Implement validated Recruiter uploads, local preview, Draft binding, and Publish-time sealing for
+Critical Challenge `IMAGE`, `AUDIO`, and `FILE` Parts. Keep Video visibly planned but unsupported.
+
+### Actual outcome
+
+- Added strict versioned upload/complete/receipt contracts with exact MIME and byte policies. Image
+  alt text and audio transcript excerpts are mandatory; Video is absent from the schema.
+- Added authenticated, CSRF- and idempotency-protected presign/complete routes plus an authorized
+  private read route. Browser uploads are five-minute create-only PUTs; complete verifies object
+  metadata, SHA-256, and content signatures, including audio-only MP4 handler validation.
+- Added migration `0015_employer_challenge_assets`, PostgreSQL owner/state constraints, immutable
+  sealed rows, Domain Event and Receipt persistence, Draft binding, and atomic Publish sealing.
+- Draft and Publish Commands reload verified rows and reject duplicate, cross-owner, mismatched,
+  unverified, or browser-forged synthetic media. Only the synthetic reset receives an internal
+  fixture-write capability; public Web contexts cannot set it.
+- Added the Recruiter Part Ledger UI with ordered Part numbers, local image/audio/file previews,
+  accessibility fields, upload state, hash seal, responsive layout, and disabled `Video — later`.
+  Candidate Detail, Answer Sandbox, and Recruiter Review resolve the same authorized sealed source.
+- Updated product, doctrine, engineering, README, and agent invariants. The frontend-design skill
+  kept the new UI inside the existing industrial Coral/Teal visual language rather than introducing
+  a separate component system.
+
+### Tests and verification
+
+- `pnpm check` passed: formatting, lint, all workspace typechecks, 263 Unit, 47 Integration,
+  26 Security, 7 Replay, and all 179 documentation assertions. Two pre-existing Integration tests
+  remain skipped and are not counted as passed.
+- `pnpm build` passed.
+- PostgreSQL: 6 files and 48 tests passed, including fresh/rollback migration, verification,
+  idempotency, owner isolation, anti-forgery, Draft binding, atomic sealing, Candidate authorization,
+  and sealed-row immutability.
+- Dedicated PostgreSQL + MinIO Playwright: 1/1 passed, exercising real Image, Audio, and File PUTs,
+  three previews, three verified receipts, Draft binding, 3/3 Publish sealing, and private read
+  headers.
+- `git diff --check` passed; prohibited `.only/.skip` scan is clean.
+- Full evidence, including every corrected failure: [test-reports/20260721T231549Z-challenge-asset-uploads.log](test-reports/20260721T231549Z-challenge-asset-uploads.log).
+
+### Known issue and next safe step
+
+- The repository-wide functional Playwright Reset correctly refuses its stale `RECORDED_LIVE`
+  Eligibility fixture because the pinned Contract hash no longer matches the current Contract. It
+  was not silently repinned. Regenerate it through the explicit real LIVE recording workflow before
+  claiming the complete legacy E2E passes.
+- Answer Artifact orphan cleanup already exists; abandoned Employer Challenge upload-intent cleanup
+  remains a bounded follow-up.
+- No deployment, merge, commit, push, or LIVE OpenAI call was performed.
 
 ---
 

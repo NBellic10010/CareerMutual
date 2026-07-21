@@ -70,6 +70,159 @@ export const CriticalChallengeAssetSchema = z
   })
   .strict();
 
+export const EmployerChallengeAssetPartKindSchema = z.enum(["IMAGE", "AUDIO", "FILE"]);
+
+export const EMPLOYER_CHALLENGE_IMAGE_MIME_TYPES = [
+  "image/png",
+  "image/jpeg",
+  "image/webp",
+  "image/gif",
+] as const;
+
+export const EMPLOYER_CHALLENGE_AUDIO_MIME_TYPES = [
+  "audio/mpeg",
+  "audio/wav",
+  "audio/x-wav",
+  "audio/ogg",
+  "audio/webm",
+  "audio/mp4",
+] as const;
+
+export const EMPLOYER_CHALLENGE_FILE_MIME_TYPES = [
+  "application/pdf",
+  "text/plain",
+  "text/csv",
+  "application/json",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  "application/zip",
+] as const;
+
+export const EMPLOYER_CHALLENGE_IMAGE_MAX_BYTES = 10 * 1024 * 1024;
+export const EMPLOYER_CHALLENGE_MEDIA_MAX_BYTES = 20 * 1024 * 1024;
+
+function allowedEmployerChallengeMimeTypes(kind: "IMAGE" | "AUDIO" | "FILE") {
+  switch (kind) {
+    case "IMAGE":
+      return EMPLOYER_CHALLENGE_IMAGE_MIME_TYPES;
+    case "AUDIO":
+      return EMPLOYER_CHALLENGE_AUDIO_MIME_TYPES;
+    case "FILE":
+      return EMPLOYER_CHALLENGE_FILE_MIME_TYPES;
+  }
+}
+
+function hasControlCharacters(value: string): boolean {
+  return [...value].some((character) => {
+    const codePoint = character.codePointAt(0) ?? 0;
+    return codePoint <= 31 || codePoint === 127;
+  });
+}
+
+export const CreateEmployerChallengeAssetUploadCommandSchema = z
+  .object({
+    schema_version: z.literal("create-employer-challenge-asset-upload-command@1"),
+    part_kind: EmployerChallengeAssetPartKindSchema,
+    file_name: z
+      .string()
+      .trim()
+      .min(1)
+      .max(240)
+      .refine((value) => !value.includes("/") && !value.includes("\\"), {
+        message: "Challenge Asset file names cannot contain path separators.",
+      })
+      .refine((value) => !hasControlCharacters(value), {
+        message: "Challenge Asset file names cannot contain control characters.",
+      }),
+    content_type: z.string().trim().min(3).max(200),
+    content_length: z.number().int().positive().max(EMPLOYER_CHALLENGE_MEDIA_MAX_BYTES),
+    alt_text: z.string().trim().min(3).max(500).nullable(),
+    transcript_excerpt: z.string().trim().min(3).max(2_000).nullable(),
+  })
+  .strict()
+  .superRefine((command, context) => {
+    const allowed = allowedEmployerChallengeMimeTypes(command.part_kind) as readonly string[];
+    if (!allowed.includes(command.content_type)) {
+      context.addIssue({
+        code: "custom",
+        path: ["content_type"],
+        message: `${command.part_kind} does not allow the declared MIME type.`,
+      });
+    }
+    if (
+      command.part_kind === "IMAGE" &&
+      command.content_length > EMPLOYER_CHALLENGE_IMAGE_MAX_BYTES
+    ) {
+      context.addIssue({
+        code: "custom",
+        path: ["content_length"],
+        message: "Employer Challenge images cannot exceed 10 MB.",
+      });
+    }
+    if (command.part_kind === "IMAGE" && command.alt_text === null) {
+      context.addIssue({
+        code: "custom",
+        path: ["alt_text"],
+        message: "Employer Challenge images require accessible alt text.",
+      });
+    }
+    if (command.part_kind === "AUDIO" && command.transcript_excerpt === null) {
+      context.addIssue({
+        code: "custom",
+        path: ["transcript_excerpt"],
+        message: "Employer Challenge audio requires an accessible transcript excerpt.",
+      });
+    }
+    if (command.part_kind !== "IMAGE" && command.alt_text !== null) {
+      context.addIssue({
+        code: "custom",
+        path: ["alt_text"],
+        message: "Only IMAGE Challenge Assets accept alt text.",
+      });
+    }
+    if (command.part_kind !== "AUDIO" && command.transcript_excerpt !== null) {
+      context.addIssue({
+        code: "custom",
+        path: ["transcript_excerpt"],
+        message: "Only AUDIO Challenge Assets accept a transcript excerpt.",
+      });
+    }
+  });
+
+export const EmployerChallengeAssetUploadReceiptSchema = z
+  .object({
+    schema_version: z.literal("employer-challenge-asset-upload-receipt@1"),
+    asset_ref: AiOpaqueRefSchema,
+    part_kind: EmployerChallengeAssetPartKindSchema,
+    upload_url: z.string().trim().min(1).max(4_000),
+    required_upload_headers: z.object({ "If-None-Match": z.literal("*") }).strict(),
+    upload_expires_at: IsoDateTimeSchema,
+    file_name: z.string().trim().min(1).max(240),
+    content_type: z.string().trim().min(3).max(200),
+    content_length: z.number().int().positive().max(EMPLOYER_CHALLENGE_MEDIA_MAX_BYTES),
+  })
+  .strict();
+
+export const CompleteEmployerChallengeAssetUploadCommandSchema = z
+  .object({
+    schema_version: z.literal("complete-employer-challenge-asset-upload-command@1"),
+    asset_ref: AiOpaqueRefSchema,
+    sha256: AiSha256Schema,
+  })
+  .strict();
+
+export const EmployerChallengeAssetVerifiedReceiptSchema = z
+  .object({
+    schema_version: z.literal("employer-challenge-asset-verified-receipt@1"),
+    state: z.literal("VERIFIED"),
+    asset: CriticalChallengeAssetSchema.extend({
+      source_kind: z.literal("EMPLOYER_UPLOAD"),
+    }).strict(),
+    part_kind: EmployerChallengeAssetPartKindSchema,
+    verified_at: IsoDateTimeSchema,
+  })
+  .strict();
+
 export { CriticalChallengePartKindSchema } from "./common";
 
 export const CriticalChallengePartSchema = z
@@ -857,6 +1010,16 @@ export type JobPostDraftInput = z.infer<typeof JobPostDraftInputSchema>;
 export type { RoleCategory } from "./common";
 export type CriticalChallenge = z.infer<typeof CriticalChallengeSchema>;
 export type CriticalChallengePart = z.infer<typeof CriticalChallengePartSchema>;
+export type EmployerChallengeAssetPartKind = z.infer<typeof EmployerChallengeAssetPartKindSchema>;
+export type CreateEmployerChallengeAssetUploadCommand = z.infer<
+  typeof CreateEmployerChallengeAssetUploadCommandSchema
+>;
+export type CompleteEmployerChallengeAssetUploadCommand = z.infer<
+  typeof CompleteEmployerChallengeAssetUploadCommandSchema
+>;
+export type EmployerChallengeAssetVerifiedReceipt = z.infer<
+  typeof EmployerChallengeAssetVerifiedReceiptSchema
+>;
 export type CreateJobPostDraftCommand = z.infer<typeof CreateJobPostDraftCommandSchema>;
 export type UpdateJobPostDraftCommand = z.infer<typeof UpdateJobPostDraftCommandSchema>;
 export type PublishJobPostCommand = z.infer<typeof PublishJobPostCommandSchema>;

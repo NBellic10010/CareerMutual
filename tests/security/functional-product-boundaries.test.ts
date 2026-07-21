@@ -31,6 +31,18 @@ const candidatePassport = read(
   "../../apps/web/src/components/functional/candidate-evidence-passport.tsx",
 );
 const employerDashboard = read("../../apps/web/src/components/functional/employer-dashboard.tsx");
+const challengeAssetComposer = read(
+  "../../apps/web/src/components/functional/employer-challenge-part-composer.tsx",
+);
+const challengeAssetPresignRoute = read(
+  "../../apps/web/app/api/v1/employer/challenge-assets/presign/route.ts",
+);
+const challengeAssetCompleteRoute = read(
+  "../../apps/web/app/api/v1/employer/challenge-assets/complete/route.ts",
+);
+const challengeAssetReadRoute = read("../../apps/web/app/api/v1/challenge-assets/[id]/route.ts");
+const functionalRoute = read("../../apps/web/src/server/functional-route.ts");
+const functionalReset = read("../../scripts/reset-functional-demo.ts");
 
 describe("functional product privacy and authority boundaries", () => {
   it("keeps OpenAI credentials and calls in the Worker rather than browser or Web composition", () => {
@@ -100,6 +112,21 @@ describe("functional product privacy and authority boundaries", () => {
     expect(answerSandbox).not.toContain("dangerouslySetInnerHTML");
     expect(reviewWorkspace).not.toContain("dangerouslySetInnerHTML");
     expect(reviewWorkspace).not.toMatch(/\.innerHTML/iu);
+  });
+
+  it("keeps Employer Challenge uploads private, append-only, and outside the video surface", () => {
+    expect(challengeAssetPresignRoute).toContain('requireCommandContext(request, "EMPLOYER")');
+    expect(challengeAssetCompleteRoute).toContain('requireCommandContext(request, "EMPLOYER")');
+    expect(challengeAssetReadRoute).toContain('"Cache-Control": "private, no-store"');
+    expect(challengeAssetReadRoute).toContain('"X-Content-Type-Options": "nosniff"');
+    expect(functionalStore).toContain("getAuthorizedEmployerChallengeAsset");
+    expect(functionalStore).toContain("match.state = 'POSITIVE_EVIDENCE'");
+    expect(functionalStore).toContain('row.access_mode === "OPEN_TO_ALL"');
+    expect(challengeAssetComposer).toContain("Video · later");
+    expect(challengeAssetComposer).toContain("If-None-Match");
+    expect(challengeAssetComposer).not.toMatch(/OPENAI_API_KEY|candidate_private_labels/iu);
+    expect(functionalRoute).not.toContain("trustedSyntheticFixtureWrite");
+    expect(functionalReset).toContain("trustedSyntheticFixtureWrite: true");
   });
 
   it("structurally rejects pool data from Candidate payloads and identity labels from review payloads", () => {
