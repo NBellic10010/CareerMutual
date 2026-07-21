@@ -636,7 +636,7 @@ Evidence Passport 是单独的 Candidate-owned 数据边界。Candidate discover
 | `EmployerPreAnswerProjection` | Sealed Question、rolling Slot WIP、Queue depth、履约状态和匿名计数；不含 Candidate 卡片或 Claim |
 | `EmployerAnswerReviewProjection` | 匿名 Answer Evidence、逐份 Review 状态、Slot recycling、Advancement Cohort barrier 和真人动作 |
 | `CandidateOpportunityProjection` | Interest receipt、Queue policy/status、backed Slot availability、Opportunity pause/closure；不含其他 Candidate |
-| `CandidateDiscoveryProjection` | Candidate-only Passport 状态、岗位 discovery band、Evidence refs、bounded reason 与 still unknown；所有开放岗位仍可见 |
+| `CandidateDiscoveryProjection` | Candidate-only Passport 状态、岗位 discovery band、Evidence refs、bounded reason 与 still unknown；UI 默认 `Matched for you`，次级 `Explore all jobs` 保持所有开放岗位可访问 |
 | `CandidateProjection` | Reviewer、SLA、Application/Proof 状态、所选 Challenge、Outcome、Receipt |
 | `SyntheticAuditProjection` | 合成 Demo 的原始标签、传统排序和反事实 Crosswalk |
 
@@ -879,7 +879,8 @@ GPT 可以：
 - 推荐三个 Catalog Challenge ID；
 - 压缩已有 Evidence；
 - 明确输出未知或拒绝判断。
-- 为 Candidate 自己生成基于来源引用的岗位发现信号，而不隐藏岗位或影响 Employer 路径。
+- 为 Candidate 自己生成基于来源引用的岗位发现信号；信号可驱动默认 `Matched for you` 视图，但
+  `Explore all jobs` 必须保持全部开放岗位可访问，且不得影响 Employer 路径。
 
 GPT 不可以：
 

@@ -2,7 +2,7 @@
 
 ## Blind answer first, attention before labor
 
-**版本：** 1.6
+**版本：** 1.7
 **日期：** 2026-07-21
 **地位：** 规范性产品原则；产品、工程、AI、Demo 与 Agent 规则不得与本文冲突。
 
@@ -164,8 +164,11 @@ Passport source refs + public Job capabilities
 → Candidate 自己决定是否登记 Interest
 ```
 
-这个机制不是回答前的 Employer Matching。所有开放岗位始终可见；信号不得改变 Eligibility、
-Interest Queue、Answer Invitation、Attention Slot、Employer 审阅顺序或 Direct / Explore。Sarah
+这个机制不是回答前的 Employer Matching。Candidate Job Feed 使用两层视图：默认 `Matched for you`
+只显示 `EVIDENCE_CONNECTED | ADJACENT`、带有效旧连接的 `STALE` 岗位，以及 Candidate 已经进入
+Interest/Application 流程的岗位；次级 `Explore all jobs` 保持所有开放岗位可访问。缺少发现信号只
+影响默认发现视图，不能剥夺岗位访问或 Interest 权利。信号不得改变 Eligibility、Interest Queue、
+Answer Invitation、Attention Slot、Employer 审阅顺序或 Direct / Explore。Sarah
 在匿名回答被推进之前看不到 Passport、Snapshot、Signal 或 GPT 理由；通过后也只读取被授权的
 完整 Resume Snapshot，而不读取 Candidate-only discovery rationale。
 

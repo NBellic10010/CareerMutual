@@ -16,7 +16,7 @@ The main Candidate and Employer surfaces now execute this persistent causal chai
 ```text
 temporary persistent actor-bound session selected from seven synthetic Candidates or Sarah
 → optional Candidate-only Evidence Passport Snapshot
-→ evidence-linked Job discovery guidance while every open role remains visible
+→ a default evidence-linked Matched feed plus Explore all jobs, where every open role remains accessible
 → PostgreSQL-backed JobPost with an ordered multimodal Critical Challenge
 → public Candidate interest
 → funded Attention Slot and backed invitation

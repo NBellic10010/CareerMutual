@@ -265,7 +265,8 @@ interface CandidateJobDiscoveryPort {
 ```
 
 它只返回 `EVIDENCE_CONNECTED | ADJACENT | INSUFFICIENT_SOURCE`、input-bound Opportunity /
-Capability / Evidence refs、bounded reason 与 `still_unknown`。所有开放岗位始终可见。
+Capability / Evidence refs、bounded reason 与 `still_unknown`。默认 `Matched for you` 只消费有界
+连接，次级 `Explore all jobs` 保持所有开放岗位可访问；Signal 不构成访问控制。
 
 Legacy `buildMatchEdge(BuildMatchEdgeInputV2)` 保留为迁移期兼容接口，只能服务旧 Replay、数据迁移和回归测试。新 Application workflow、Employer Projection 和 UI 不得消费其输出。
 

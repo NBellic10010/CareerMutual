@@ -3,6 +3,39 @@
 import type { CandidateOpportunityFeedV2, RoleCategory } from "@onlyboth/contracts";
 import { useMemo, useState } from "react";
 
+export type CandidateFeedLayer = "MATCHED" | "ALL";
+
+type CandidateJobCard = CandidateOpportunityFeedV2["opportunities"][number];
+
+const ACTIVE_JOURNEY_STATES = new Set<CandidateJobCard["interest_state"]>([
+  "WAITING_FOR_BACKED_SLOT",
+  "BACKED_OFFERED",
+  "APPLICATION_ACTIVE",
+  "APPLICATION_SUBMITTED",
+  "REVIEWED",
+  "EMPLOYER_BREACH",
+]);
+
+export function belongsToMatchedCandidateFeed(job: CandidateJobCard): boolean {
+  const hasCurrentConnection = ["EVIDENCE_CONNECTED", "ADJACENT"].includes(job.discovery.status);
+  const hasStaleConnection =
+    job.discovery.status === "STALE" &&
+    (job.discovery.evidence_refs.length > 0 || job.discovery.capability_refs.length > 0);
+  return (
+    hasCurrentConnection ||
+    hasStaleConnection ||
+    ACTIVE_JOURNEY_STATES.has(job.interest_state) ||
+    job.active_answer_session_ref !== null
+  );
+}
+
+export function candidateJobsForFeedLayer(
+  jobs: readonly CandidateJobCard[],
+  layer: CandidateFeedLayer,
+): readonly CandidateJobCard[] {
+  return layer === "MATCHED" ? jobs.filter(belongsToMatchedCandidateFeed) : jobs;
+}
+
 const CATEGORY_LABELS: Record<RoleCategory, string> = {
   TECHNOLOGY: "Technology",
   FINANCE: "Finance",
@@ -25,15 +58,21 @@ export function CandidateHome({
   readonly feed: CandidateOpportunityFeedV2;
   readonly candidateLabel: string;
 }) {
+  const [feedLayer, setFeedLayer] = useState<CandidateFeedLayer>("MATCHED");
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<RoleCategory | "ALL">("ALL");
-  const categories = useMemo(
-    () => [...new Set(feed.opportunities.map((job) => job.role_category))],
+  const matchedJobs = useMemo(
+    () => candidateJobsForFeedLayer(feed.opportunities, "MATCHED"),
     [feed.opportunities],
+  );
+  const layerJobs = feedLayer === "MATCHED" ? matchedJobs : feed.opportunities;
+  const categories = useMemo(
+    () => [...new Set(layerJobs.map((job) => job.role_category))],
+    [layerJobs],
   );
   const visibleJobs = useMemo(() => {
     const normalized = query.trim().toLowerCase();
-    return feed.opportunities.filter(
+    return layerJobs.filter(
       (job) =>
         (category === "ALL" || job.role_category === category) &&
         (normalized.length === 0 ||
@@ -42,13 +81,20 @@ export function CandidateHome({
             .toLowerCase()
             .includes(normalized)),
     );
-  }, [category, feed.opportunities, query]);
+  }, [category, layerJobs, query]);
+
+  function chooseFeedLayer(layer: CandidateFeedLayer) {
+    setFeedLayer(layer);
+    setCategory("ALL");
+  }
 
   return (
     <main className="functional-shell">
       <section className="functional-hero compact-hero">
         <div>
-          <p className="eyebrow">{candidateLabel} / matched opportunities</p>
+          <p className="eyebrow">
+            {candidateLabel} / {feedLayer === "MATCHED" ? "matched for you" : "explore all jobs"}
+          </p>
           <h1>Apply only when attention is already there.</h1>
           <p>
             Registering interest is free. One Candidate Credit is consumed only after a backed
@@ -81,9 +127,54 @@ export function CandidateHome({
         </div>
       </section>
 
+      <section className="candidate-feed-router" aria-labelledby="candidate-feed-title">
+        <div className="candidate-feed-copy">
+          <p className="section-kicker">Two-layer opportunity feed</p>
+          <h2 id="candidate-feed-title">
+            {feedLayer === "MATCHED" ? "Start with a bounded connection." : "Keep the market open."}
+          </h2>
+          <p>
+            {feedLayer === "MATCHED"
+              ? "Evidence-linked roles appear here first. Any active Interest or Application stays pinned even when discovery becomes stale."
+              : "Browse every funded, open JobPost. A missing discovery signal never removes your right to express Interest."}
+          </p>
+        </div>
+        <div className="candidate-feed-tabs" role="tablist" aria-label="Opportunity feed layer">
+          <button
+            id="matched-feed-tab"
+            type="button"
+            role="tab"
+            aria-controls="candidate-feed-panel"
+            aria-selected={feedLayer === "MATCHED"}
+            tabIndex={feedLayer === "MATCHED" ? 0 : -1}
+            onClick={() => chooseFeedLayer("MATCHED")}
+          >
+            <span>Matched for you</span>
+            <strong>{matchedJobs.length}</strong>
+            <small>Evidence-linked</small>
+          </button>
+          <button
+            id="all-jobs-feed-tab"
+            type="button"
+            role="tab"
+            aria-controls="candidate-feed-panel"
+            aria-selected={feedLayer === "ALL"}
+            tabIndex={feedLayer === "ALL" ? 0 : -1}
+            onClick={() => chooseFeedLayer("ALL")}
+          >
+            <span>Explore all jobs</span>
+            <strong>{feed.opportunities.length}</strong>
+            <small>Nothing hidden</small>
+          </button>
+        </div>
+      </section>
+
       <section className="opportunity-controls" aria-label="Opportunity filters">
         <label>
-          <span>Search all {feed.opportunities.length} open roles</span>
+          <span>
+            Search {feedLayer === "MATCHED" ? matchedJobs.length : feed.opportunities.length}{" "}
+            {feedLayer === "MATCHED" ? "matched" : "open"} roles
+          </span>
           <input
             type="search"
             value={query}
@@ -97,7 +188,7 @@ export function CandidateHome({
             aria-pressed={category === "ALL"}
             onClick={() => setCategory("ALL")}
           >
-            All <span>{feed.opportunities.length}</span>
+            All <span>{layerJobs.length}</span>
           </button>
           {categories.map((value) => (
             <button
@@ -115,7 +206,18 @@ export function CandidateHome({
         </p>
       </section>
 
-      <section className="opportunity-list" aria-label="Open jobs with discovery guidance">
+      <section
+        className={`opportunity-list feed-layer-${feedLayer.toLowerCase()}`}
+        id="candidate-feed-panel"
+        key={feedLayer}
+        role="tabpanel"
+        aria-labelledby={feedLayer === "MATCHED" ? "matched-feed-tab" : "all-jobs-feed-tab"}
+        aria-label={
+          feedLayer === "MATCHED"
+            ? "Jobs matched through Candidate-only discovery"
+            : "All open jobs"
+        }
+      >
         {visibleJobs.map((job, index) => (
           <article className="job-row" key={job.opportunity_ref}>
             <span className="job-index">{String(index + 1).padStart(2, "0")}</span>
@@ -182,14 +284,31 @@ export function CandidateHome({
         ))}
         {visibleJobs.length === 0 ? (
           <div className="empty-opportunity-filter">
-            <strong>No role matches this local filter.</strong>
-            <p>Clear the search or choose All. No open JobPost has been hidden by GPT.</p>
+            <strong>
+              {feedLayer === "MATCHED"
+                ? "No bounded connection is ready for this view."
+                : "No role matches this local filter."}
+            </strong>
+            <p>
+              {feedLayer === "MATCHED"
+                ? "Your access is unchanged. Explore every open JobPost while discovery refreshes."
+                : "Clear the search or choose All. No open JobPost has been hidden by GPT."}
+            </p>
+            {feedLayer === "MATCHED" ? (
+              <button
+                className="secondary-button"
+                type="button"
+                onClick={() => chooseFeedLayer("ALL")}
+              >
+                Explore all jobs
+              </button>
+            ) : null}
           </div>
         ) : null}
       </section>
       <p className="product-disclosure">
-        Discovery guidance is not eligibility or Employer ranking. Credits are a rate limit, never a
-        bid, and all open jobs remain visible.
+        Matched for you is private discovery guidance, not eligibility or Employer ranking. Every
+        open JobPost remains accessible in Explore all jobs; Credits are a rate limit, never a bid.
       </p>
     </main>
   );

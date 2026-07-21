@@ -25,9 +25,10 @@ This file records OnlyBoth’s current implementation state and development hand
 - The functional demo now has seven allowlisted synthetic Candidate actors plus Sarah. `Start as`
   issues a distinct signed Session for the selected actor; each Candidate has an independent Credit
   account, Evidence Passport, immutable Snapshot, Candidate-only discovery projection, and Resume
-  Snapshot. The Candidate Feed still returns every open Job and uses signals only to explain
-  evidence connections and unknowns. Employer, Eligibility, Queue, Invitation, and Attention paths
-  cannot read these signals. Highest education is required, with an explicit no-formal-degree path.
+  Snapshot. The Candidate Feed now defaults to an evidence-linked `Matched for you` layer and keeps
+  every open Job accessible through `Explore all jobs`; active Candidate journeys remain pinned in
+  the default layer. Employer, Eligibility, Queue, Invitation, and Attention paths cannot read these
+  signals. Highest education is required, with an explicit no-formal-degree path.
 - The functional seed now publishes one primary engineering role and twenty additional synthetic
   cross-domain roles across twelve categories. Every Contract contains one ordered
   `critical-challenge@1` manifest; the corpus covers text, audio, image, and file Parts. Candidate
@@ -90,6 +91,93 @@ This file records OnlyBoth’s current implementation state and development hand
   Analyst smoke and calibrated 30-case release gate on the exact production-default
   `gpt-5.6-sol` configuration. Completed-cohort allocation and Deep Proof attention remain the next
   product slice; post-Review Resume Reveal is now implemented.
+
+---
+
+## 2026-07-21 — Candidate two-layer opportunity feed
+
+**Status:** Complete for the Candidate discovery presentation; structured forward-looking intent
+preferences remain a separate future slice
+
+### Goal
+
+Replace the misleading all-jobs-only Candidate homepage with a two-layer feed: an evidence-linked
+default view that feels genuinely matched, plus an explicit complete-market view that preserves the
+Candidate's access to every funded open JobPost.
+
+### Actual outcome
+
+- `/candidate` now opens on `Matched for you`. It includes `EVIDENCE_CONNECTED`, `ADJACENT`, stale
+  signals that retain source/capability refs, and every active Interest/Application journey.
+- `Explore all jobs` exposes the complete open feed. Switching layers resets the role category to
+  `All`, preserves the text query, updates counts and accessible tab state, and remounts the result
+  panel with a reduced-motion-safe transition.
+- Empty matched results provide a direct route to the complete market instead of implying rejection
+  or lack of ability.
+- The selector is Candidate-side presentation only. The API continues returning the complete
+  Candidate-owned projection; GPT still has no Eligibility, Queue, Invitation, Attention, Employer,
+  or access-control authority.
+
+### Files changed
+
+- `apps/web/src/components/functional/candidate-home.tsx`
+- `apps/web/src/components/functional/candidate-discovery-ui.test.tsx`
+- `apps/web/app/globals.css`
+- `AGENTS.md`
+- `README.md`
+- `OnlyBoth-产品精神.md`
+- `OnlyBoth-产品方案.md`
+- `OnlyBoth-工程设计.md`
+- `OnlyBoth-AI工程设计.md`
+- `tests/docs/agents-contract.sh`
+- `tests/docs/ai-engineering-design-contract.sh`
+- `tests/docs/product-spirit-contract.sh`
+- `test-reports/20260721T121010Z-two-layer-candidate-feed.log`
+- `HANDOFF.md`
+
+### Product and engineering decisions
+
+- Discovery may reduce first-screen noise without removing access: `Matched for you` is the default
+  layer and `Explore all jobs` is the complete secondary layer.
+- A discovery signal remains Candidate-private guidance, not hard Eligibility, Employer matching,
+  Queue ordering, or an AI ranking.
+- Ongoing Candidate journeys remain in the default layer even if the underlying discovery signal is
+  missing or stale, so a presentation filter cannot strand an application.
+
+### Tests added or updated
+
+- Updated the Candidate discovery component test to assert that an insufficient-source job is absent
+  from the default rendered panel while the complete-market tab remains visible.
+- Added selector tests for connected, stale-source, active-journey, insufficient-source, matched, and
+  all-jobs behavior.
+- Updated documentation contracts to require complete JobPost access through the secondary feed.
+
+### Verification and report
+
+- `pnpm --filter @onlyboth/web typecheck` — passed.
+- `pnpm --filter @onlyboth/web test` — 13 files and 43 tests passed.
+- `pnpm test:docs` — 48 + 38 + 86 assertions passed.
+- `pnpm check` — passed: 233 Unit, 39 Integration, 25 Security, and 7 Replay tests; two pre-existing
+  conditional Integration tests remained skipped.
+- `pnpm build` — passed with the Next.js optimized production build.
+- `git diff --check` — passed.
+- `rg -n "\.(only|skip)\(" tests apps packages` — no matches.
+- Complete report: `test-reports/20260721T121010Z-two-layer-candidate-feed.log`.
+
+### Checks not run and remaining risk
+
+- PostgreSQL destructive suites, MinIO integration, Playwright, and LIVE AI evals were not rerun
+  because this slice changes Candidate-side presentation and documentation only.
+- `Matched for you` currently represents Evidence Passport connections, not a complete
+  forward-looking Candidate Intent Profile. Calling it intention matching beyond this bounded
+  evidence meaning would overstate the current data model.
+- No migration, API schema, environment variable, Worker mode, AI prompt, or provider model changed.
+
+### Next action
+
+Design a versioned Candidate Intent Profile for desired role direction, work mode, location,
+compensation, and explicit exclusions, then combine its deterministic constraints with the existing
+evidence-linked explanation without giving GPT access-control authority.
 
 ---
 

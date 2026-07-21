@@ -82,7 +82,7 @@ require_text "$document" "CandidateAnswerAssistantPort" "design defines the disc
 require_text "$document" "VoiceTranscriptionPort" "design defines the Voice Memo transcription boundary"
 require_text "$document" "deriveCandidateJobSignals" "design defines Candidate-only job discovery"
 require_text "$document" "gpt-5.6-luna" "design pins the Candidate discovery model"
-require_text "$document" "所有开放岗位始终可见" "design forbids discovery-based job hiding"
+require_text "$document" '`Explore all jobs` 保持所有开放岗位可访问' "design preserves complete job access through the secondary feed"
 require_text "$document" "绝不自动切回预载 Snapshot 或 Golden Fixture" "design requires LIVE discovery to fail closed"
 require_text "$document" "gpt-5.6-terra" "design pins the Candidate assistant model"
 require_text "$document" "gpt-4o-mini-transcribe" "design pins the transcription model"

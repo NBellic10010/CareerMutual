@@ -55,8 +55,9 @@ A Candidate may optionally publish a private Evidence Passport for Candidate-sid
 `deriveCandidateJobSignals` may connect sanitized synthetic source refs to public Job Contract
 capabilities, but its output is guidance for that Candidate only. It MUST NOT enter Employer
 projections, Eligibility, Interest Queue order, Answer Invitations, Attention allocation, or human
-review. Every open JobPost remains visible and the Candidate remains the only actor who can register
-Interest. The Passport MUST contain an explicit highest-education record, including the valid
+review. The Candidate Feed defaults to an evidence-linked `Matched for you` layer, while every open
+JobPost remains accessible through the secondary `Explore all jobs` layer; the Candidate remains the
+only actor who can register Interest. The Passport MUST contain an explicit highest-education record, including the valid
 `NO_FORMAL_DEGREE` pathway. Discovery uses deterministic precedence rather than a score: education
 precedes work/credential evidence through the inclusive two-year graduation boundary; after that,
 work/credentials precede education. Institution identity is excluded from the AI input, and absence
@@ -270,8 +271,10 @@ reviewed anonymous answer evidence in a completed Advancement Cohort
   do not return it.
 - Candidate claims may support candidate-side routing or later audit, but they are not an Employer selection input and are not verified ability evidence.
 - Candidate-side discovery may link sanitized Passport source refs to public capability refs as a
-  bounded hypothesis. It cannot hide jobs, set Eligibility, reorder Interests, allocate Slots, or
-  describe `SYNTHETIC_SOURCE_ATTACHED` as independently verified.
+  bounded hypothesis. The UI may use those connections for the default `Matched for you` layer, but
+  `Explore all jobs` must keep every open JobPost accessible. Discovery cannot set Eligibility,
+  reorder Interests, allocate Slots, or describe `SYNTHETIC_SOURCE_ATTACHED` as independently
+  verified.
 - Demo actor switching MUST issue a signed allowlisted actor Session; changing a client-side label
   is not authentication. Each synthetic Candidate must retain an independent Credit account,
   Passport, discovery projection, and Resume Snapshot. The operator-only identity chooser must not

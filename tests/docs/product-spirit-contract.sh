@@ -90,7 +90,7 @@ require_text "$doctrine" '主 `/candidate` 与 `/employer` 入口已经执行本
 require_text "$doctrine" "Candidate Application Credit 是频率与并发约束，不是 Bid" "doctrine defines Candidate Credit as a rate limit"
 require_text "$doctrine" '`PLATFORM_ASSISTANT_ALLOWED`' "doctrine permits only the disclosed platform assistant policy"
 require_text "$doctrine" "Candidate Evidence Passport 与岗位发现" "doctrine defines Candidate-only Evidence Passport discovery"
-require_text "$doctrine" "所有开放岗位始终可见" "doctrine forbids Passport-based job hiding"
+require_text "$doctrine" '`Explore all jobs` 保持所有开放岗位可访问' "doctrine preserves complete job access through the secondary feed"
 require_text "$doctrine" "Employer、Eligibility、Queue 与 Attention 代码不读取这些表" "doctrine prevents discovery signals from becoming pre-answer selection"
 require_text "$doctrine" "Critical Challenge 是一个整体" "doctrine defines the role Challenge as one whole"
 require_text "$doctrine" "TEXT + AUDIO + IMAGE + FILE" "doctrine permits all four Challenge part types"
