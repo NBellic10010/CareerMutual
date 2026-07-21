@@ -1,0 +1,121 @@
+Timestamp (UTC): 2026-07-21T21:30:44Z
+Scope: Rebrand README prose to CareerMutual, translate all six Chinese product/engineering documents into English, migrate document references and contract tests, and prepare main for GitHub publication.
+Git branch / base commit: main / f2e1f8d
+Environment / runtime mode: local documentation and regression validation; no database reset, deployment, or business-state mutation.
+
+Files translated and renamed:
+- OnlyBoth-产品精神.md -> CareerMutual-Product-Doctrine.md
+- OnlyBoth-产品方案.md -> CareerMutual-Product-Plan.md
+- OnlyBoth-工程设计.md -> CareerMutual-Engineering-Design.md
+- OnlyBoth-AI工程设计.md -> CareerMutual-AI-Engineering-Design.md
+- OnlyBoth-赛事评估与竞品研究.md -> CareerMutual-Hackathon-Evaluation-and-Competitive-Research.md
+- OnlyBoth-运行代码迁移计划-TEMP.md -> CareerMutual-Runtime-Code-Migration-Plan-TEMP.md
+
+Translation method:
+- Each source was translated with the locally configured OpenAI credential and gpt-5.6-luna.
+- The credential and provider response contents were not written to this report.
+- Product prose uses CareerMutual; lowercase onlyboth runtime identifiers, @onlyboth package names,
+  prompt/schema IDs, database identifiers, API paths, code, and commands remain unchanged.
+- The initial one-request Product Plan translation preserved only headings through section 8.2.
+  It was rejected before acceptance and replaced by a top-level-section chunked translation.
+
+Command: structural parity audit against the six source documents in Git HEAD
+Exit code: 0
+Relevant output:
+Product Doctrine: headings 18/18; fences 20/20; bullets 54/54; numbered 35/35; table rows 4/4
+Product Plan: headings 129/129; fences 84/84; bullets 433/433; numbered 84/84; table rows 126/126
+Engineering Design: headings 69/69; fences 96/96; bullets 248/248; numbered 39/39; table rows 75/75
+AI Engineering Design: headings 75/75; fences 76/76; bullets 272/272; numbered 20/20; table rows 42/42
+Hackathon/Competitive Research: headings 63/63; fences 0/0; bullets 119/119; numbered 38/38; table rows 110/110
+Runtime Migration Plan: headings 45/45; fences 80/80; bullets 104/104; numbered 39/39; table rows 22/22
+
+Command: pnpm exec prettier --write README.md AGENTS.md HANDOFF.md apps/worker/README.md CareerMutual-*.md tests/docs/*.sh
+Exit code: 2
+Relevant output:
+- Markdown files were formatted successfully.
+- Prettier could not infer a parser for the three .sh document-contract files.
+- No shell file content was changed by Prettier; the shell scripts were subsequently exercised by pnpm test:docs and pnpm check.
+
+Command: pnpm exec prettier --check tests/docs/agents-contract.sh
+Exit code: 2
+Relevant output:
+[error] No parser could be inferred for file tests/docs/agents-contract.sh.
+This confirms the prior formatter failure is a tool/parser limitation, not a shell syntax or contract-test failure.
+
+Command: pnpm test:docs (first translated-contract run)
+Exit code: 1
+Relevant output:
+- 48/49 Agent-contract checks passed; HANDOFF English scan treated a middle-dot UI separator as Han script.
+- The separator was replaced with an em dash.
+
+Command: pnpm test:docs (second translated-contract run)
+Exit code: 1
+Relevant output:
+- Agent contract passed 49/49.
+- AI design contract had two fixed-string mismatches caused by translated line wrapping.
+- Patterns were narrowed to the same invariant-bearing English clauses.
+
+Command: pnpm test:docs (third translated-contract run)
+Exit code: 1
+Relevant output:
+- Agent contract passed 49/49; AI design contract passed 40/40.
+- Product-spirit contract had two fixed-string mismatches caused by translated line wrapping.
+- Patterns were narrowed without weakening the asserted semantics.
+
+Command: pnpm test:docs (final standalone run)
+Exit code: 0
+Relevant output:
+- Agent contract: 49 passed, 0 failed.
+- AI engineering design contract: 40 passed, 0 failed.
+- Product doctrine/design contract: 87 passed, 0 failed.
+
+Command: pnpm check
+Exit code: 0
+Relevant output:
+- Formatting: passed.
+- ESLint: passed.
+- TypeScript: passed across the workspace.
+- Unit: 51 files, 259 tests passed.
+- Integration: 12 files passed, 1 file skipped; 46 tests passed, 2 skipped.
+- Security: 6 files, 25 tests passed.
+- Replay: 2 files, 7 tests passed.
+- Documentation contracts: 49 + 40 + 87 passed, 0 failed.
+
+Command: git diff --check
+Exit code: 0
+Relevant output: none.
+
+Command: rg -n '\.(only|skip)\(' tests apps packages
+Exit code: 1, expected clean scan result.
+Relevant output: no .only/.skip markers found.
+
+Command: Han-script, legacy prose-brand, old Chinese filename, and authoritative Markdown reference scans
+Exit code: 0
+Relevant output:
+- No Han-script residue in current authoritative Markdown or document-contract scripts.
+- No uppercase OnlyBoth prose brand in current Markdown.
+- No old Chinese document filename outside immutable historical test reports.
+- All CareerMutual Markdown references resolve to present files.
+
+Corrected validation command:
+- The first combined reference scan exited 1 because a zsh scalar did not split newline-delimited
+  filenames in a `for` loop and passed all six filenames to one `test -f` call.
+- The scan was rewritten as `while IFS= read -r ref`; it exited 0 and confirmed every referenced
+  CareerMutual Markdown file exists.
+- A subsequent legacy-brand scan correctly found the explanatory old brand name in this new
+  Handoff entry. The prose was reworded without changing history, and the final scan exited 0.
+- The first credential scan used an overbroad `OPENAI_API_KEY=<non-space>` expression and therefore
+  treated documented `OPENAI_API_KEY=...` command placeholders as secrets. A corrected scan using
+  real GitHub/OpenAI token prefixes and minimum token lengths exited 0 with no matches.
+
+Summary:
+- Passed: six-document structural parity, final formatting, lint, typecheck, unit, integration,
+  security, Replay, documentation contracts, English-only scans, reference scans, diff check, and
+  prohibited test-marker scan.
+- Failed then corrected: one overlong translation omission, one unsupported shell-formatting
+  attempt, three fixed-string documentation-contract runs, and three validation-command issues.
+  All final gates passed.
+- Skipped: 2 pre-existing integration tests reported by the existing suite; no new skip was added.
+- Blocked: none.
+- Known pre-existing failures: none relevant to this documentation migration.
+- Deployment and environment changes: none.

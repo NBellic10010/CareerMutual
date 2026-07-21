@@ -1,4 +1,4 @@
-# OnlyBoth Worker
+# CareerMutual Worker
 
 The Claim-first MatchEdge worker and pre-answer Direct allocation are retained only as a legacy
 migration/regression path. The target architecture in the root product doctrine commits Blind

@@ -1,17 +1,17 @@
 # HANDOFF
 
-This file records OnlyBoth’s current implementation state and development handoffs. Put the newest entry first.
+This file records CareerMutual’s current implementation state and development handoffs. Put the newest entry first.
 
 ## Current state
 
 - Phase: the main Candidate and Employer routes now run the persistent blind-answer-first product
   slice through mandatory anonymous Human Review and per-Slot settlement. The Claim-first
   Matching flow is retained only as a historical regression surface.
-- Authoritative product doctrine: `OnlyBoth-产品精神.md`.
-- Authoritative product document: `OnlyBoth-产品方案.md`.
-- Authoritative engineering document: `OnlyBoth-工程设计.md`.
-- AI implementation blueprint: `OnlyBoth-AI工程设计.md`.
-- Temporary runtime cutover plan: `OnlyBoth-运行代码迁移计划-TEMP.md`.
+- Authoritative product doctrine: `CareerMutual-Product-Doctrine.md`.
+- Authoritative product document: `CareerMutual-Product-Plan.md`.
+- Authoritative engineering document: `CareerMutual-Engineering-Design.md`.
+- AI implementation blueprint: `CareerMutual-AI-Engineering-Design.md`.
+- Temporary runtime cutover plan: `CareerMutual-Runtime-Code-Migration-Plan-TEMP.md`.
 - Agent execution contract: `AGENTS.md`.
 - Runnable causal order: demo-only persistent role session; PostgreSQL JobPost and free Interest;
   funded reusable Attention Slot; versioned Candidate consent and Application Credit consumption;
@@ -110,6 +110,93 @@ This file records OnlyBoth’s current implementation state and development hand
   `SYNTHETIC_SOURCE_ATTACHED` or keep the Passport explicitly self-attested for Build Week.
   Completed-cohort allocation and Deep Proof attention remain the next product slice; post-Review
   Resume Reveal is already implemented.
+
+---
+
+## 2026-07-21 — CareerMutual English documentation migration
+
+**Status:** Complete
+
+### Goal
+
+Replace the README prose brand with CareerMutual, translate every Chinese product and engineering
+document into English, migrate all active references and document contracts to English filenames,
+and publish the resulting `main` branch to GitHub.
+
+### Actual outcome
+
+- Renamed and fully translated all six Chinese product/engineering documents:
+  - `CareerMutual-Product-Doctrine.md`
+  - `CareerMutual-Product-Plan.md`
+  - `CareerMutual-Engineering-Design.md`
+  - `CareerMutual-AI-Engineering-Design.md`
+  - `CareerMutual-Hackathon-Evaluation-and-Competitive-Research.md`
+  - `CareerMutual-Runtime-Code-Migration-Plan-TEMP.md`
+- Updated README and Worker README prose branding to CareerMutual. Lowercase `onlyboth` runtime
+  identifiers and `@onlyboth` package names remain unchanged for compatibility.
+- Updated `AGENTS.md`, the current and historical Handoff references, and all three documentation
+  contract suites to the new English filenames and invariant-bearing English clauses.
+- Rejected an incomplete first Product Plan translation that stopped after section 8.2. Re-ran the
+  source in top-level-section chunks and verified exact structural parity across all six documents.
+- Current authoritative Markdown and document-contract scripts contain no Han-script prose, legacy
+  uppercase project-brand prose, or active references to the deleted Chinese filenames. Immutable
+  historical test reports were intentionally not rewritten.
+
+### Files changed
+
+- `README.md`, `apps/worker/README.md`, `AGENTS.md`, and `HANDOFF.md`
+- Six translated `CareerMutual-*.md` documents replacing the six legacy Chinese-named documents
+- `tests/docs/agents-contract.sh`
+- `tests/docs/ai-engineering-design-contract.sh`
+- `tests/docs/product-spirit-contract.sh`
+- `test-reports/20260721T213044Z-careermutual-english-documentation.log`
+
+### Product and engineering decisions
+
+- This is a language, brand, and documentation-path migration only. Product invariants, runtime
+  APIs, schemas, migrations, prompts, database identifiers, package namespaces, Railway services,
+  and AI business authority are unchanged.
+- English translations preserve runtime identifiers exactly while using CareerMutual for the prose
+  product brand.
+- Historical test reports remain immutable evidence and may still contain the old filenames.
+
+### Tests and verification
+
+- Six-document structural audit: exact source/translation parity for headings, fenced blocks,
+  bullets, numbered items, and table rows.
+- Final `pnpm test:docs`: 49 Agent-contract, 40 AI-design, and 87 doctrine/design checks passed.
+- `pnpm check`: passed formatting, lint, typecheck, 259 unit tests, 46 integration tests, 25 security
+  tests, 7 Replay tests, and all documentation contracts. The existing integration suite reported
+  two skipped tests; no new skip was introduced.
+- Han-script, legacy prose-brand, old filename, and Markdown-reference scans: passed.
+- `git diff --check`: passed.
+- Prohibited `.only/.skip` marker scan: clean.
+- Full evidence: `test-reports/20260721T213044Z-careermutual-english-documentation.log`.
+
+### Corrected validation issues
+
+- The first one-request Product Plan translation omitted later chapters despite returning a
+  completed provider status; chapter-count validation caught it before acceptance.
+- Prettier cannot infer a parser for the `.sh` contract files. Markdown formatting succeeded, and
+  the shell contracts themselves passed through both `pnpm test:docs` and `pnpm check`.
+- Three intermediate document-contract runs exposed a middle-dot script-classification edge case
+  and fixed-string line-wrap mismatches. The final clauses assert the same semantics and all checks
+  pass.
+
+### Checks not run
+
+- PostgreSQL/MinIO-specific suites, browser E2E, LIVE semantic evals, and Railway deployment were not
+  rerun because no application behavior, persistence, provider configuration, or deployment changed.
+
+### Known issues, risks, and blockers
+
+- No blocker remains. As with any large language translation, future product edits should be made
+  directly in the English authoritative documents and reviewed alongside their contract clauses.
+- No environment variable or migration changed.
+
+### Next action
+
+Use the new `CareerMutual-*.md` filenames in all future product and engineering work.
 
 ---
 
@@ -765,7 +852,7 @@ display calibration before recording the next pitch walkthrough.
 
 ### Outcome
 
-- Replaced every user-visible `OnlyBoth` brand literal in the Web UI and page metadata with
+- Replaced every user-visible `CareerMutual` brand literal in the Web UI and page metadata with
   `CareerMutual`; internal package scopes, cookie names, database identifiers, and historical
   product documents remain unchanged because this request was explicitly UI-scoped.
 - Added a reusable `CareerMutualTrademark` component with a briefcase/check `HIRED` stamp. The
@@ -884,9 +971,9 @@ pre-answer selection, scores, ranks, or Queue effects.
 - `package.json`
 - `AGENTS.md`
 - `README.md`
-- `OnlyBoth-产品精神.md`
-- `OnlyBoth-产品方案.md`
-- `OnlyBoth-工程设计.md`
+- `CareerMutual-Product-Doctrine.md`
+- `CareerMutual-Product-Plan.md`
+- `CareerMutual-Engineering-Design.md`
 - `test-reports/20260721T143221Z-six-candidate-match-lab.log`
 - `HANDOFF.md`
 
@@ -1057,7 +1144,7 @@ role-specific comic character to each Home without obscuring content or weakenin
   UI copy, contain no readable text or logos, and are decorative to assistive technology.
 - Role-aware header tint, focus color, hero emphasis, primary action treatment, discovery panels,
   Feed controls, and attention rails now follow the signed role. Public pages retain the combined
-  coral/teal OnlyBoth identity.
+  coral/teal CareerMutual identity.
 - Desktop heroes preserve the character at the right edge. Tablet and mobile overlays increase text
   protection, reduce artwork opacity, and keep the character visible near the lower edge.
 - The source PNGs were generated through the built-in image-generation path, visually inspected,
@@ -1233,10 +1320,10 @@ Candidate's access to every funded open JobPost.
 - `apps/web/app/globals.css`
 - `AGENTS.md`
 - `README.md`
-- `OnlyBoth-产品精神.md`
-- `OnlyBoth-产品方案.md`
-- `OnlyBoth-工程设计.md`
-- `OnlyBoth-AI工程设计.md`
+- `CareerMutual-Product-Doctrine.md`
+- `CareerMutual-Product-Plan.md`
+- `CareerMutual-Engineering-Design.md`
+- `CareerMutual-AI-Engineering-Design.md`
 - `tests/docs/agents-contract.sh`
 - `tests/docs/ai-engineering-design-contract.sh`
 - `tests/docs/product-spirit-contract.sh`
@@ -1297,7 +1384,7 @@ evidence-linked explanation without giving GPT access-control authority.
 
 ### Goal
 
-Commit the complete OnlyBoth workspace as one coherent repository snapshot while keeping local
+Commit the complete CareerMutual workspace as one coherent repository snapshot while keeping local
 credentials, sessions, private keys, database copies, browser authentication state, and runtime
 volumes outside Git.
 
@@ -1404,7 +1491,7 @@ record an independent Human Review, and preserve the Resume Reveal boundary.
 - `tests/puppeteer/multi-candidate-live-demo.ts`
 - `tests/unit/synthetic-demo-fixtures.test.ts`
 - `tests/integration/workspace-shape.test.ts`
-- `package.json`, `README.md`, `OnlyBoth-产品方案.md`, `OnlyBoth-工程设计.md`, and `HANDOFF.md`
+- `package.json`, `README.md`, `CareerMutual-Product-Plan.md`, `CareerMutual-Engineering-Design.md`, and `HANDOFF.md`
 
 ### Product and engineering decisions
 
@@ -1473,7 +1560,7 @@ Interest → Answer → behavior evidence → LIVE AI analysis → Sarah Human R
   Recruiter pre-answer projection.
 - Candidate routes now use the signed actor rather than hard-coded Candidate 42 hard-fact refs or
   headings. The app breadcrumb shows the active actor, for example
-  `OnlyBoth / Candidate 17 · Maya Patel`, and changes to `Recruiter · Sarah Chen` after switching.
+  `CareerMutual / Candidate 17 — Maya Patel`, and changes to `Recruiter — Sarah Chen` after switching.
 - The functional reset creates six independent Candidate Credit accounts, Passport Drafts and
   Snapshots, Candidate-only preloaded discovery signals, and Resume Snapshots. Candidate 42 retains
   the first backed Offer for existing regressions; Candidate 17 receives the second Slot only after
@@ -1541,7 +1628,7 @@ top breadcrumb/navigation follow the active signed role.
 - Added `/employer/candidates`, which queries only reviewer-authorized Reveals and renders one full
   Resume per page. The Human Review receipt appears before identity, education, experience,
   credentials, skills, and contact data. The sequential review projection still has no Resume join.
-- The sticky App Shell now renders `OnlyBoth / Candidate` or `OnlyBoth / Recruiter` from the signed
+- The sticky App Shell now renders `CareerMutual / Candidate` or `CareerMutual / Recruiter` from the signed
   role. Candidate navigation contains Opportunities and Evidence Passport; Recruiter navigation
   contains JobPosts, Revealed Candidates, and Audit. Logged-out navigation contains only Sign in.
 - Migration 0012 safely backfills required education while preserving the Snapshot immutable
@@ -1636,8 +1723,8 @@ from the Employer review projection.
 - `package.json`
 - `tsconfig.tests.json`
 - `README.md`
-- `OnlyBoth-AI工程设计.md`
-- `OnlyBoth-工程设计.md`
+- `CareerMutual-AI-Engineering-Design.md`
+- `CareerMutual-Engineering-Design.md`
 - `test-reports/20260721T084446Z-gpt-5p6-luna-worker-ui.log`
 - `HANDOFF.md`
 
@@ -1756,7 +1843,7 @@ was not run
 
 ### Goal
 
-Adopt the clarified product boundary that OnlyBoth promises résumé-label-blind first-round judgment,
+Adopt the clarified product boundary that CareerMutual promises résumé-label-blind first-round judgment,
 not the absence of anonymous Answer or disclosed process assessment. Add red/yellow/green behavior
 signals, a Good/Bad verdict for one sealed Answer, and source-linked language analysis to the
 sequential Employer review experience without converting them into Candidate ranking or automatic
@@ -1884,7 +1971,7 @@ Candidate overall score. Keep production models unchanged.
 
 - Updated Candidate discovery and Employer Analyst LIVE adapters, Prompts, deterministic error
   mapping/diagnostics, unit tests, and LIVE eval reporting.
-- Updated `OnlyBoth-AI工程设计.md`, this handoff, and the redacted test report. Product semantics,
+- Updated `CareerMutual-AI-Engineering-Design.md`, this handoff, and the redacted test report. Product semantics,
   contracts, database schema, runtime environment variables, and Worker production model policy
   did not change.
 
@@ -2004,7 +2091,7 @@ Synthetic or Golden fallback.
 
 - `packages/ai/src/employer-review-analyst-adapter.ts`
 - `packages/ai/src/employer-review-analyst-adapter.test.ts`
-- `OnlyBoth-AI工程设计.md`
+- `CareerMutual-AI-Engineering-Design.md`
 - `.env.example` was sanitized; ignored `.env.local` holds the temporary runtime value and is not
   an acceptance artifact.
 - `test-reports/20260720T223701Z-live-ai-quota-bringup.log`
@@ -2994,10 +3081,10 @@ are actually seen while preserving bounded Employer WIP and the no-unbacked-labo
 
 ### Files changed
 
-- Product authority: `OnlyBoth-产品精神.md`, `OnlyBoth-产品方案.md`.
-- Engineering authority: `OnlyBoth-工程设计.md`, `OnlyBoth-AI工程设计.md`.
-- Implementation planning and evaluation: `OnlyBoth-运行代码迁移计划-TEMP.md`,
-  `OnlyBoth-赛事评估与竞品研究.md`.
+- Product authority: `CareerMutual-Product-Doctrine.md`, `CareerMutual-Product-Plan.md`.
+- Engineering authority: `CareerMutual-Engineering-Design.md`, `CareerMutual-AI-Engineering-Design.md`.
+- Implementation planning and evaluation: `CareerMutual-Runtime-Code-Migration-Plan-TEMP.md`,
+  `CareerMutual-Hackathon-Evaluation-and-Competitive-Research.md`.
 - Repository guidance: `AGENTS.md`, `README.md`, `apps/worker/README.md`, and this handoff.
 - Documentation contracts: `tests/docs/agents-contract.sh` and
   `tests/docs/product-spirit-contract.sh`.
@@ -3113,7 +3200,7 @@ Candidate Opportunity discovery and staged work-visibility boundary.
 
 ### Files changed
 
-- Added `OnlyBoth-运行代码迁移计划-TEMP.md`.
+- Added `CareerMutual-Runtime-Code-Migration-Plan-TEMP.md`.
 - Updated `tests/docs/product-spirit-contract.sh` with migration-plan existence, authority,
   Candidate visibility, review barrier, AI timing, consistency, legacy cutover, target allocation,
   facts-only reset, and acceptance-gate assertions.
@@ -3141,7 +3228,7 @@ Candidate Opportunity discovery and staged work-visibility boundary.
 
 ### Verification and report
 
-- `pnpm exec prettier --check OnlyBoth-运行代码迁移计划-TEMP.md HANDOFF.md` → Passed before
+- `pnpm exec prettier --check CareerMutual-Runtime-Code-Migration-Plan-TEMP.md HANDOFF.md` → Passed before
   the final handoff update.
 - `pnpm test:docs` → Passed: 31 agent-contract, 22 AI-design, and 41 product/migration assertions.
 - Final repository checks and their actual output are stored in:
@@ -3194,7 +3281,7 @@ required anonymous answers have been recorded and individually reviewed.
 
 ### Actual outcome
 
-- Added `OnlyBoth-产品精神.md` as the highest-level product doctrine. It fixes the causal order
+- Added `CareerMutual-Product-Doctrine.md` as the highest-level product doctrine. It fixes the causal order
   and defines five non-negotiable invariants covering pre-funded review, recorded work,
   mandatory review completion, delayed pedigree reveal, and settlement backpressure.
 - Reframed attention as two separate commitments: a pre-answer Blind Answer Review obligation
@@ -3214,11 +3301,11 @@ required anonymous answers have been recorded and individually reviewed.
 
 ### Files changed
 
-- New doctrine: `OnlyBoth-产品精神.md`.
-- Product and evaluation: `OnlyBoth-产品方案.md` and
-  `OnlyBoth-赛事评估与竞品研究.md`.
-- Engineering and AI architecture: `OnlyBoth-工程设计.md` and
-  `OnlyBoth-AI工程设计.md`.
+- New doctrine: `CareerMutual-Product-Doctrine.md`.
+- Product and evaluation: `CareerMutual-Product-Plan.md` and
+  `CareerMutual-Hackathon-Evaluation-and-Competitive-Research.md`.
+- Engineering and AI architecture: `CareerMutual-Engineering-Design.md` and
+  `CareerMutual-AI-Engineering-Design.md`.
 - Repository guidance: `AGENTS.md`, `README.md`, `apps/worker/README.md`, and this handoff.
 - Documentation contracts: `tests/docs/agents-contract.sh`,
   `tests/docs/ai-engineering-design-contract.sh`, and the new
@@ -3364,7 +3451,7 @@ Candidate 42 acceptance, Recorded Stage A, and the existing Sarah Challenge/Stag
   responsive CSS.
 - Acceptance: Matching unit, security, deterministic eval, PostgreSQL, and Playwright tests;
   existing Challenge tests and migration expectations were updated for the new schema.
-- Documentation: `README.md`, `OnlyBoth-工程设计.md`, `OnlyBoth-AI工程设计.md`, and this handoff.
+- Documentation: `README.md`, `CareerMutual-Engineering-Design.md`, `CareerMutual-AI-Engineering-Design.md`, and this handoff.
 
 ### Product and engineering decisions
 
@@ -3483,7 +3570,7 @@ remove the environment blocker from the Candidate 42 database and browser accept
 - `apps/web/next.config.ts`
 - `packages/application/src/commands/select-human-challenge.ts`
 - `tests/unit/select-human-challenge.test.ts`
-- `OnlyBoth-工程设计.md`
+- `CareerMutual-Engineering-Design.md`
 - `test-reports/20260719T085150Z-postgres-test-database.log`
 - `HANDOFF.md`
 
@@ -3736,8 +3823,8 @@ operations, Label Veil, human authority, and truthful Golden Replay.
 
 ### Files changed
 
-- `OnlyBoth-AI工程设计.md`
-- `OnlyBoth-工程设计.md`
+- `CareerMutual-AI-Engineering-Design.md`
+- `CareerMutual-Engineering-Design.md`
 - `README.md`
 - `package.json`
 - `tests/docs/ai-engineering-design-contract.sh`
@@ -3816,7 +3903,7 @@ Candidate Stage B projection change.
 
 ### Goal
 
-Create the repository scaffold described by the current OnlyBoth engineering plan, including the two-process monorepo, privacy-separated role views, Golden Replay cold open, core Domain boundaries, adapter ports, tests, retained verification output, and handoff.
+Create the repository scaffold described by the current CareerMutual engineering plan, including the two-process monorepo, privacy-separated role views, Golden Replay cold open, core Domain boundaries, adapter ports, tests, retained verification output, and handoff.
 
 ### Actual outcome
 

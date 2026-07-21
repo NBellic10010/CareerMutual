@@ -7,9 +7,9 @@ This file applies to the repository root and every descendant directory. Every a
 Before changing the repository, read these sources in order:
 
 1. `AGENTS.md`: stable execution rules for this repository;
-2. `OnlyBoth-产品精神.md`: normative blind-answer-first product doctrine;
-3. `OnlyBoth-产品方案.md`: authoritative product semantics and product invariants;
-4. the complete relevant sections of `OnlyBoth-工程设计.md`: architecture, domain, privacy, and demo behavior;
+2. `CareerMutual-Product-Doctrine.md`: normative blind-answer-first product doctrine;
+3. `CareerMutual-Product-Plan.md`: authoritative product semantics and product invariants;
+4. the complete relevant sections of `CareerMutual-Engineering-Design.md`: architecture, domain, privacy, and demo behavior;
 5. `HANDOFF.md`: current implementation state, unresolved work, recent verification, and risks;
 6. all source files, tests, migrations, prompts, fixtures, and test reports relevant to the task.
 
@@ -17,7 +17,7 @@ Do not revive or implement the dating, social, Shared Table, or generic AI-inter
 
 ## 2. Project mission
 
-OnlyBoth is a label-blind proof and Attention Escrow mechanism for hiring. It addresses two errors produced by resume-first screening:
+CareerMutual is a label-blind proof and Attention Escrow mechanism for hiring. It addresses two errors produced by resume-first screening:
 
 - **False Positive:** strong resume labels consume expensive human interview time even when the candidate cannot handle the role-specific risk;
 - **False Negative:** a non-traditional candidate loses access before producing relevant work evidence.
@@ -78,9 +78,9 @@ Resolve conflicts in this order:
 
 1. the user’s explicit requirements for the current task;
 2. this `AGENTS.md`;
-3. the blind-answer-first doctrine in `OnlyBoth-产品精神.md`;
-4. product invariants and confirmed decisions in `OnlyBoth-产品方案.md`;
-5. engineering boundaries in `OnlyBoth-工程设计.md`;
+3. the blind-answer-first doctrine in `CareerMutual-Product-Doctrine.md`;
+4. product invariants and confirmed decisions in `CareerMutual-Product-Plan.md`;
+5. engineering boundaries in `CareerMutual-Engineering-Design.md`;
 6. current implementation state recorded in `HANDOFF.md`;
 7. the behavior of the existing code, tests, and fixtures.
 

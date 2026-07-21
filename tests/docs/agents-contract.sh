@@ -55,14 +55,7 @@ require_english_prose() {
   local path="$1"
   local description="$2"
 
-  if sed \
-    -e 's/OnlyBoth-产品方案\.md//g' \
-    -e 's/OnlyBoth-产品精神\.md//g' \
-    -e 's/OnlyBoth-工程设计\.md//g' \
-    -e 's/OnlyBoth-AI工程设计\.md//g' \
-    -e 's/OnlyBoth-赛事评估与竞品研究\.md//g' \
-    -e 's/OnlyBoth-运行代码迁移计划-TEMP\.md//g' \
-    "$repo_root/$path" | rg --quiet --pcre2 '\p{Han}'; then
+  if rg --quiet --pcre2 '\p{Han}' "$repo_root/$path"; then
     fail "$description (found Han-script prose in $path)"
   else
     pass "$description"
@@ -71,9 +64,9 @@ require_english_prose() {
 
 require_file "AGENTS.md" "root AGENTS.md exists"
 require_file "HANDOFF.md" "root HANDOFF.md exists"
-require_file "OnlyBoth-产品精神.md" "normative product doctrine exists"
-require_file "OnlyBoth-产品方案.md" "authoritative product plan exists"
-require_file "OnlyBoth-工程设计.md" "authoritative engineering design exists"
+require_file "CareerMutual-Product-Doctrine.md" "normative product doctrine exists"
+require_file "CareerMutual-Product-Plan.md" "authoritative product plan exists"
+require_file "CareerMutual-Engineering-Design.md" "authoritative engineering design exists"
 require_file "README.md" "root README exists"
 require_file "test-reports/README.md" "test report policy exists"
 

@@ -3,7 +3,7 @@
 set -uo pipefail
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-document="OnlyBoth-AI工程设计.md"
+document="CareerMutual-AI-Engineering-Design.md"
 passes=0
 failures=0
 
@@ -58,7 +58,7 @@ require_text "$document" "buildAnswerEvidenceEdge" "design defines post-answer E
 require_text "$document" "EmployerReviewAnalystPort" "design defines the narrowed Employer analyst port"
 require_text "$document" "SUPPORTED | CONTRADICTED | NOT_ADDRESSED" "design limits findings to criterion-local states"
 require_text "$document" "gpt-5.6-sol" "design pins the Employer analyst model"
-require_text "$document" "Process Source 只能" "design separates process sources from capability findings"
+require_text "$document" "Process Sources may appear" "design separates process sources from capability findings"
 require_text "$document" "answer-evidence-edge-draft@2" "design versions the bounded answer verdict and language analysis"
 require_text "$document" "onlyboth.answer-behavior-severity@1" "design pins deterministic behavior severity"
 require_text "$document" "PLATFORM_KILL_SWITCH_OFF" "design records the fail-closed analyst kill switch"
@@ -82,15 +82,15 @@ require_text "$document" "CandidateAnswerAssistantPort" "design defines the disc
 require_text "$document" "VoiceTranscriptionPort" "design defines the Voice Memo transcription boundary"
 require_text "$document" "deriveCandidateJobSignals" "design defines Candidate-only job discovery"
 require_text "$document" "gpt-5.6-luna" "design pins the Candidate discovery model"
-require_text "$document" '没有 Passport 的 Candidate 只看到 `OPEN_TO_ALL`' "design makes Passport-less evidence-gated access fail closed"
-require_text "$document" '未匹配 Job 在 Feed、Detail 与 Interest API 统一不可枚举' "design prevents unauthorized Job enumeration"
+require_text "$document" 'Passport sees only `OPEN_TO_ALL`' "design makes Passport-less evidence-gated access fail closed"
+require_text "$document" 'an unmatched Job is uniformly non-enumerable in Feed, Detail, and the Interest API' "design prevents unauthorized Job enumeration"
 require_text "$document" "onlyboth.derive-candidate-eligibility-matches@1.0.0" "design pins the Eligibility Match prompt"
-require_text "$document" "绝不自动切回预载 Snapshot 或 Golden Fixture" "design requires LIVE discovery to fail closed"
+require_text "$document" "must never automatically fall back to a preloaded Snapshot or Golden Fixture" "design requires LIVE discovery to fail closed"
 require_text "$document" "gpt-5.6-terra" "design pins the Candidate assistant model"
 require_text "$document" "gpt-4o-mini-transcribe" "design pins the transcription model"
 require_text "$document" 'independent sealed `GPT_TRACE` Artifact' "design requires a sealed complete assistant trace"
-require_text "OnlyBoth-工程设计.md" "OnlyBoth-AI工程设计.md" "authoritative engineering design links the AI design"
-require_text "README.md" "OnlyBoth-AI工程设计.md" "root README links the AI design"
+require_text "CareerMutual-Engineering-Design.md" "CareerMutual-AI-Engineering-Design.md" "authoritative engineering design links the AI design"
+require_text "README.md" "CareerMutual-AI-Engineering-Design.md" "root README links the AI design"
 require_balanced_fences "$document"
 
 printf 'RESULT: %d passed, %d failed\n' "$passes" "$failures"

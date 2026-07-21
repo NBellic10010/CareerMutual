@@ -1,13 +1,13 @@
-# OnlyBoth
+# CareerMutual
 
-OnlyBoth is a mutual-intent, blind-answer-first hiring product: Candidates signal where they want
+CareerMutual is a mutual-intent, blind-answer-first hiring product: Candidates signal where they want
 to go, while Recruiters commit named review attention before asking them to work. An employer must
 record an evidence-linked review before the same attention slot can serve the next person. Pedigree
 stays sealed until anonymous work earns backed, post-answer attention.
 
-The normative product doctrine is `OnlyBoth-产品精神.md`. The authoritative product and
-engineering sources are `OnlyBoth-产品方案.md`, `OnlyBoth-工程设计.md`, and
-`OnlyBoth-AI工程设计.md`.
+The normative product doctrine is `CareerMutual-Product-Doctrine.md`. The authoritative product and
+engineering sources are `CareerMutual-Product-Plan.md`, `CareerMutual-Engineering-Design.md`, and
+`CareerMutual-AI-Engineering-Design.md`.
 
 ## How Codex and GPT-5.6 are used
 
