@@ -113,6 +113,73 @@ This file records OnlyBoth’s current implementation state and development hand
 
 ---
 
+## 2026-07-21 — Railway LIVE Eligibility and Employer Analyst enabled
+
+**Status:** Complete
+
+### Goal
+
+Restore the incomplete Railway Eligibility seed, keep the OpenAI credential exclusively in the
+private Worker, republish the synthetic JobPosts with disclosed Employer analysis, and prove both
+LIVE model paths rather than relying on configuration presence.
+
+### Actual outcome
+
+- Added `OPENAI_API_KEY` to the Railway Worker through CLI stdin. The value was not printed,
+  persisted in a command argument, added to Web, or written to this repository.
+- Configured the Worker with `EMPLOYER_REVIEW_AI_ENABLED=true`, `EMPLOYER_REVIEW_AI_MODE=LIVE`, and
+  `EMPLOYER_REVIEW_AI_MODEL=gpt-5.6-luna`.
+- Set the synthetic publishing policy to `ANSWER_PLUS_PROCESS` and completed a destructive
+  synthetic-only reset. Unlike the interrupted prior run, the same process was followed until it
+  returned `FUNCTIONAL_DEMO_READY` and exit code 0.
+- Republished 27 JobPosts with sealed `ANSWER_PLUS_PROCESS`; restored seven READY Candidate
+  Eligibility projections, seven Match Sets, and 182 immutable per-Candidate/per-Job Matches.
+- Verified all seven Candidate Feeds differ by Passport evidence while Customer Success Lead
+  remains the shared `OPEN_TO_ALL` role.
+- Redeployed the Worker as `1db3b891-c1d3-4c06-8571-8826afd56e69`; deployment status is `SUCCESS`.
+- Ran the real `LiveCandidateEligibilityMatchAdapter` against a bounded synthetic canary. The
+  validated Structured Output completed on `gpt-5.6-sol` with a positive source-linked result.
+- Submitted a bounded synthetic Candidate 17 answer through the public Interest → backed Slot →
+  consent → immutable Submission APIs. The continuous Railway Worker completed a non-synthetic
+  LIVE `gpt-5.6-luna` Employer analysis with status `READY`, one criterion finding, process context,
+  and a `GOOD_ANSWER` verdict scoped only to the sealed Challenge.
+- Candidate 42 retains the primary backed offer. Candidate 17 now occupies the synthetic pending
+  Human Review example so the Recruiter can inspect the LIVE Analyst output.
+
+### Security and product boundary
+
+- Web has no OpenAI key; Worker has the key. Neither public API output nor this report contains the
+  credential.
+- The Analyst output remains advisory. It is not a Candidate-wide score, ranking, advancement
+  command, or completed Human Review; Sarah must still record the evidence-linked Review.
+- The Candidate 17 answer, Passport, JobPosts, and all sources are synthetic. No real hiring data
+  was introduced.
+
+### Verification
+
+- Seed receipt: `FUNCTIONAL_DEMO_READY`, exit 0, 27 JobPosts, seven Candidates,
+  `ANSWER_PLUS_PROCESS`.
+- PostgreSQL: 7 Passports, 7 Match Sets, 182 Matches, 7 READY projections, 27 Analyst-enabled
+  contracts, 1 preserved Candidate 42 invitation.
+- Public Feeds: all seven return `READY` with a pinned Passport Snapshot and role-specific results.
+- LIVE Luna connectivity canary: completed with resolved model `gpt-5.6-luna`.
+- LIVE Eligibility Adapter: completed with resolved model `gpt-5.6-sol`; strict validation passed.
+- Candidate 17 functional path: Interest 201, backed Offer, Credit 3→2, immutable Submission.
+- Employer analysis: `READY`, policy `ANSWER_PLUS_PROCESS`, model run `SUCCEEDED`, resolved model
+  `gpt-5.6-luna`, validated AI output and Answer Evidence Edge present.
+- Recruiter projection: HTTP 200, `employer-current-review-projection@3`, LIVE analysis visible.
+- Documentation contracts and formatting: passed.
+- Full evidence:
+  `test-reports/20260721T204146Z-railway-live-matching-analyst-enable.log`.
+
+### Corrected acceptance issue
+
+- The first minimal Luna canary command failed before any network request because `tsx -e` does not
+  permit top-level await under its CJS transform. Wrapping the same request in an async function
+  completed successfully. This was a command-wrapper error, not an OpenAI or Railway failure.
+
+---
+
 ## 2026-07-21 — Feature branch merged to main and Railway redeployed
 
 **Status:** Complete

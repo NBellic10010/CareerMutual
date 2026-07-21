@@ -1,0 +1,84 @@
+CareerMutual Railway LIVE matching and Employer analysis enablement
+Timestamp: 2026-07-21T20:41:46Z
+Result: PASS
+
+AUTHORIZED EXTERNAL CHANGES
+- Destructively reset and republished synthetic Railway Demo data.
+- Added OPENAI_API_KEY through Railway CLI stdin to the private Worker only.
+- Worker: EMPLOYER_REVIEW_AI_ENABLED=true
+- Worker: EMPLOYER_REVIEW_AI_MODE=LIVE
+- Worker: EMPLOYER_REVIEW_AI_MODEL=gpt-5.6-luna
+- Web and Worker seed policy: DEMO_EMPLOYER_AI_REVIEW_POLICY=ANSWER_PLUS_PROCESS
+- Web OPENAI_API_KEY present: false
+- Worker OPENAI_API_KEY present: true
+- No secret value was printed or retained in this report.
+
+SEED COMPLETION
+- Command remained attached to the same process until terminal completion.
+- Receipt: FUNCTIONAL_DEMO_READY
+- Exit code: 0
+- Published JobPosts: 27
+- Synthetic Candidates: 7
+- Employer analysis policy: ANSWER_PLUS_PROCESS
+- Candidate 42 feed count: 4
+- Candidate 42 backed invitation: present
+
+POSTGRESQL HARD GATES
+- Candidate Evidence Passport Snapshots: 7
+- Candidate Eligibility Match Sets: 7
+- Candidate Job Eligibility Matches: 182
+- Candidate Eligibility READY Projections: 7
+- Analyst-enabled sealed contracts: 27
+- Candidate interests immediately after seed: 1
+- Candidate invitations immediately after seed: 1
+- Per-Candidate positive/negative Match counts:
+  - candidate-03: 2 / 24
+  - candidate-08: 2 / 24
+  - candidate-11: 1 / 25
+  - candidate-17: 3 / 23
+  - candidate-19: 2 / 24
+  - candidate-27: 1 / 25
+  - candidate-42: 3 / 23
+
+PUBLIC FEED GATES
+- candidate-42: READY; Backend, Payment Workflow, and Payments Incident roles plus OPEN_TO_ALL.
+- candidate-17: READY; Backend, Payment Workflow, and Payments Incident roles plus OPEN_TO_ALL.
+- candidate-03: READY; Partner Integration and Payment Workflow roles plus OPEN_TO_ALL.
+- candidate-08: READY; Cloud Recovery and Payments Incident roles plus OPEN_TO_ALL.
+- candidate-11: READY; Financial Reconciliation role plus OPEN_TO_ALL.
+- candidate-27: READY; Brand Illustration role plus OPEN_TO_ALL.
+- candidate-19: READY; Distributed Verification and Backend roles plus OPEN_TO_ALL.
+
+WORKER AND LIVE MODEL GATES
+- Worker deployment: 1db3b891-c1d3-4c06-8571-8826afd56e69 — SUCCESS
+- Luna connectivity canary: completed, resolved model gpt-5.6-luna, response ID present.
+- First Luna canary wrapper: FAILED before network because tsx -e rejected top-level await.
+- Corrected async-wrapper Luna canary: PASS.
+- Real LiveCandidateEligibilityMatchAdapter canary: PASS.
+  - resolved model: gpt-5.6-sol
+  - strict source/ref validator: passed
+  - result: POSITIVE_EVIDENCE with two bounded connections
+
+LIVE EMPLOYER ANALYST FUNCTIONAL WITNESS
+- Synthetic actor: candidate-17
+- Interest API: 201
+- Named backed Offer: created in the second primary review Slot
+- Candidate Credit: 3 to 2
+- Answer Submission: immutable and persisted
+- Candidate 42 primary backed Offer: retained
+- Employer analysis Projection: READY
+- Policy: ANSWER_PLUS_PROCESS
+- Synthetic adapter flag: false
+- Model run: SUCCEEDED
+- Requested/resolved model: gpt-5.6-luna / gpt-5.6-luna
+- Validated AI Output: present
+- Answer Evidence Edge: present
+- Process Evidence: present
+- Verdict: GOOD_ANSWER, scoped to THIS_SEALED_CHALLENGE_ONLY
+- Criterion findings: 1
+- Recruiter API: employer-current-review-projection@3, HTTP 200, LIVE analysis visible
+
+PRODUCT BOUNDARY
+- This evidence does not represent an automatic hiring decision or Candidate-wide score.
+- Sarah still owes the mandatory Human Answer Review before Slot settlement or résumé reveal.
+- All data used in this witness is synthetic.
