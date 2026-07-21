@@ -119,7 +119,7 @@ This file records CareerMutual’s current implementation state and development 
 
 ## 2026-07-21 — JobPost upload-flow schema diagnostics hotfix
 
-**Status:** Complete locally; Railway deployment recorded below after verification.
+**Status:** Complete on `main` and deployed to Railway production.
 
 ### Actual outcome
 
@@ -135,6 +135,9 @@ This file records CareerMutual’s current implementation state and development 
 - Command responses now preserve bounded Zod issue paths across server-bundler module boundaries;
   the client renders the first actionable issue while retaining closed error codes for non-schema
   failures. Request values and private upload bodies are not logged.
+- Commit `e6e257d` was pushed to `origin/main`. Railway Web deployment
+  `12c6bac6-c5b0-45b4-b61b-dca1f5eefaea` reached `SUCCESS`; the Worker was not redeployed because
+  this hotfix changes only Web validation and error presentation.
 
 ### Tests and verification
 
@@ -145,6 +148,8 @@ This file records CareerMutual’s current implementation state and development 
 - `pnpm build` passed.
 - Dedicated PostgreSQL + MinIO Challenge Asset Playwright passed 1/1, including Image, Audio, and
   File upload, Draft creation, Publish sealing, and authorized private reads.
+- Production smoke passed with HTTP `200` for Login, `201` for the Recruiter demo Session, and
+  `200` for the authenticated Employer Dashboard. Existing JobPosts remained readable.
 - The first aggregate check stopped at formatting and the first E2E invocation stopped because
   `TEST_DATABASE_URL` was absent; both non-passes are retained in the report. Formatting was
   corrected, and E2E was rerun against the dedicated `onlyboth_test` database.

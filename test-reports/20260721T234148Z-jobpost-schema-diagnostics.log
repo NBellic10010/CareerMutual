@@ -66,4 +66,18 @@ Result:
 ADDITIONAL GUARDS
 - git diff --check: PASS
 - OpenAI LIVE calls: NOT RUN (not required for this UI/schema boundary)
-- Railway deployment: pending at the time this report entry was created
+
+GIT AND RAILWAY DELIVERY
+- Commit: e6e257d (fix: expose job post schema errors)
+- Git push: origin/main advanced from a651a21 to e6e257d
+- Railway Web deployment: 12c6bac6-c5b0-45b4-b61b-dca1f5eefaea
+- Railway final state: SUCCESS
+- Worker deployment: NOT RUN (Web-only hotfix)
+
+PRODUCTION READ-ONLY SMOKE
+- GET /login: 200; CareerMutual brand present
+- POST /api/v1/dev/session as the allowlisted synthetic Recruiter: 201
+- GET /employer with the issued signed Session: 200
+- Create JobPost action and existing Customer Success Lead JobPost present
+- No Draft, JobPost, upload object, reset, seed, or environment variable was created or changed by
+  the smoke.
