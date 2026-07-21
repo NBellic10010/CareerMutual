@@ -1,0 +1,5 @@
+account,ledger_balance,subledger_balance,age_days,materiality_usd,owner_note
+Deferred revenue,481200,476900,4,25000,Contract amendment pending
+Payment clearing,91840,96220,2,15000,Processor settlement lag
+Accrued expenses,207500,207500,1,20000,Matched
+Intercompany,133000,118000,12,10000,FX mapping disputed

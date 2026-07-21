@@ -1,0 +1,44 @@
+Timestamp (UTC): 2026-07-19T21:12:29Z
+Scope: Failing-first tests for the rolling Blind Review contracts and pure domain model
+Git branch / commit: unavailable; repository has no HEAD and workspace files are untracked
+Environment / runtime mode: local macOS; pure unit-test slice; runtime mode not applicable
+
+Command:
+pnpm exec vitest run --config vitest.unit.config.ts tests/unit/blind-answer-contracts.test.ts tests/unit/blind-answer-domain.test.ts
+Exit code: 1
+
+Relevant raw output:
+
+RUN v4.1.10 <repo>
+
+FAIL tests/unit/blind-answer-contracts.test.ts
+Error: Cannot find package '@onlyboth/contracts' imported from tests/unit/blind-answer-contracts.test.ts
+
+FAIL tests/unit/blind-answer-domain.test.ts > rolling blind-review domain > orders eligible Interests without Candidate profile or model input
+TypeError: createRollingBlindReview is not a function
+
+FAIL tests/unit/blind-answer-domain.test.ts > rolling blind-review domain > recycles the first settled Slot before Cohort 1 reaches 8/8 and pins Candidate 09 to Cohort 2
+TypeError: createRollingBlindReview is not a function
+
+FAIL tests/unit/blind-answer-domain.test.ts > rolling blind-review domain > keeps Direct and Explore locked at 7/8 reviewed without blocking settled Slots
+TypeError: createRollingBlindReview is not a function
+
+FAIL tests/unit/blind-answer-domain.test.ts > rolling blind-review domain > fails closed when an Answer has no backed active obligation
+TypeError: createRollingBlindReview is not a function
+
+Test Files 2 failed (2)
+Tests 4 failed (4)
+
+Summary:
+- Passed: 0 target tests.
+- Failed: the expected pre-implementation contract/domain surface was absent.
+- Additional harness issue: the root test package does not directly depend on @onlyboth/contracts; the focused contract test will import the workspace source entry directly rather than adding an unnecessary root dependency.
+- Skipped: none.
+- Blocked: none.
+
+Resolution target:
+- Add strict rolling blind-review contracts under packages/contracts.
+- Add the immutable rolling blind-review domain under packages/domain.
+- Export the new surfaces and rerun these same focused tests before repository regression checks.
+
+Known pre-existing failures: none relevant to this focused slice.

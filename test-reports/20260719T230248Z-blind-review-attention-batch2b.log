@@ -1,0 +1,184 @@
+Timestamp (UTC): 2026-07-19T23:02:48Z
+Scope: Blind Review Attention Batch 2b — Candidate Interest, Answer Invitation Accept/Decline, database-time Expiry, and Queue reconciliation
+Git branch / commit: main / unavailable (repository has no HEAD)
+Environment: macOS; Node.js v22.22.0; pnpm 11.9.0; PostgreSQL 16 in the local Docker development service
+Database credentials, URLs, and provider secrets are intentionally redacted.
+
+Historical failing-first evidence:
+- test-reports/20260719T223731Z-blind-review-attention-batch2b-initial.log
+- The expected failing domain/contract tests were corrected by the Batch 2b implementation.
+
+Implemented causal slice:
+- Authenticated Candidate Interest -> sealed Contract and consent pins -> typed deterministic hard eligibility -> Candidate-only projection -> durable Queue reconciliation.
+- Backed Answer Invitation -> Accept -> exactly one database-time Answer Session while Hold/Reservation/Credit/Lease remain backed.
+- Backed Answer Invitation -> Decline or database-time Expiry -> neutral disposition -> Credit return -> Lease/Slot/Cohort Seat release -> fresh Queue dispatch.
+- Interest, Invitation, financial state, Event, Outbox, role projection, Answer Session, and command Receipt mutations use PostgreSQL transactions and optimistic/advisory concurrency controls.
+
+Command 1:
+pnpm exec vitest run --config vitest.unit.config.ts tests/unit/answer-invitation-decision.test.ts
+
+Exit code: 0
+Relevant output:
+Test Files  1 passed (1)
+Tests       11 passed (11)
+
+Command 2 (first aggregate attempt):
+pnpm check
+
+Exit code: 2
+Relevant output:
+- TypeScript found that the new PostgreSQL test reused a BlindReviewApplicationIdFactory whose accepted ID kinds were narrower than CandidateInterestIdFactory.
+- The shared test factory was corrected to accept string ID kinds. No runtime production logic was changed by this correction.
+
+Command 3 (final aggregate gate):
+pnpm check
+
+Exit code: 0
+Relevant output:
+- Prettier: all matched files use Prettier code style.
+- ESLint: 0 warnings/errors.
+- TypeScript: all workspace and test configurations passed.
+- Unit: 24 files, 158 tests passed.
+- Integration: 6 files, 23 tests passed.
+- Security: 4 files, 19 tests passed.
+- Replay: 2 files, 7 tests passed.
+- Documentation contracts: AGENTS 34/34, AI design 22/22, product spirit 60/60 passed.
+
+Command 4:
+pnpm build
+
+Exit code: 0
+Relevant output:
+- Next.js 16.2.10 compiled successfully and completed TypeScript.
+- 8/8 static pages generated.
+- Existing route inventory remained available.
+
+Command 5:
+TEST_DATABASE_URL=<redacted> pnpm test:postgres
+
+Exit code: 0
+Relevant output:
+Test Files  5 passed (5)
+Tests       34 passed (34)
+Duration    7.44s
+
+The suite exercised fresh/reentrant migrations through:
+- 0001_challenge_recommendation_vertical
+- 0002_matching_vertical
+- 0003_blind_answer_first
+- 0004_blind_review_runtime_pins
+- 0005_candidate_interest_and_answer_invitation_decisions
+
+Command 6 (environment-precondition probe):
+pnpm test:e2e
+
+Exit code: 1
+Relevant output:
+BLOCKED: Playwright requires an accessible PostgreSQL 16 TEST_DATABASE_URL.
+
+Interpretation:
+- This was an environment invocation error, not a product-test result.
+- The suite was immediately rerun with the dedicated test database below.
+
+Command 7:
+TEST_DATABASE_URL=<redacted> pnpm test:e2e
+
+Exit code: 0
+Relevant output:
+- Sarah's real authorization drives all three Candidate and Sandbox branches: passed.
+- Direct 17 plus deterministic Explore 42 reaches the existing Redis Stage B chain: passed.
+- 2 passed (10.9s).
+
+These are legacy compatibility regressions. They do not claim that the new Answer-first Candidate routes or UI are wired.
+
+Command 8:
+pnpm test:evals
+
+Exit code: 0
+Relevant output:
+Test Files  2 passed (2)
+Tests       2 passed (2)
+
+Command 9:
+pnpm demo:offline
+
+Exit code: 0
+Raw output:
+{
+  "status": "ok",
+  "runtimeMode": "GOLDEN_REPLAY",
+  "externalWebDependencies": 0,
+  "replayId": "payment-retry-v1",
+  "candidates": 2,
+  "projections": ["EMPLOYER", "CANDIDATE", "SYNTHETIC_JUDGE"],
+  "catalogRef": "payment-retry@1"
+}
+
+Command 10:
+git diff --check
+
+Exit code: 0
+Output: empty
+
+Command 11:
+rg -n "\.(only|skip)\(" tests apps packages
+
+Exit code: 1
+Output: empty
+Interpretation: expected ripgrep no-match status; no focused or skipped tests were found.
+
+Command 12 (post-change LIVE smoke):
+RUNTIME_MODE=LIVE DATABASE_URL=<redacted> SANDBOX_ADAPTER=docker pnpm live:smoke
+
+Exit code: 1
+Relevant output:
+{"outcome":"refused_to_start","error_code":"WORKER_CONFIGURATION_INVALID","runtime_mode":"LIVE"}
+
+Result: BLOCKED.
+Reason: no Worker-only OPENAI_API_KEY is available. The Worker failed closed and did not switch to Golden Replay.
+
+Command 13 (post-change LIVE eval):
+pnpm test:evals:live
+
+Exit code: 1
+Relevant output:
+- buildMatchEdge LIVE suite: BLOCKED because a Worker-only OPENAI_API_KEY is absent; no Golden case was substituted.
+- recommendChallenges LIVE suite: BLOCKED because a Worker-only OPENAI_API_KEY is absent; no case was skipped or substituted.
+- 2 suites blocked at collection; no LIVE tests or model requests ran.
+
+Official OpenAI compatibility review:
+- Current model migration guidance supports gpt-5.6-sol and explicit reasoning.effort: medium.
+- Current Structured Outputs guidance supports Responses API responses.parse with Zod text.format.
+- The adapter keeps store:false, no tools, X-Client-Request-Id correlation, typed refusal/incomplete handling, deterministic semantic validation, and zero SDK retries.
+
+Command 14 (post-HANDOFF final aggregate gate):
+pnpm check
+
+Exit code: 0
+Relevant output:
+- Prettier, ESLint, and all TypeScript checks passed.
+- Unit: 24 files, 158 tests passed.
+- Integration: 6 files, 23 tests passed.
+- Security: 4 files, 19 tests passed.
+- Replay: 2 files, 7 tests passed.
+- Documentation contracts: AGENTS 34/34, AI design 22/22, product spirit 60/60 passed.
+
+Passed summary:
+- Final aggregate check, build, PostgreSQL, legacy browser regressions, offline Demo, deterministic evals, and source hygiene gates passed.
+- PostgreSQL passed 34/34 tests, including concurrency, exactly-once Answer Session, financial invariants, Slot/Seat reuse, database-time Expiry, and rollback scenarios.
+
+Failed summary:
+- 0 unresolved non-LIVE verification failures.
+- One intermediate test-factory typecheck failure and one missing TEST_DATABASE_URL E2E invocation are recorded above; both were corrected and rerun successfully.
+
+Skipped summary:
+- 0 tests were marked skipped.
+
+Blocked summary:
+- LIVE OpenAI smoke and LIVE evals are blocked by the missing Worker-only OPENAI_API_KEY.
+- No LIVE result is claimed and Golden Replay was not used as fallback.
+
+Known remaining work:
+- Authenticated Candidate Interest and Answer Invitation HTTP routes and Candidate UI are not wired.
+- AnswerSessionStarted has no Answer workspace/Sandbox consumer yet.
+- The repository has no HEAD and all workspace files are untracked, so normal tracked-diff attribution is unavailable.

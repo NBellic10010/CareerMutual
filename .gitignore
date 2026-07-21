@@ -1,0 +1,53 @@
+node_modules/
+.next/
+dist/
+coverage/
+test-results/
+playwright-report/
+playwright-report-prototype/
+playwright-report-live-analyst/
+*.tsbuildinfo
+.DS_Store
+
+# Environment and local runtime configuration. Keep only reviewed examples.
+.env
+.env.*
+!.env.example
+*.local
+.envrc
+.direnv/
+
+# Credentials, signing material, and provider/service-account exports.
+.secrets/
+secrets/
+credentials*.json
+service-account*.json
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+*.keystore
+
+# Browser login state and local authentication captures.
+.auth/
+playwright/.auth/
+**/storage-state*.json
+cookies*.json
+
+# Local infrastructure state, database copies, and temporary runtime files.
+.data/
+.runtime/
+infra/data/
+tmp/
+*.dump
+*.dump.gz
+*.sql.gz
+*.sqlite
+*.sqlite3
+
+# Editor-local state.
+.idea/
+.vscode/
+*.swp
+*.swo

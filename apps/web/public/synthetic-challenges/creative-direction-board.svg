@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="540" viewBox="0 0 960 540" role="img" aria-labelledby="title description">
+  <title id="title">Synthetic creative direction board</title>
+  <desc id="description">Three abstract campaign directions labelled Trust, Momentum, and Human.</desc>
+  <rect width="960" height="540" fill="#10161c"/>
+  <rect x="48" y="48" width="864" height="444" rx="24" fill="#17232b" stroke="#ff8266" stroke-width="3"/>
+  <text x="78" y="104" fill="#f2ede4" font-family="Arial, sans-serif" font-size="24" font-weight="700">SYNTHETIC DIRECTION BOARD / Q3</text>
+  <g transform="translate(78 144)">
+    <rect width="244" height="286" rx="18" fill="#20333c"/>
+    <circle cx="122" cy="92" r="58" fill="#56d6c9"/>
+    <text x="28" y="198" fill="#f2ede4" font-family="Arial, sans-serif" font-size="30" font-weight="700">TRUST</text>
+    <text x="28" y="232" fill="#a9bbc2" font-family="Arial, sans-serif" font-size="16">Calm · precise · proven</text>
+  </g>
+  <g transform="translate(358 144)">
+    <rect width="244" height="286" rx="18" fill="#2b2025"/>
+    <path d="M42 132 L122 42 L202 132 L122 174 Z" fill="#ff8266"/>
+    <text x="28" y="198" fill="#f2ede4" font-family="Arial, sans-serif" font-size="30" font-weight="700">MOMENTUM</text>
+    <text x="28" y="232" fill="#cbb4bc" font-family="Arial, sans-serif" font-size="16">Direct · urgent · bold</text>
+  </g>
+  <g transform="translate(638 144)">
+    <rect width="244" height="286" rx="18" fill="#252a21"/>
+    <path d="M48 144 C72 42 172 42 196 144 C156 116 88 116 48 144 Z" fill="#d6d36a"/>
+    <text x="28" y="198" fill="#f2ede4" font-family="Arial, sans-serif" font-size="30" font-weight="700">HUMAN</text>
+    <text x="28" y="232" fill="#c4c5ad" font-family="Arial, sans-serif" font-size="16">Warm · candid · useful</text>
+  </g>
+</svg>

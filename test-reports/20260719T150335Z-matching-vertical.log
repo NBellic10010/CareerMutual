@@ -1,0 +1,1087 @@
+^D$ pnpm format:check && pnpm lint && pnpm typecheck && pnpm test:unit && pnpm test:integration && pnpm test:security && pnpm replay:verify && pnpm test:docs
+$ prettier --check .
+Checking formatting...
+.editorconfig[2K[1G.env.example[2K[1G.gitignore[2K[1G.npmrc[2K[1G.prettierignore[2K[1GAGENTS.md[2K[1Gapps/web/app/api/v1/candidate/opportunities/[id]/route.ts[2K[1Gapps/web/app/api/v1/candidate/review-windows/[id]/route.ts[2K[1Gapps/web/app/api/v1/demo/session/candidate/route.ts[2K[1Gapps/web/app/api/v1/demo/session/employer/matching/route.ts[2K[1Gapps/web/app/api/v1/demo/session/employer/route.ts[2K[1Gapps/web/app/api/v1/employer/opportunities/[id]/matching/route.ts[2K[1Gapps/web/app/api/v1/employer/review-windows/[id]/route.ts[2K[1Gapps/web/app/api/v1/opportunities/[id]/reserve-attention/route.ts[2K[1Gapps/web/app/api/v1/review-windows/[id]/accept/route.ts[2K[1Gapps/web/app/api/v1/review-windows/[id]/challenge/select/route.ts[2K[1Gapps/web/app/api/v1/review-windows/[id]/decline/route.ts[2K[1Gapps/web/app/audit/page.tsx[2K[1Gapps/web/app/candidate/page.tsx[2K[1Gapps/web/app/demo/page.tsx[2K[1Gapps/web/app/employer/matching/page.tsx[2K[1Gapps/web/app/employer/page.tsx[2K[1Gapps/web/app/globals.css[2K[1Gapps/web/app/layout.tsx[2K[1Gapps/web/app/page.tsx[2K[1Gapps/web/next-env.d.ts[2K[1Gapps/web/next.config.ts[2K[1Gapps/web/package.json[2K[1Gapps/web/src/components/app-shell.tsx[2K[1Gapps/web/src/components/audit-view.tsx[2K[1Gapps/web/src/components/candidate-checkpoint-panel.tsx[2K[1Gapps/web/src/components/candidate-matching-panel.tsx[2K[1Gapps/web/src/components/candidate-view.tsx[2K[1Gapps/web/src/components/challenge-panels.test.tsx[2K[1Gapps/web/src/components/cold-open-storyboard.tsx[2K[1Gapps/web/src/components/employer-challenge-panel.tsx[2K[1Gapps/web/src/components/employer-matching-panel.tsx[2K[1Gapps/web/src/components/employer-view.tsx[2K[1Gapps/web/src/components/role-views.test.tsx[2K[1Gapps/web/src/lib/demo-source.ts[2K[1Gapps/web/src/lib/demo-timeline.test.ts[2K[1Gapps/web/src/lib/demo-timeline.ts[2K[1Gapps/web/src/lib/demo-view-model.ts[2K[1Gapps/web/src/server/challenge-services.ts[2K[1Gapps/web/src/server/demo-auth.test.ts[2K[1Gapps/web/src/server/demo-auth.ts[2K[1Gapps/web/src/server/matching-services.ts[2K[1Gapps/web/src/server/proof-window-request.ts[2K[1Gapps/web/tsconfig.json[2K[1Gapps/web/vitest.config.ts[2K[1Gapps/worker/package.json[2K[1Gapps/worker/README.md[2K[1Gapps/worker/src/challenge-composition.ts[2K[1Gapps/worker/src/config.test.ts[2K[1Gapps/worker/src/config.ts[2K[1Gapps/worker/src/golden-replay-smoke.ts[2K[1Gapps/worker/src/index.ts[2K[1Gapps/worker/src/matching-composition.ts[2K[1Gapps/worker/src/stage-a-composition.ts[2K[1Gapps/worker/src/structured-logger.ts[2K[1Gapps/worker/src/worker-command.ts[2K[1Gapps/worker/src/worker-runtime.test.ts[2K[1Gapps/worker/src/worker-runtime.ts[2K[1Gapps/worker/tsconfig.json[2K[1Gchallenges/payment-retry/v1/hidden-tests/cross-region-retry/bundle.json[2K[1Gchallenges/payment-retry/v1/hidden-tests/duplicate-webhook/bundle.json[2K[1Gchallenges/payment-retry/v1/hidden-tests/redis-failover/bundle.json[2K[1Gchallenges/payment-retry/v1/manifest.json[2K[1Gchallenges/payment-retry/v1/scenarios/cross-region-retry/scenario.json[2K[1Gchallenges/payment-retry/v1/scenarios/duplicate-webhook/scenario.json[2K[1Gchallenges/payment-retry/v1/scenarios/redis-failover/scenario.json[2K[1Gchallenges/payment-retry/v1/starter/snapshot.json[2K[1Gchallenges/payment-retry/v1/visible-tests/manifest.json[2K[1Geslint.config.mjs[2K[1GHANDOFF.md[2K[1Ginfra/docker-compose.dev.yml[2K[1Ginfra/postgres.env.example[2K[1Gpackage.json[2K[1Gpackages/ai/package.json[2K[1Gpackages/ai/src/ai-boundary.test.ts[2K[1Gpackages/ai/src/build-match-edge-prompt.ts[2K[1Gpackages/ai/src/canonical-json.ts[2K[1Gpackages/ai/src/challenge-recommendation.test.ts[2K[1Gpackages/ai/src/errors.ts[2K[1Gpackages/ai/src/fixtures/candidate-42-recommendation.ts[2K[1Gpackages/ai/src/golden-replay-adapter.ts[2K[1Gpackages/ai/src/index.ts[2K[1Gpackages/ai/src/live-responses-adapter.ts[2K[1Gpackages/ai/src/match-edge-validator.ts[2K[1Gpackages/ai/src/match-edge.test.ts[2K[1Gpackages/ai/src/port.ts[2K[1Gpackages/ai/src/prompt-registry.ts[2K[1Gpackages/ai/src/recommend-challenges-prompt.ts[2K[1Gpackages/ai/src/recommendation-validator.ts[2K[1Gpackages/ai/src/schemas.ts[2K[1Gpackages/ai/src/unconfigured-adapter.ts[2K[1Gpackages/ai/tsconfig.json[2K[1Gpackages/application/package.json[2K[1Gpackages/application/src/commands/abort-platform-failure.ts[2K[1Gpackages/application/src/commands/authorize-label-reveal.ts[2K[1Gpackages/application/src/commands/decide-proof-window.ts[2K[1Gpackages/application/src/commands/reserve-matched-attention.ts[2K[1Gpackages/application/src/commands/reserve-review-window.ts[2K[1Gpackages/application/src/commands/select-human-challenge.ts[2K[1Gpackages/application/src/commands/submit-matching-stage-a.ts[2K[1Gpackages/application/src/index.ts[2K[1Gpackages/application/src/ports/challenge-selection.ts[2K[1Gpackages/application/src/ports/hiring-intelligence.ts[2K[1Gpackages/application/src/ports/matching-allocation.ts[2K[1Gpackages/application/src/ports/matching-stage-a.ts[2K[1Gpackages/application/src/ports/proof-window-decision.ts[2K[1Gpackages/application/src/ports/review-window-repository.ts[2K[1Gpackages/application/src/workflows/challenge-recommendation-worker.ts[2K[1Gpackages/application/src/workflows/match-edge-worker.ts[2K[1Gpackages/application/src/workflows/stage-a-replay-worker.ts[2K[1Gpackages/application/tsconfig.json[2K[1Gpackages/challenge-catalog/package.json[2K[1Gpackages/challenge-catalog/src/catalog.lock.json[2K[1Gpackages/challenge-catalog/src/index.ts[2K[1Gpackages/challenge-catalog/src/registry.test.ts[2K[1Gpackages/challenge-catalog/src/registry.ts[2K[1Gpackages/challenge-catalog/src/schemas.ts[2K[1Gpackages/challenge-catalog/tsconfig.json[2K[1Gpackages/contracts/package.json[2K[1Gpackages/contracts/src/challenge-review.ts[2K[1Gpackages/contracts/src/common.ts[2K[1Gpackages/contracts/src/golden-replay.ts[2K[1Gpackages/contracts/src/hiring-intelligence.ts[2K[1Gpackages/contracts/src/index.ts[2K[1Gpackages/contracts/src/matching-review.ts[2K[1Gpackages/contracts/tsconfig.json[2K[1Gpackages/db/migrations/0001_challenge_recommendation_vertical.down.sql[2K[1Gpackages/db/migrations/0001_challenge_recommendation_vertical.sql[2K[1Gpackages/db/migrations/0002_matching_vertical.down.sql[2K[1Gpackages/db/migrations/0002_matching_vertical.sql[2K[1Gpackages/db/package.json[2K[1Gpackages/db/src/demo-seed.ts[2K[1Gpackages/db/src/index.ts[2K[1Gpackages/db/src/migrate.ts[2K[1Gpackages/db/src/outbox.ts[2K[1Gpackages/db/src/postgres-challenge-store.ts[2K[1Gpackages/db/src/postgres-challenge-worker-store.ts[2K[1Gpackages/db/src/postgres-match-edge-worker-store.ts[2K[1Gpackages/db/src/postgres-matching-stage-a-store.ts[2K[1Gpackages/db/src/postgres-matching-store.ts[2K[1Gpackages/db/src/postgres-pool.ts[2K[1Gpackages/db/src/postgres-proof-window-decision-store.ts[2K[1Gpackages/db/src/repositories.ts[2K[1Gpackages/db/src/types.ts[2K[1Gpackages/db/tsconfig.json[2K[1Gpackages/demo-replay/package.json[2K[1Gpackages/demo-replay/src/build-views.ts[2K[1Gpackages/demo-replay/src/fixtures/matching-v1.ts[2K[1Gpackages/demo-replay/src/fixtures/payment-retry-v1.ts[2K[1Gpackages/demo-replay/src/index.ts[2K[1Gpackages/demo-replay/src/loader.ts[2K[1Gpackages/demo-replay/tsconfig.json[2K[1Gpackages/domain/package.json[2K[1Gpackages/domain/src/index.ts[2K[1Gpackages/domain/src/matching/allocator.ts[2K[1Gpackages/domain/src/matching/eligibility.ts[2K[1Gpackages/domain/src/matching/errors.ts[2K[1Gpackages/domain/src/matching/index.ts[2K[1Gpackages/domain/src/matching/matching-cycle.ts[2K[1Gpackages/domain/src/matching/types.ts[2K[1Gpackages/domain/src/review-window/errors.ts[2K[1Gpackages/domain/src/review-window/index.ts[2K[1Gpackages/domain/src/review-window/review-window.ts[2K[1Gpackages/domain/src/review-window/types.ts[2K[1Gpackages/domain/tsconfig.json[2K[1Gpackages/projections/package.json[2K[1Gpackages/projections/src/candidate-projection.ts[2K[1Gpackages/projections/src/employer-projection.ts[2K[1Gpackages/projections/src/index.ts[2K[1Gpackages/projections/src/synthetic-judge-projection.ts[2K[1Gpackages/projections/tsconfig.json[2K[1Gpackages/sandbox/package.json[2K[1Gpackages/sandbox/src/docker-adapter.ts[2K[1Gpackages/sandbox/src/fixtures/payment-retry-v1.ts[2K[1Gpackages/sandbox/src/index.ts[2K[1Gpackages/sandbox/src/port.ts[2K[1Gpackages/sandbox/src/replay-adapter.test.ts[2K[1Gpackages/sandbox/src/replay-adapter.ts[2K[1Gpackages/sandbox/src/schemas.ts[2K[1Gpackages/sandbox/src/selected-challenge-replay.ts[2K[1Gpackages/sandbox/tsconfig.json[2K[1Gpackages/testkit/package.json[2K[1Gpackages/testkit/src/fake-clock.ts[2K[1Gpackages/testkit/src/in-memory-challenge-selection.ts[2K[1Gpackages/testkit/src/in-memory-review-window-repository.ts[2K[1Gpackages/testkit/src/index.ts[2K[1Gpackages/testkit/src/review-window-fixture.ts[2K[1Gpackages/testkit/src/security.ts[2K[1Gpackages/testkit/tsconfig.json[2K[1Gplaywright.config.ts[2K[1Gpnpm-workspace.yaml[2K[1Gprettier.config.mjs[2K[1GREADME.md[2K[1Gscripts/verify-offline-demo.ts[2K[1Gtest-reports/README.md[2K[1Gtests/docs/agents-contract.sh[2K[1Gtests/docs/ai-engineering-design-contract.sh[2K[1Gtests/e2e/challenge-vertical.spec.ts[2K[1Gtests/e2e/matching-vertical.spec.ts[2K[1Gtests/evals/build-match-edge-corpus.ts[2K[1Gtests/evals/build-match-edge.contract.eval.test.ts[2K[1Gtests/evals/build-match-edge.live.eval.test.ts[2K[1Gtests/evals/recommend-challenges-corpus.ts[2K[1Gtests/evals/recommend-challenges.contract.eval.test.ts[2K[1Gtests/evals/recommend-challenges.live.eval.test.ts[2K[1Gtests/integration/postgres-migration-contract.test.ts[2K[1Gtests/integration/workspace-shape.test.ts[2K[1Gtests/postgres/challenge-vertical.postgres.test.ts[2K[1Gtests/postgres/matching-vertical.postgres.test.ts[2K[1Gtests/replay/golden-replay-integrity.test.ts[2K[1Gtests/replay/selected-challenge-branch-parity.test.ts[2K[1Gtests/security/challenge-slice-boundaries.test.ts[2K[1Gtests/security/label-veil.test.ts[2K[1Gtests/security/matching-boundaries.test.ts[2K[1Gtests/unit/application-handlers.test.ts[2K[1Gtests/unit/challenge-recommendation-worker.test.ts[2K[1Gtests/unit/match-edge-worker.test.ts[2K[1Gtests/unit/matching-domain.test.ts[2K[1Gtests/unit/review-window.test.ts[2K[1Gtests/unit/select-human-challenge.test.ts[2K[1Gtsconfig.base.json[2K[1Gtsconfig.tests.json[2K[1Gvitest.evals.config.ts[2K[1Gvitest.integration.config.ts[2K[1Gvitest.live-evals.config.ts[2K[1Gvitest.postgres.config.ts[2K[1Gvitest.replay.config.ts[2K[1Gvitest.security.config.ts[2K[1Gvitest.unit.config.ts[2K[1GAll matched files use Prettier code style!
+$ eslint . --max-warnings=0
+$ pnpm -r --if-present typecheck && tsc --noEmit -p tsconfig.tests.json
+[0JScope: 12 of 13 workspace projects
+[1A[0JScope: 12 of 13 workspace projects
+packages/domain typecheck$ 
+└─ Running...
+[3A[0JScope: 12 of 13 workspace projects
+packages/domain typecheck$ 
+└─ Running...
+packages/challenge-catalog typecheck$ 
+└─ Running...
+[5A[0JScope: 12 of 13 workspace projects
+packages/domain typecheck$ 
+└─ Running...
+packages/challenge-catalog typecheck$ 
+└─ Running...
+packages/contracts typecheck$ 
+└─ Running...
+[7A[0JScope: 12 of 13 workspace projects
+packages/domain typecheck$ 
+└─ Done in 268ms
+packages/challenge-catalog typecheck$ 
+└─ Running...
+packages/contracts typecheck$ 
+└─ Running...
+[7A[0JScope: 12 of 13 workspace projects
+packages/domain typecheck$ 
+└─ Done in 268ms
+packages/challenge-catalog typecheck$ 
+└─ Running...
+packages/contracts typecheck$ 
+└─ Done in 344ms
+[7A[0JScope: 12 of 13 workspace projects
+packages/domain typecheck$ 
+└─ Done in 268ms
+packages/challenge-catalog typecheck$ 
+└─ Done in 462ms
+packages/contracts typecheck$ 
+└─ Done in 344ms
+[7A[0JScope: 12 of 13 workspace projects
+packages/domain typecheck$ 
+└─ Done in 268ms
+packages/challenge-catalog typecheck$ 
+└─ Done in 462ms
+packages/contracts typecheck$ 
+└─ Done in 344ms
+packages/application typecheck$ 
+└─ Running...
+[9A[0JScope: 12 of 13 workspace projects
+packages/domain typecheck$ 
+└─ Done in 268ms
+packages/challenge-catalog typecheck$ 
+└─ Done in 462ms
+packages/contracts typecheck$ 
+└─ Done in 344ms
+packages/application typecheck$ 
+└─ Running...
+packages/projections typecheck$ 
+└─ Running...
+[11A[0JScope: 12 of 13 workspace projects
+packages/domain typecheck$ 
+└─ Done in 268ms
+packages/challenge-catalog typecheck$ 
+└─ Done in 462ms
+packages/contracts typecheck$ 
+└─ Done in 344ms
+packages/application typecheck$ 
+└─ Running...
+packages/projections typecheck$ 
+└─ Done in 320ms
+[11A[0JScope: 12 of 13 workspace projects
+packages/domain typecheck$ 
+└─ Done in 268ms
+packages/challenge-catalog typecheck$ 
+└─ Done in 462ms
+packages/contracts typecheck$ 
+└─ Done in 344ms
+packages/application typecheck$ 
+└─ Done in 397ms
+packages/projections typecheck$ 
+└─ Done in 320ms
+[11A[0JScope: 12 of 13 workspace projects
+packages/domain typecheck$ 
+└─ Done in 268ms
+packages/challenge-catalog typecheck$ 
+└─ Done in 462ms
+packages/contracts typecheck$ 
+└─ Done in 344ms
+packages/application typecheck$ 
+└─ Done in 397ms
+packages/projections typecheck$ 
+└─ Done in 320ms
+packages/testkit typecheck$ 
+└─ Running...
+[13A[0JScope: 12 of 13 workspace projects
+packages/domain typecheck$ 
+└─ Done in 268ms
+packages/challenge-catalog typecheck$ 
+└─ Done in 462ms
+packages/contracts typecheck$ 
+└─ Done in 344ms
+packages/application typecheck$ 
+└─ Done in 397ms
+packages/projections typecheck$ 
+└─ Done in 320ms
+packages/testkit typecheck$ 
+└─ Running...
+packages/sandbox typecheck$ 
+└─ Running...
+[15A[0JScope: 12 of 13 workspace projects
+packages/domain typecheck$ 
+└─ Done in 268ms
+packages/challenge-catalog typecheck$ 
+└─ Done in 462ms
+packages/contracts typecheck$ 
+└─ Done in 344ms
+packages/application typecheck$ 
+└─ Done in 397ms
+packages/projections typecheck$ 
+└─ Done in 320ms
+packages/testkit typecheck$ 
+└─ Running...
+packages/sandbox typecheck$ 
+└─ Running...
+packages/demo-replay typecheck$ 
+└─ Running...
+[17A[0JScope: 12 of 13 workspace projects
+packages/domain typecheck$ 
+└─ Done in 268ms
+packages/challenge-catalog typecheck$ 
+└─ Done in 462ms
+packages/contracts typecheck$ 
+└─ Done in 344ms
+packages/application typecheck$ 
+└─ Done in 397ms
+packages/projections typecheck$ 
+└─ Done in 320ms
+packages/testkit typecheck$ 
+└─ Running...
+packages/sandbox typecheck$ 
+└─ Running...
+packages/demo-replay typecheck$ 
+└─ Done in 354ms
+[17A[0JScope: 12 of 13 workspace projects
+packages/domain typecheck$ 
+└─ Done in 268ms
+packages/challenge-catalog typecheck$ 
+└─ Done in 462ms
+packages/contracts typecheck$ 
+└─ Done in 344ms
+packages/application typecheck$ 
+└─ Done in 397ms
+packages/projections typecheck$ 
+└─ Done in 320ms
+packages/testkit typecheck$ 
+└─ Done in 444ms
+packages/sandbox typecheck$ 
+└─ Running...
+packages/demo-replay typecheck$ 
+└─ Done in 354ms
+[17A[0JScope: 12 of 13 workspace projects
+packages/domain typecheck$ 
+└─ Done in 268ms
+packages/challenge-catalog typecheck$ 
+└─ Done in 462ms
+packages/contracts typecheck$ 
+└─ Done in 344ms
+packages/application typecheck$ 
+└─ Done in 397ms
+packages/projections typecheck$ 
+└─ Done in 320ms
+packages/testkit typecheck$ 
+└─ Done in 444ms
+packages/sandbox typecheck$ 
+└─ Done in 497ms
+packages/demo-replay typecheck$ 
+└─ Done in 354ms
+[17A[0JScope: 12 of 13 workspace projects
+packages/domain typecheck$ 
+└─ Done in 268ms
+packages/challenge-catalog typecheck$ 
+└─ Done in 462ms
+packages/contracts typecheck$ 
+└─ Done in 344ms
+packages/application typecheck$ 
+└─ Done in 397ms
+packages/projections typecheck$ 
+└─ Done in 320ms
+packages/testkit typecheck$ 
+└─ Done in 444ms
+packages/sandbox typecheck$ 
+└─ Done in 497ms
+packages/demo-replay typecheck$ 
+└─ Done in 354ms
+packages/db typecheck$ 
+└─ Running...
+[19A[0JScope: 12 of 13 workspace projects
+packages/domain typecheck$ 
+└─ Done in 268ms
+packages/challenge-catalog typecheck$ 
+└─ Done in 462ms
+packages/contracts typecheck$ 
+└─ Done in 344ms
+packages/application typecheck$ 
+└─ Done in 397ms
+packages/projections typecheck$ 
+└─ Done in 320ms
+packages/testkit typecheck$ 
+└─ Done in 444ms
+packages/sandbox typecheck$ 
+└─ Done in 497ms
+packages/demo-replay typecheck$ 
+└─ Done in 354ms
+packages/db typecheck$ 
+└─ Running...
+packages/ai typecheck$ 
+└─ Running...
+[21A[0JScope: 12 of 13 workspace projects
+packages/domain typecheck$ 
+└─ Done in 268ms
+packages/challenge-catalog typecheck$ 
+└─ Done in 462ms
+packages/contracts typecheck$ 
+└─ Done in 344ms
+packages/application typecheck$ 
+└─ Done in 397ms
+packages/projections typecheck$ 
+└─ Done in 320ms
+packages/testkit typecheck$ 
+└─ Done in 444ms
+packages/sandbox typecheck$ 
+└─ Done in 497ms
+packages/demo-replay typecheck$ 
+└─ Done in 354ms
+packages/db typecheck$ 
+└─ Done in 615ms
+packages/ai typecheck$ 
+└─ Running...
+[21A[0JScope: 12 of 13 workspace projects
+packages/domain typecheck$ 
+└─ Done in 268ms
+packages/challenge-catalog typecheck$ 
+└─ Done in 462ms
+packages/contracts typecheck$ 
+└─ Done in 344ms
+packages/application typecheck$ 
+└─ Done in 397ms
+packages/projections typecheck$ 
+└─ Done in 320ms
+packages/testkit typecheck$ 
+└─ Done in 444ms
+packages/sandbox typecheck$ 
+└─ Done in 497ms
+packages/demo-replay typecheck$ 
+└─ Done in 354ms
+packages/db typecheck$ 
+└─ Done in 615ms
+packages/ai typecheck$ 
+└─ Done in 722ms
+[21A[0JScope: 12 of 13 workspace projects
+packages/domain typecheck$ 
+└─ Done in 268ms
+packages/challenge-catalog typecheck$ 
+└─ Done in 462ms
+packages/contracts typecheck$ 
+└─ Done in 344ms
+packages/application typecheck$ 
+└─ Done in 397ms
+packages/projections typecheck$ 
+└─ Done in 320ms
+packages/testkit typecheck$ 
+└─ Done in 444ms
+packages/sandbox typecheck$ 
+└─ Done in 497ms
+packages/demo-replay typecheck$ 
+└─ Done in 354ms
+packages/db typecheck$ 
+└─ Done in 615ms
+packages/ai typecheck$ 
+└─ Done in 722ms
+apps/worker typecheck$ 
+└─ Running...
+[23A[0JScope: 12 of 13 workspace projects
+packages/domain typecheck$ 
+└─ Done in 268ms
+packages/challenge-catalog typecheck$ 
+└─ Done in 462ms
+packages/contracts typecheck$ 
+└─ Done in 344ms
+packages/application typecheck$ 
+└─ Done in 397ms
+packages/projections typecheck$ 
+└─ Done in 320ms
+packages/testkit typecheck$ 
+└─ Done in 444ms
+packages/sandbox typecheck$ 
+└─ Done in 497ms
+packages/demo-replay typecheck$ 
+└─ Done in 354ms
+packages/db typecheck$ 
+└─ Done in 615ms
+packages/ai typecheck$ 
+└─ Done in 722ms
+apps/worker typecheck$ 
+└─ Running...
+apps/web typecheck$ 
+└─ Running...
+[25A[0JScope: 12 of 13 workspace projects
+packages/domain typecheck$ 
+└─ Done in 268ms
+packages/challenge-catalog typecheck$ 
+└─ Done in 462ms
+packages/contracts typecheck$ 
+└─ Done in 344ms
+packages/application typecheck$ 
+└─ Done in 397ms
+packages/projections typecheck$ 
+└─ Done in 320ms
+packages/testkit typecheck$ 
+└─ Done in 444ms
+packages/sandbox typecheck$ 
+└─ Done in 497ms
+packages/demo-replay typecheck$ 
+└─ Done in 354ms
+packages/db typecheck$ 
+└─ Done in 615ms
+packages/ai typecheck$ 
+└─ Done in 722ms
+apps/worker typecheck$ 
+└─ Running...
+apps/web typecheck$ 
+└─ Done in 760ms
+[25A[0JScope: 12 of 13 workspace projects
+packages/domain typecheck$ 
+└─ Done in 268ms
+packages/challenge-catalog typecheck$ 
+└─ Done in 462ms
+packages/contracts typecheck$ 
+└─ Done in 344ms
+packages/application typecheck$ 
+└─ Done in 397ms
+packages/projections typecheck$ 
+└─ Done in 320ms
+packages/testkit typecheck$ 
+└─ Done in 444ms
+packages/sandbox typecheck$ 
+└─ Done in 497ms
+packages/demo-replay typecheck$ 
+└─ Done in 354ms
+packages/db typecheck$ 
+└─ Done in 615ms
+packages/ai typecheck$ 
+└─ Done in 722ms
+apps/worker typecheck$ 
+└─ Done in 803ms
+apps/web typecheck$ 
+└─ Done in 760ms
+$ vitest run --config vitest.unit.config.ts
+[?25l
+ RUN  v4.1.10 /Users/tatar/Documents/CareerMutual
+
+
+ Test Files  17 passed (17)
+      Tests  100 passed (100)
+   Start at  11:03:58
+   Duration  391ms (transform 1.61s, setup 0ms, import 2.81s, tests 94ms, environment 1ms)
+
+[?25h$ vitest run --config vitest.integration.config.ts
+[?25l
+ RUN  v4.1.10 /Users/tatar/Documents/CareerMutual
+
+
+ Test Files  2 passed (2)
+      Tests  8 passed (8)
+   Start at  11:03:59
+   Duration  82ms (transform 23ms, setup 0ms, import 35ms, tests 4ms, environment 0ms)
+
+[?25h$ vitest run --config vitest.security.config.ts
+[?25l
+ RUN  v4.1.10 /Users/tatar/Documents/CareerMutual
+
+
+ Test Files  3 passed (3)
+      Tests  13 passed (13)
+   Start at  11:03:59
+   Duration  192ms (transform 140ms, setup 0ms, import 347ms, tests 11ms, environment 0ms)
+
+[?25h$ vitest run --config vitest.replay.config.ts
+[?25l
+ RUN  v4.1.10 /Users/tatar/Documents/CareerMutual
+
+
+ Test Files  2 passed (2)
+      Tests  7 passed (7)
+   Start at  11:04:00
+   Duration  157ms (transform 80ms, setup 0ms, import 150ms, tests 7ms, environment 0ms)
+
+[?25h$ bash tests/docs/agents-contract.sh && bash tests/docs/ai-engineering-design-contract.sh
+PASS: root AGENTS.md exists
+PASS: root HANDOFF.md exists
+PASS: authoritative product plan exists
+PASS: authoritative engineering design exists
+PASS: root README exists
+PASS: test report policy exists
+PASS: AGENTS requires tests for behavior changes
+PASS: AGENTS requires persisted test output
+PASS: AGENTS requires HANDOFF updates
+PASS: AGENTS protects HANDOFF during parallel work
+PASS: AGENTS preserves reviewer reservation invariant
+PASS: AGENTS preserves label reveal invariant
+PASS: AGENTS preserves backpressure invariant
+PASS: HANDOFF includes test report section
+PASS: report policy forbids false pass claims
+PASS: AGENTS defines a stable aggregate check command
+PASS: AGENTS separates operational logs from domain audit
+PASS: AGENTS preserves the English documentation rule
+PASS: AGENTS.md has balanced Markdown fences
+PASS: HANDOFF.md has balanced Markdown fences
+PASS: AGENTS prose is English
+PASS: HANDOFF prose is English
+PASS: README.md has balanced Markdown fences
+PASS: README.md prose is English
+PASS: apps/worker/README.md has balanced Markdown fences
+PASS: apps/worker/README.md prose is English
+PASS: test-reports/README.md has balanced Markdown fences
+PASS: test-reports/README.md prose is English
+RESULT: 28 passed, 0 failed
+PASS: AI engineering design exists
+PASS: design defines contract compilation
+PASS: design defines MatchEdge drafting
+PASS: design defines Challenge recommendation
+PASS: design defines Evidence compression
+PASS: design forbids AI tools
+PASS: design disables Responses application-state storage
+PASS: design uses Responses Structured Outputs
+PASS: design specifies provider request correlation
+PASS: design defines typed refusal handling
+PASS: design defines stale-result handling
+PASS: design defines superseded requests
+PASS: design preserves human Challenge authority
+PASS: design explicitly protects private labels
+PASS: design specifies Replay parity
+PASS: design rejects an MVP multi-agent workflow
+PASS: authoritative engineering design links the AI design
+PASS: root README links the AI design
+PASS: OnlyBoth-AI工程设计.md has balanced Markdown fences
+RESULT: 19 passed, 0 failed
+$ pnpm -r --if-present build
+[0JScope: 12 of 13 workspace projects
+[1A[0JScope: 12 of 13 workspace projects
+apps/web build$ 
+└─ Running...
+[3A[0JScope: 12 of 13 workspace projects
+apps/web build$ 
+│ 
+└─ Running...
+[4A[0JScope: 12 of 13 workspace projects
+apps/web build$ 
+│ 
+│ 
+└─ Running...
+[5A[0JScope: 12 of 13 workspace projects
+apps/web build$ 
+│ 
+│ 
+│ 
+└─ Running...
+[6A[0JScope: 12 of 13 workspace projects
+apps/web build$ 
+│ 
+│ 
+│ 
+│ 
+└─ Running...
+[7A[0JScope: 12 of 13 workspace projects
+apps/web build$ 
+│ 
+│ 
+│ 
+│ 
+│ 
+└─ Running...
+[8A[0JScope: 12 of 13 workspace projects
+apps/web build$ 
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+└─ Running...
+[9A[0JScope: 12 of 13 workspace projects
+apps/web build$ 
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+└─ Running...
+[10A[0JScope: 12 of 13 workspace projects
+apps/web build$ 
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+└─ Running...
+[11A[0JScope: 12 of 13 workspace projects
+apps/web build$ 
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+└─ Running...
+[12A[0JScope: 12 of 13 workspace projects
+apps/web build$ 
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+└─ Running...
+[13A[0JScope: 12 of 13 workspace projects
+apps/web build$ 
+[1 lines collapsed]
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+└─ Running...
+[14A[0JScope: 12 of 13 workspace projects
+apps/web build$ 
+[2 lines collapsed]
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+└─ Running...
+[14A[0JScope: 12 of 13 workspace projects
+apps/web build$ 
+[3 lines collapsed]
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+└─ Running...
+[14A[0JScope: 12 of 13 workspace projects
+apps/web build$ 
+[4 lines collapsed]
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+└─ Running...
+[14A[0JScope: 12 of 13 workspace projects
+apps/web build$ 
+[5 lines collapsed]
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+└─ Running...
+[14A[0JScope: 12 of 13 workspace projects
+apps/web build$ 
+[6 lines collapsed]
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+└─ Running...
+[14A[0JScope: 12 of 13 workspace projects
+apps/web build$ 
+[7 lines collapsed]
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+└─ Running...
+[14A[0JScope: 12 of 13 workspace projects
+apps/web build$ 
+[8 lines collapsed]
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+└─ Running...
+[14A[0JScope: 12 of 13 workspace projects
+apps/web build$ 
+[9 lines collapsed]
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+└─ Running...
+[14A[0JScope: 12 of 13 workspace projects
+apps/web build$ 
+[10 lines collapsed]
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+└─ Running...
+[14A[0JScope: 12 of 13 workspace projects
+apps/web build$ 
+[11 lines collapsed]
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+└─ Running...
+[14A[0JScope: 12 of 13 workspace projects
+apps/web build$ 
+[12 lines collapsed]
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+└─ Running...
+[14A[0JScope: 12 of 13 workspace projects
+apps/web build$ 
+[13 lines collapsed]
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+└─ Running...
+[14A[0JScope: 12 of 13 workspace projects
+apps/web build$ 
+[14 lines collapsed]
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+└─ Running...
+[14A[0JScope: 12 of 13 workspace projects
+apps/web build$ 
+[15 lines collapsed]
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+└─ Running...
+[14A[0JScope: 12 of 13 workspace projects
+apps/web build$ 
+[16 lines collapsed]
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+└─ Running...
+[14A[0JScope: 12 of 13 workspace projects
+apps/web build$ 
+[17 lines collapsed]
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+└─ Running...
+[14A[0JScope: 12 of 13 workspace projects
+apps/web build$ 
+[18 lines collapsed]
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+└─ Running...
+[14A[0JScope: 12 of 13 workspace projects
+apps/web build$ 
+[19 lines collapsed]
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+└─ Running...
+[14A[0JScope: 12 of 13 workspace projects
+apps/web build$ 
+[20 lines collapsed]
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+└─ Running...
+[14A[0JScope: 12 of 13 workspace projects
+apps/web build$ 
+[21 lines collapsed]
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+└─ Running...
+[14A[0JScope: 12 of 13 workspace projects
+apps/web build$ 
+[22 lines collapsed]
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+└─ Running...
+[14A[0JScope: 12 of 13 workspace projects
+apps/web build$ 
+[23 lines collapsed]
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+└─ Running...
+[14A[0JScope: 12 of 13 workspace projects
+apps/web build$ 
+[23 lines collapsed]
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+│ 
+└─ Done in 3.2s
+$ vitest run --config vitest.postgres.config.ts
+[?25l
+ RUN  v4.1.10 /Users/tatar/Documents/CareerMutual
+
+
+ Test Files  2 passed (2)
+      Tests  14 passed (14)
+   Start at  11:04:04
+   Duration  3.88s (transform 143ms, setup 0ms, import 322ms, tests 3.43s, environment 0ms)
+
+[?25h$ playwright test
+
+[WebServer] (node:72968) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] $ next dev
+
+[WebServer] (node:72981) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:72987) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 2 tests using 1 worker
+
+
+(node:72989) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+[1/2] tests/e2e/challenge-vertical.spec.ts:70:1 › Sarah's real authorization drives all three Candidate and Sandbox branches
+
+[WebServer] (node:72995) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:72996) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:72997) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:72998) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:72999) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:73000) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:73001) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:73002) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:73003) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:73006) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:73007) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:73008) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:73027) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:73028) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:73033) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:73034) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:73035) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:73036) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:73037) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[2/2] tests/e2e/matching-vertical.spec.ts:61:1 › Direct 17 plus deterministic Explore 42 reaches the existing Redis Stage B chain
+
+[WebServer] (node:73040) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:73041) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:73042) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:73043) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:73044) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:73045) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:73046) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:73047) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:73048) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:73049) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:73050) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:73069) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:73070) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:73071) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:73072) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:73074) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] (node:73075) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+  2 passed (11.2s)
+
+To open last HTML report run:
+[36m[39m
+[36m  pnpm exec playwright show-report[39m
+[36m[39m
+$ vitest run --config vitest.evals.config.ts
+[?25l
+ RUN  v4.1.10 /Users/tatar/Documents/CareerMutual
+
+
+ Test Files  2 passed (2)
+      Tests  2 passed (2)
+   Start at  11:04:20
+   Duration  211ms (transform 122ms, setup 0ms, import 281ms, tests 6ms, environment 0ms)
+
+[?25h$ tsx scripts/verify-offline-demo.ts
+{
+  "status": "ok",
+  "runtimeMode": "GOLDEN_REPLAY",
+  "externalWebDependencies": 0,
+  "replayId": "payment-retry-v1",
+  "candidates": 2,
+  "projections": [
+    "EMPLOYER",
+    "CANDIDATE",
+    "SYNTHETIC_JUDGE"
+  ],
+  "catalogRef": "payment-retry@1"
+}
+$ vitest run --config vitest.live-evals.config.ts
+[?25l
+ RUN  v4.1.10 /Users/tatar/Documents/CareerMutual
+
+ ❯ tests/evals/recommend-challenges.live.eval.test.ts (0 test)
+ ❯ tests/evals/build-match-edge.live.eval.test.ts (0 test)
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/evals/build-match-edge.live.eval.test.ts [ tests/evals/build-match-edge.live.eval.test.ts ]
+Error: BLOCKED: LIVE buildMatchEdge eval requires a Worker-only OPENAI_API_KEY. No Golden case was substituted.
+ ❯ tests/evals/build-match-edge.live.eval.test.ts:11:9
+      9| const apiKey = process.env.OPENAI_API_KEY;
+     10| if (apiKey === undefined || apiKey.length === 0) {
+     11|   throw new Error(
+       |         ^
+     12|     "BLOCKED: LIVE buildMatchEdge eval requires a Worker-only OPENAI_A…
+     13|   );
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  tests/evals/recommend-challenges.live.eval.test.ts [ tests/evals/recommend-challenges.live.eval.test.ts ]
+Error: BLOCKED: test:evals:live requires a Worker-only OPENAI_API_KEY. No case was skipped or substituted.
+ ❯ tests/evals/recommend-challenges.live.eval.test.ts:14:9
+     12| const apiKey = process.env.OPENAI_API_KEY;
+     13| if (apiKey === undefined || apiKey.length === 0) {
+     14|   throw new Error(
+       |         ^
+     15|     "BLOCKED: test:evals:live requires a Worker-only OPENAI_API_KEY. N…
+     16|   );
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  2 failed (2)
+      Tests  no tests
+   Start at  11:04:21
+   Duration  324ms (transform 71ms, setup 0ms, import 0ms, tests 0ms, environment 0ms)
+
+[?25h[0J[ELIFECYCLE] Command failed with exit code 1.
+LIVE eval status: BLOCKED as expected because OPENAI_API_KEY is absent

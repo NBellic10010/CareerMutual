@@ -1,0 +1,16 @@
+CareerMutual Blind Review Attention Batch 2b - failing-first report
+Recorded at: 2026-07-19T22:37:31Z
+
+Command:
+  pnpm exec vitest run --config vitest.unit.config.ts tests/unit/blind-answer-domain.test.ts
+
+Result: FAILED AS EXPECTED
+  Test files: 1 failed
+  Tests: 3 failed, 6 passed
+
+Expected missing behavior exposed:
+  - acceptance did not enforce the backed Invitation deadline;
+  - releaseBackedAnswerOffer did not yet exist for Candidate decline;
+  - releaseBackedAnswerOffer did not yet exist for database-time expiry.
+
+This is the persisted red phase before Batch 2b implementation.

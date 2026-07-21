@@ -1,0 +1,180 @@
+OnlyBoth verification report — runnable functional product vertical
+UTC timestamp: 2026-07-20T13:21:33Z
+Branch: main
+Commit: UNAVAILABLE — this workspace has no HEAD and all repository files are currently untracked
+Runtime: Node.js 22; pnpm 11.9; RUNTIME_MODE=GOLDEN_REPLAY for retained offline/Worker checks
+Services: PostgreSQL 16 and MinIO healthy on loopback; dedicated onlyboth_test database
+Secrets: no OpenAI API key; database and Object Store credentials redacted from commands below
+
+Scope
+-----
+- Persistent demo-only role sessions and logout
+- PostgreSQL JobPost, Candidate Credit, backed Application, timed Answer Session, immutable Submit
+- TipTap rich text, Voice Memo, disclosed Candidate GPT, sealed complete GPT_TRACE
+- private append-only MinIO/S3 ObjectStorePort and Presigned PUT
+- earliest-answer-only Employer review and rolling Slot settlement
+- database-time Employer Review SLA breach settlement
+- product/engineering/AI/Agent/README/HANDOFF synchronization
+
+Final commands and actual relevant output
+-----------------------------------------
+
+1. pnpm check
+Exit code: 0
+
+Formatting: All matched files use Prettier code style.
+Lint: 0 errors, 0 warnings.
+TypeScript: all 13 applicable workspace projects and tsconfig.tests.json passed.
+
+Unit:
+  Test Files  29 passed (29)
+  Tests       174 passed (174)
+
+Default Integration (Object Store environment deliberately absent):
+  Test Files  7 passed | 1 skipped (8)
+  Tests       26 passed | 2 skipped (28)
+
+Security:
+  Test Files  5 passed (5)
+  Tests       23 passed (23)
+
+Replay:
+  Test Files  2 passed (2)
+  Tests       7 passed (7)
+
+Documentation contracts:
+  AGENTS/English contracts    36 passed, 0 failed
+  AI engineering contracts   27 passed, 0 failed
+  Product doctrine contracts 70 passed, 0 failed
+
+2. OBJECT_STORE_*=<local-redacted-values> pnpm test:integration
+Exit code: 0
+
+  Test Files  8 passed (8)
+  Tests       28 passed (28)
+
+This explicit run executes the two assertions conditionally excluded from the default aggregate.
+It verified private MinIO access, checksum metadata, download signing, deletion, server write-once
+behavior, and Presigned PUT same-key overwrite rejection.
+
+3. TEST_DATABASE_URL=<dedicated-test-database> pnpm test:postgres
+Exit code: 0
+
+  Test Files  6 passed (6)
+  Tests       36 passed (36)
+  Duration    8.98s
+
+4. pnpm build
+Exit code: 0
+
+  Next.js 16.2.10 production build compiled successfully.
+  TypeScript passed.
+  10/10 static pages generated.
+  Dynamic Candidate, Employer, session, answer, Artifact, and review routes emitted.
+  No build warnings.
+
+5. TEST_DATABASE_URL=<dedicated-test-database> OBJECT_STORE_*=<local-redacted-values> pnpm test:e2e
+Exit code: 0
+
+  Running 1 test using 1 worker
+  [1/1] persistent roles complete the backed application and sequential human-review loop
+  1 passed (5.0s)
+
+The scenario used isolated Sarah/Candidate contexts, real PostgreSQL and MinIO, Credit 3→2,
+TipTap autosave, create-only voice upload, explicit keyless GPT/transcription failures, sealed
+GPT_TRACE, immutable reload, anonymous earliest-only review, Slot settlement, next-answer gate,
+offline Demo assertions, zero external web requests, and explicit logout.
+
+6. pnpm demo:offline
+Exit code: 0
+
+  status: ok
+  runtimeMode: GOLDEN_REPLAY
+  externalWebDependencies: 0
+  replayId: payment-retry-v1
+  candidates: 2
+  catalogRef: payment-retry@1
+
+7. pnpm test:evals
+Exit code: 0
+
+  Test Files  2 passed (2)
+  Tests       2 passed (2)
+
+8. RUNTIME_MODE=GOLDEN_REPLAY DATABASE_URL=<dedicated-test-database>
+   OBJECT_STORE_*=<local-redacted-values> pnpm worker:once
+Exit code: 0
+
+  service: worker
+  command_or_job: challenge-worker-once
+  outcome: processed
+
+This proves the ordinary Worker composition includes the new functional Worker rather than relying
+on a test-only composition.
+
+9. env -u OPENAI_API_KEY pnpm test:evals:live
+Exit code: 1 — BLOCKED, not failed product behavior and not passed
+
+  Failed Suites 3
+  Tests no tests
+  BLOCKED: LIVE Candidate assistant and Voice Memo transcription require a Worker-only
+  OPENAI_API_KEY. No Replay response was substituted.
+  BLOCKED: LIVE buildMatchEdge requires a Worker-only key. No Golden case was substituted.
+  BLOCKED: LIVE recommendChallenges requires a Worker-only key. No case was skipped or substituted.
+
+10. git diff --check
+Exit code: 0
+
+The workspace has no HEAD and all files are untracked, so this command has no tracked patch to
+inspect. Prettier, ESLint, TypeScript, and the complete source checks above provide the actionable
+whitespace and syntax evidence.
+
+Focused marker audit
+--------------------
+- No .only markers found.
+- One intentional conditional marker exists:
+  tests/integration/object-store-minio.integration.test.ts selects describe.skip only when
+  OBJECT_STORE_ENDPOINT is absent.
+- The default aggregate therefore reports 2 Skipped; the explicit MinIO run reports all 28 Passed.
+
+Resolved failing-first observations
+-----------------------------------
+- Formatting initially identified candidate-job-detail.tsx; formatted and rechecked.
+- Lint initially identified one unused contract type, two unused worker identifiers, and one
+  type-only test import; corrected and rechecked.
+- Documentation contracts initially retained obsolete “no Candidate AI” wording; changed to the
+  precise “no pre-answer Candidate matching AI” boundary while retaining the disclosed Sidecar.
+- Offline Demo verification initially treated loopback MinIO as a remote asset; the rule now
+  permits loopback infrastructure while still reporting externalWebDependencies=0.
+- The first final E2E attempt was interrupted because pending Voice transcription incorrectly
+  disabled the independent GPT request button. Voice and assistant pending states are now
+  independent, while final Submit still waits for terminal disclosed platform work. The final
+  browser run passed and is the only E2E result counted as Passed.
+
+Final classification
+--------------------
+Passed:
+- 174 Unit
+- 28 Integration with MinIO (26 in default keyless aggregate)
+- 23 Security
+- 7 Replay
+- 133 documentation assertions
+- 36 PostgreSQL
+- 1 Playwright functional vertical
+- 2 deterministic evals
+- production build, offline Demo, and ordinary Worker composition
+
+Skipped:
+- 2 MinIO assertions only in the environment-free aggregate; both passed in the explicit service run
+
+Blocked:
+- 3 LIVE eval suites because no Worker-only OpenAI API key was supplied
+
+Failed:
+- 0 unresolved final checks
+
+Known remaining boundary
+------------------------
+- Post-answer AnswerEvidenceEdge, Advancement Cohort allocation, Deep Proof attention, Resume
+  Reveal, production IdP, payments, and arbitrary code execution are not part of this delivered
+  slice and remain fail closed.

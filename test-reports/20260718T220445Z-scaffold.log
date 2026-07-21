@@ -1,0 +1,222 @@
+Timestamp (UTC): 2026-07-18T22:04:45Z
+Scope: Engineering scaffold integration
+Git branch: main
+Git commit: unavailable (repository has no HEAD commit)
+Environment: Darwin 25.4.0 arm64; Node.js v22.14.0; pnpm 11.9.0
+Runtime mode: GOLDEN_REPLAY for Replay and Worker smoke checks
+
+FINAL RUN 1 — Frozen dependency installation
+Command: pnpm install --frozen-lockfile
+Exit code: 0
+
+Output:
+Scope: all 13 workspace projects
+Already up to date
+Done in 196ms using pnpm v11.9.0
+
+FINAL RUN 2 — Aggregate regression gate
+Command: pnpm check
+Exit code: 0
+
+Output:
+$ pnpm format:check && pnpm lint && pnpm typecheck && pnpm test:unit && pnpm test:integration && pnpm test:security && pnpm replay:verify
+$ prettier --check .
+Checking formatting...
+All matched files use Prettier code style!
+$ eslint . --max-warnings=0
+$ pnpm -r --if-present typecheck
+Scope: 12 of 13 workspace projects
+packages/ai typecheck: Done
+packages/application typecheck: Done
+packages/challenge-catalog typecheck: Done
+packages/contracts typecheck: Done
+packages/db typecheck: Done
+packages/demo-replay typecheck: Done
+packages/domain typecheck: Done
+packages/projections typecheck: Done
+packages/sandbox typecheck: Done
+packages/testkit typecheck: Done
+apps/web typecheck: Done
+apps/worker typecheck: Done
+$ vitest run --config vitest.unit.config.ts
+Test Files  9 passed (9)
+Tests       51 passed (51)
+$ vitest run --config vitest.integration.config.ts
+Test Files  1 passed (1)
+Tests       4 passed (4)
+$ vitest run --config vitest.security.config.ts
+Test Files  1 passed (1)
+Tests       6 passed (6)
+$ vitest run --config vitest.replay.config.ts
+Test Files  1 passed (1)
+Tests       3 passed (3)
+
+FINAL RUN 3 — Explicit Replay verification
+Command: pnpm replay:verify
+Exit code: 0
+
+Output:
+$ vitest run --config vitest.replay.config.ts
+Test Files  1 passed (1)
+Tests       3 passed (3)
+
+FINAL RUN 4 — Production build
+Command: pnpm build
+Exit code: 0
+
+Output:
+$ pnpm -r --if-present build
+Scope: 12 of 13 workspace projects
+apps/web build: Next.js 16.2.10 (Turbopack)
+apps/web build: Compiled successfully
+apps/web build: Finished TypeScript
+apps/web build: Generating static pages (7/7)
+apps/web build: Route (app)
+apps/web build: /              Static
+apps/web build: /_not-found    Static
+apps/web build: /audit         Static
+apps/web build: /candidate     Static
+apps/web build: /demo          Static
+apps/web build: /employer      Static
+apps/web build: Done
+
+FINAL RUN 5 — Offline demo source and Replay check
+Command: pnpm demo:offline
+Exit code: 0
+
+Output:
+{
+  "status": "ok",
+  "runtimeMode": "GOLDEN_REPLAY",
+  "externalWebDependencies": 0,
+  "replayId": "payment-retry-v1",
+  "candidates": 2,
+  "projections": ["EMPLOYER", "CANDIDATE", "SYNTHETIC_JUDGE"],
+  "catalogRef": "payment-retry@1"
+}
+
+FINAL RUN 6 — Keyless Worker Replay smoke
+Command: env RUNTIME_MODE=GOLDEN_REPLAY DATABASE_URL=<local-postgres-url> SANDBOX_ADAPTER=replay REPLAY_ID=payment-retry-v1 pnpm --filter @onlyboth/worker smoke
+Exit code: 0
+
+Output (timestamp omitted from this retained report):
+{"service":"worker","runtime_mode":"GOLDEN_REPLAY","trace_id":"worker-bootstrap","correlation_id":"worker-bootstrap","command_or_job":"golden-replay-scaffold-smoke","actor_role":"SYSTEM","synthetic":true,"level":"info","outcome":"smoke_succeeded","fixture_ref":"payment-retry-v1","verification_ref":"verification-42-redis-failover"}
+
+FINAL RUN 7 — Built Web route smoke
+Command: pnpm --filter @onlyboth/web start --hostname 127.0.0.1 --port 3000
+Command: curl each local route and record its HTTP status
+Exit code: 0 for route requests; server was then intentionally stopped with SIGINT
+
+Output:
+/ status=200
+/demo status=200
+/employer status=200
+/candidate status=200
+/audit status=200
+
+FINAL RUN 8 — Documentation contract
+Command: bash tests/docs/agents-contract.sh
+Exit code: 0
+
+Output summary:
+RESULT: 28 passed, 0 failed
+
+FINAL RUN 9 — Documentation harness syntax
+Command: bash -n tests/docs/agents-contract.sh
+Exit code: 0
+Output: <none>
+
+FINAL RUN 10 — Focused or skipped test scan
+Command: rg -n '\.(only|skip)\(' tests apps packages
+Exit code: 1
+Output: <none>
+Interpretation: PASS; ripgrep exit 1 means no matches.
+
+FINAL RUN 11 — Tracked diff whitespace check
+Command: git diff --check
+Exit code: 0
+Output: <none>
+Note: The repository has no HEAD commit and files are untracked, so FINAL RUN 12 also scans the scaffold directly.
+
+FINAL RUN 12 — Scaffold trailing-whitespace scan
+Command: rg -n '[[:blank:]]+$' . --glob '!node_modules/**' --glob '!apps/web/.next/**' --glob '!test-reports/*.log' --glob '!OnlyBoth-产品方案.md' --glob '!OnlyBoth-工程设计.md' --glob '!OnlyBoth-赛事评估与竞品研究.md'
+Exit code: 1
+Output: <none>
+Interpretation: PASS; ripgrep exit 1 means no matches. The three pre-existing authoritative Markdown documents were excluded because their intentional two-space hard line breaks are not scaffold defects.
+
+FINAL RUN 13 — Documentation contract after HANDOFF/report linkage
+Command: bash tests/docs/agents-contract.sh
+Exit code: 0
+
+Output summary:
+RESULT: 28 passed, 0 failed
+
+FINAL RUN 14 — Final formatting after HANDOFF update
+Command: pnpm format:check
+Exit code: 0
+
+Output:
+Checking formatting...
+All matched files use Prettier code style!
+
+FINAL RUN 15 — Handoff report-link validation
+Command: test -s test-reports/20260718T220445Z-scaffold.log && rg -n 'test-reports/20260718T220445Z-scaffold\.log|\*\*Status:\*\* Complete' HANDOFF.md
+Exit code: 0
+
+Relevant output:
+19:**Status:** Complete
+77:- Test report: [test-reports/20260718T220445Z-scaffold.log](test-reports/20260718T220445Z-scaffold.log).
+
+NOT IMPLEMENTED / NOT CLAIMED AS PASSED
+
+Command: pnpm test:e2e
+Exit code: 0
+Output: No test files found.
+Interpretation: NOT IMPLEMENTED. Playwright demo scenarios are a later engineering slice.
+
+Command: pnpm test:evals
+Exit code: 0
+Output: No test files found.
+Interpretation: NOT IMPLEMENTED. The live OpenAI adapter and model eval fixtures are not present.
+
+Command: docker --version
+Exit code: 127
+Output: zsh: command not found: docker
+Interpretation: BLOCKED BY ENVIRONMENT. PostgreSQL Compose, Docker Sandbox isolation, and Docker-based Verifier checks were not run.
+
+INTERMEDIATE FAILURES PRESERVED
+
+1. Initial format and lint checks failed on unformatted scaffold files and two import() type annotations in packages/db/src/outbox.ts. The import types were made explicit and the scaffold was formatted. The final aggregate gate passed.
+
+2. The first root unit run followed workspace node_modules symlinks because the custom exclude list replaced Vitest defaults. It attempted Zod's package-source tests and reported 52 failed files, while 31,707 dependency tests ran. It also exposed a JSX transform error in the new Web component test. The root config now excludes node_modules/.next and sets OXC automatic JSX. The final project-only result is 9 files and 51 tests passed.
+
+3. The first root Replay and offline checks could not resolve @onlyboth/challenge-catalog because the root package had not declared its workspace script dependencies. The dependencies were added explicitly; both final checks passed.
+
+4. The first production build inferred `<home>` as the workspace root because an unrelated parent package-lock.json exists, then Turbopack encountered a protected parent directory. apps/web/next.config.ts now pins turbopack.root to this repository, with an integration regression test. The final build passed without the warning.
+
+5. The first post-build offline check treated the official documentation URL in Next's generated next-env.d.ts comment as a remote runtime asset. Declaration files are now excluded from the runtime-source scan. Runtime TypeScript, TSX, and CSS remain covered; the final check reported zero external Web dependencies.
+
+6. The first local route-smoke shell used zsh's read-only variable name "status" and exited 1 before making the route assertions. It was rerun with "http_code" and all five routes returned 200.
+
+SUMMARY
+
+Passed:
+- Frozen monorepo installation across 13 workspace projects.
+- Formatting, lint, and strict type checking across all 12 child projects.
+- 51 unit tests, 4 integration tests, 6 security tests, and 3 Replay tests.
+- Production Next.js build with seven static pages.
+- Offline Golden Replay source/Catalog/projection check with zero external Web dependencies.
+- Keyless Worker Replay smoke.
+- Five built Web route HTTP smoke checks.
+- Documentation contract, shell syntax, focused-test scan, and scaffold whitespace checks.
+
+Failed after correction:
+- None in the implemented scaffold scope.
+
+Not implemented or blocked:
+- E2E suite: no test files.
+- GPT eval suite: no test files.
+- Docker/PostgreSQL/Sandbox isolation verification: Docker unavailable.
+
+Known pre-existing failures:
+- None observed. The repository has no HEAD commit, so tracked-diff coverage is limited; a direct scaffold whitespace scan was used in addition.

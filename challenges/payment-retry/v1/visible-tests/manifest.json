@@ -1,0 +1,5 @@
+{
+  "schema_version": "visible-test-bundle@1",
+  "bundle_ref": "payment-retry/visible-tests@1",
+  "tests": ["single-payment", "same-key-retry", "concurrent-retry"]
+}

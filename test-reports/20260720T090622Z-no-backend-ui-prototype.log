@@ -1,0 +1,66 @@
+# OnlyBoth no-backend UI prototype verification
+
+Timestamp: 2026-07-20 05:06 EDT
+Scope: static `/prototype` dual-role browser experience, target Resume Reveal documentation, and existing runtime regressions
+
+## Failing-first evidence
+
+- `test-reports/20260720T084209Z-no-backend-ui-prototype-initial.log`
+- The first focused Vitest run failed because the prototype state and UI modules did not yet exist.
+
+## Final checks
+
+### `pnpm check`
+
+PASS
+
+- Prettier: all matched files formatted.
+- ESLint: 0 errors and 0 warnings.
+- TypeScript: all 12 applicable workspace packages plus test configuration passed.
+- Unit: 26 files, 164 tests passed.
+- Integration: 6 files, 23 tests passed.
+- Security: 4 files, 19 tests passed.
+- Replay: 2 files, 7 tests passed.
+- Documentation contracts: 36 Agent assertions, 22 AI-design assertions, and 66 product-doctrine assertions passed.
+
+### `pnpm build`
+
+PASS
+
+- Next.js 16.2.10 production build completed.
+- 9/9 static pages generated.
+- `/prototype` is a statically prerendered route.
+
+### `pnpm test:e2e:prototype`
+
+PASS — 3/3 Playwright scenarios
+
+- Candidate Interest through backed Offer, six-minute Answer, Sarah's evidence-linked Review, 8/8 Cohort barrier, answer-only Advancement, Deep Proof attention Hold, and Resume Reveal.
+- 390px responsive layout with no horizontal overflow.
+- 1024px keyboard operation for role Tabs, Interest registration, and Reset.
+- The suite ran with database, OpenAI, Demo session, and runtime adapter environment variables removed.
+- No `/api/**`, Fetch, or XHR traffic was observed.
+- 1440px and 390px visual snapshots were inspected after animations settled.
+
+### PostgreSQL and existing browser regressions
+
+PASS
+
+- `TEST_DATABASE_URL=postgresql://onlyboth:local-development-only@127.0.0.1:5432/onlyboth_test pnpm test:postgres`: 5 files, 34 tests passed.
+- Existing `pnpm test:e2e`: Challenge and legacy Matching verticals, 2/2 passed.
+
+### Replay, offline, and deterministic evaluation
+
+PASS
+
+- `pnpm demo:offline`: `status=ok`, `runtimeMode=GOLDEN_REPLAY`, zero external Web dependencies.
+- `pnpm test:evals`: 2 files, 2 tests passed.
+- `git diff --check`: exit 0.
+- `rg -n "\.(only|skip)\(" tests apps packages`: no focused or skipped tests found.
+
+## Boundaries
+
+- No LIVE OpenAI smoke or LIVE eval was required or claimed for this browser-only prototype.
+- The prototype uses local React state and synthetic fixtures only. It is not a persistence, privacy, authorization, or audit boundary.
+- The target documents now Reveal a Resume only after completed anonymous Human Review, committed post-answer Direct/Explore allocation, held Deep Proof attention, and versioned conditional Candidate consent.
+- The running backend still uses its older final Outcome plus Candidate Continue Reveal condition; this batch intentionally did not change Domain, Contracts, migrations, projections, or Reveal APIs.

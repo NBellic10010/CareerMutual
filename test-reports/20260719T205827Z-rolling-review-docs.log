@@ -1,0 +1,103 @@
+Timestamp (UTC): 2026-07-19T20:58:27Z
+Scope: Product doctrine and architecture migration from one-shot eight-person invitations to reusable review Slots and a public Interest Queue
+Git branch / commit: unavailable; repository has no HEAD and workspace files are untracked
+Environment / runtime mode: local macOS; documentation-only change; runtime mode not applicable
+
+Command 1:
+pnpm exec prettier --write AGENTS.md HANDOFF.md README.md apps/worker/README.md OnlyBoth-产品精神.md OnlyBoth-产品方案.md OnlyBoth-工程设计.md OnlyBoth-AI工程设计.md OnlyBoth-赛事评估与竞品研究.md OnlyBoth-运行代码迁移计划-TEMP.md
+Exit code: 0
+Relevant output:
+AGENTS.md (unchanged)
+HANDOFF.md (unchanged)
+README.md (unchanged)
+apps/worker/README.md (unchanged)
+
+Command 2:
+pnpm test:docs
+Exit code: 1
+Outcome: expected caught failure during development. The doctrine lacked the exact normative sentence "Interest is not Application", and two new shell assertions used unescaped Markdown backticks. Full relevant output and the applied resolution are retained in test-reports/20260719T205725Z-rolling-review-docs-initial.log.
+
+Command 3:
+pnpm test:docs
+Exit code: 0
+Raw result summary:
+RESULT: 34 passed, 0 failed (AGENTS / HANDOFF / README contracts)
+RESULT: 22 passed, 0 failed (AI engineering design contracts)
+RESULT: 60 passed, 0 failed (product doctrine, architecture, migration, and Markdown contracts)
+
+Representative passed assertions:
+PASS: doctrine distinguishes interest from formal application
+PASS: doctrine forbids treating Slot WIP as a total applicant cap
+PASS: doctrine guarantees a disposition for every accepted Application
+PASS: doctrine requires per-Slot recycling
+PASS: engineering design defines the public non-profile queue
+PASS: engineering design separates comparison from Slot WIP
+PASS: engineering design pins cohort membership independently of Slot completion order
+PASS: engineering design recycles each settled Slot
+PASS: AI cannot control the queue or impersonate review settlement
+PASS: migration plan prevents recycled Slot work from entering the wrong cohort
+PASS: migration plan proves the first Slot reaches the ninth Interest
+PASS: migration plan preserves the Cohort review barrier
+PASS: product plan removes the one-shot eight-person cap
+PASS: engineering design removes the one-shot Batch aggregate
+
+Command 4:
+pnpm format:check
+Exit code: 0
+Raw output:
+$ prettier --check .
+Checking formatting...
+All matched files use Prettier code style!
+
+Command 5:
+pnpm check
+Exit code: 0
+Raw result summary:
+- prettier --check .: passed
+- eslint . --max-warnings=0: passed
+- workspace and test TypeScript checks: passed
+- unit: 17 files, 100 tests passed
+- integration: 2 files, 8 tests passed
+- security: 3 files, 13 tests passed
+- Replay: 2 files, 7 tests passed
+- documentation: 34 + 22 + 60 assertions passed
+
+Command 6:
+git diff --check
+Exit code: 0
+Output: none
+Note: the repository has no HEAD and files are untracked, so this command cannot inspect untracked content; Prettier and Markdown contract checks cover the changed documents.
+
+Command 7:
+rg -n "\.(only|skip)\(" tests apps packages || true
+Exit code: 0
+Output: none; no focused or skipped tests found.
+
+Command 8 (after the final HANDOFF update):
+pnpm format:check && pnpm test:docs
+Exit code: 0
+Raw result summary:
+- Formatting: all matched files use Prettier code style.
+- AGENTS / HANDOFF / README contracts: 34 passed, 0 failed.
+- AI engineering design contracts: 22 passed, 0 failed.
+- Product doctrine, architecture, migration, and Markdown contracts: 60 passed, 0 failed.
+
+Passed summary:
+- Documentation contracts: passed after the recorded correction.
+- Formatting, lint, TypeScript, 100 unit, 8 integration, 13 security, and 7 Replay tests: passed.
+- Diff whitespace check and focused/skipped-test scan: passed within the limitations recorded above.
+
+Failed summary:
+- One initial documentation-contract run failed and is retained separately; the final run passed.
+
+Skipped / not run:
+- PostgreSQL acceptance, Playwright E2E, build, offline Demo, deterministic evals, and LIVE evals were not run because this task changed product/architecture documentation and documentation contracts only; no runtime source, schema, prompt, fixture, or behavior changed.
+
+Blocked:
+- LIVE model verification remains blocked on the pre-existing absence of a Worker-only OpenAI API key. It is not required for this documentation-only change.
+
+Known pre-existing failures:
+- None in the suites run.
+
+Known implementation gap:
+- Runtime still executes the legacy Claim-first, pre-answer Direct flow. Reusable review Slots, the public Interest Queue, per-Slot recycling, Advancement Cohort Seats, and the Candidate 09 handoff are documented targets, not implemented behavior.

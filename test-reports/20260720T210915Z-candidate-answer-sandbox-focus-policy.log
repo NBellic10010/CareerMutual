@@ -1,0 +1,96 @@
+OnlyBoth Candidate Answer Sandbox and Focus Policy verification
+UTC timestamp: 2026-07-20T21:09:15Z
+Branch: main
+Commit: unavailable (repository has no committed HEAD)
+Runtime: macOS host; Node.js 22; pnpm workspace; PostgreSQL 16 and MinIO in healthy local containers
+Mode: DEMO_MODE=true for browser acceptance; no OpenAI API key
+
+Scope
+-----
+- Versioned Candidate Answer consent and full-screen in-JobPost Sandbox dialog.
+- Rich text, original Voice Memo, derived transcript insertion, and disclosed platform GPT trace.
+- Append-only browser visibility/window-focus activity and sandbox-focus-policy@1.
+- Database-time warning/automatic submission, empty termination, Slot/Credit settlement, and next-Interest scheduling.
+- Candidate, Employer, audit, and error-mapping privacy boundaries.
+
+Final commands and results
+--------------------------
+
+1. pnpm check
+   Exit code: 0
+   Result:
+   - Prettier: passed.
+   - ESLint: passed with zero warnings.
+   - TypeScript workspace and test projects: passed.
+   - Unit: 34 files, 196 passed.
+   - Environment-neutral integration: 9 passed files, 1 conditional file skipped;
+     32 passed tests, 2 conditional MinIO tests skipped.
+   - Security: 5 files, 24 passed.
+   - Replay: 2 files, 7 passed.
+   - Documentation: 41 Agent/Handoff assertions, 31 AI-design assertions, and
+     79 product-doctrine assertions passed.
+
+2. TEST_DATABASE_URL=<redacted dedicated local test database> pnpm test:postgres
+   Exit code: 0
+   Result: 6 files, 40 passed against PostgreSQL 16.
+   Coverage includes fresh/rollback migration 0009, immutable activity rows, focus/autosave
+   version isolation, duplicate and out-of-order browser reports, a continuously hidden
+   database-time threshold, normal and empty focus settlement, Credit retention, Slot release,
+   Invitation termination, and the next queued Interest receiving a backed offer.
+
+3. OBJECT_STORE_*<redacted local MinIO configuration> pnpm test:integration
+   Exit code: 0
+   Result: 10 files, 34 passed, 0 skipped. Presigned private upload, checksum, write-once,
+   authorized read, and cleanup paths used the healthy local MinIO service.
+
+4. pnpm build
+   Exit code: 0
+   Result: Next.js production build passed. The build contains the versioned
+   /api/v1/candidate/answer-sessions/[id]/activity-events route and all persistent product routes.
+
+5. TEST_DATABASE_URL=<redacted dedicated local test database>
+   OBJECT_STORE_*<redacted local MinIO configuration> pnpm test:e2e
+   Exit code: 0
+   Result: 3 passed in 10.3 seconds.
+   - Persistent Candidate/Recruiter backed Application and sequential Human Review.
+   - Candidate Evidence Passport at 390px.
+   - Full-screen Answer Sandbox at 1440px and 390px, active Escape lock, internal-operation
+     no-away state, focus warning, and second-departure automatic seal.
+
+6. pnpm test:evals
+   Exit code: 0
+   Result: 3 files, 14 deterministic contract evals passed.
+
+7. pnpm demo:offline
+   Exit code: 0
+   Result: status ok; GOLDEN_REPLAY historical Demo; zero external Web dependencies.
+
+8. env -u OPENAI_API_KEY pnpm test:evals:live
+   Exit code: 1
+   Result: BLOCKED as designed. Four LIVE suites refused to run without a Worker-only key.
+   No Golden, preloaded, or cached response was substituted. This is not reported as passed.
+
+Acceptance findings resolved during this run
+--------------------------------------------
+- Updated migration expectations from 0008 to 0009 and removed a deterministic in-memory
+  Artifact-key collision in repeated PostgreSQL fixtures.
+- Fixed Candidate Answer Session projection aliasing: focus.version had overwritten
+  session.version in the PostgreSQL result, causing legitimate Voice uploads to receive stale
+  versions.
+- Made public functional error mapping robust across duplicated Next.js server chunks while
+  deriving HTTP status only from the closed internal error-code table.
+- Closed accepted Invitations during empty Focus termination. This releases the partial unique
+  Cohort Seat index and allows the next queued Interest to receive the recycled Attention Slot.
+- Scoped Playwright locators to the full-screen dialog and exact error text; browser focus signals
+  are explicitly dispatched in headless Chromium because tab visibility is not deterministic in
+  headless mode.
+
+Summary
+-------
+Passed: check, PostgreSQL 40/40, MinIO 34/34, production build, Playwright 3/3,
+deterministic evals 14/14, offline Demo.
+Failed: none remaining in keyless local acceptance.
+Skipped: 2 conditional MinIO assertions in the aggregate check; both passed in the explicit
+MinIO-enabled run.
+Blocked: 4 LIVE OpenAI suites because no Worker-only OPENAI_API_KEY was supplied.
+Known pre-existing failures: none in the executed keyless suites.

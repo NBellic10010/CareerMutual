@@ -1,0 +1,122 @@
+UTC timestamp: 2026-07-21T09:33:02Z
+Scope: required Candidate education, deterministic education recency precedence, post-review Resume Reveal pagination, and role-aware top navigation
+Branch: main
+Commit: unavailable (repository has no committed HEAD)
+Runtime: Node v22.22.0; pnpm 11.9.0; PostgreSQL acceptance requires server 16+; LIVE candidate discovery explicitly requested gpt-5.6-luna
+Data: synthetic Candidate and JobPost fixtures only
+
+FINAL VERIFICATION
+
+1. pnpm check
+Exit code: 0
+Relevant output:
+  Prettier: all matched files use Prettier code style
+  ESLint: passed with max warnings 0
+  TypeScript: all 13 workspace projects plus test tsconfig passed
+  Unit: 40 files passed; 229 tests passed
+  Environment-neutral Integration: 11 files passed, 1 skipped; 38 passed, 2 skipped
+  Security: 6 files passed; 25 tests passed
+  Replay: 2 files passed; 7 tests passed
+  Documentation contracts: 48 Agent + 38 AI design + 86 product doctrine assertions passed
+
+2. pnpm build
+Exit code: 0
+Relevant output:
+  Next.js 16.2.10 production compilation and TypeScript passed.
+  Dynamic route /employer/candidates was included in the route manifest.
+
+3. pnpm --filter @onlyboth/web test
+Exit code: 0
+Relevant output:
+  Test Files 12 passed (12)
+  Tests 41 passed (41)
+
+4. pnpm test:postgres
+Exit code: 0
+Relevant output:
+  Test Files 6 passed (6)
+  Tests 45 passed (45)
+  Fresh migration, immutable education backfill, Resume snapshot pinning, positive-review Reveal,
+  non-positive no-Reveal, reviewer pagination, idempotency, and existing verticals passed.
+
+5. pnpm test:e2e
+Exit code: 0
+Relevant output:
+  Running 3 tests using 1 worker
+  3 passed (10.2s)
+  The primary browser vertical proved no Resume identity before Human Review, selected
+  ADVANCE_ELIGIBLE, then displayed the pinned full Resume only on /employer/candidates.
+  Candidate and Recruiter breadcrumbs/navigation were role-specific. The 390px Passport and
+  full-screen focus-policy scenarios also passed.
+
+6. pnpm test:evals
+Exit code: 0
+Relevant output:
+  Test Files 4 passed (4)
+  Tests 45 passed (45)
+
+7. OPENAI_EVAL_MODEL=gpt-5.6-luna pnpm exec vitest run tests/evals/candidate-discovery.live.eval.test.ts --config vitest.live-evals.config.ts
+Exit code: 0
+Relevant output:
+  Test Files 1 passed (1)
+  Tests 3 passed (3)
+  Duration 34.47s
+  The three tests execute 6 evidence-connected, 3 insufficient-source, and 3 prompt-injection
+  synthetic cases under candidate-job-discovery-input@2 and Prompt 1.1.0. No Golden fallback ran.
+
+8. git diff --check
+Exit code: 0
+
+9. rg scan for .only/.skip in TypeScript sources
+Exit code: 1 from rg (expected no-match condition); wrapper exit code: 0
+Result: no focused or skipped TypeScript tests were found.
+
+10. pnpm db:migrate
+Exit code: 0
+Relevant output:
+  outcome: migrations_applied
+  Local synthetic demo database now includes migration 0012.
+
+11. pnpm demo:reset:functional
+Exit code: 0
+Relevant output:
+  outcome: FUNCTIONAL_DEMO_READY
+  candidate_credit: 3
+  job_post_count: 21
+  employer_ai_review_policy: OFF
+
+12. pnpm --filter @onlyboth/db exec tsx -e '<redacted read-only count query>'
+Exit code: 0
+Relevant output:
+  {"resumes":1,"reveals":0,"migration":"0012_candidate_education_and_review_reveal"}
+  The reset correctly starts before any Human Review, so the Resume exists but no Reveal exists.
+
+PRESERVED REPAIRED FAILURES
+
+- The first TypeScript run rejected stale candidate-job-discovery-input@1 and Passport command@1
+  test fixtures. Fixtures were upgraded to @2 with explicit education and frozen precedence.
+- The first Unit rerun rejected an extra education verification_state because the AI education DTO
+  had not yet declared it. The strict DTO and PostgreSQL assembler were aligned; 229/229 then passed.
+- The first PostgreSQL migration run failed with
+  "candidate_evidence_passport_snapshots rows are immutable" during education backfill. Migration
+  0012 now removes that trigger only inside the migration transaction, backfills once, restores the
+  immutable trigger, and passes the fresh PostgreSQL suite.
+- The next PostgreSQL run exposed stale expected migration lists and one concurrent-suite timing
+  failure. Expected lists were upgraded for 0012; the unchanged timing scenario passed on the full
+  rerun. Final PostgreSQL result is 45/45.
+- Two ad hoc read-only demo-database confirmation attempts failed before the final query: the root
+  package could not resolve the workspace-local `pg` dependency, then `tsx -e` rejected top-level
+  await under CJS output. The same read-only query was rerun from `@onlyboth/db` inside an async
+  IIFE and returned migration 0012, one synthetic Resume, and zero pre-Review Reveals.
+
+SUMMARY
+
+Passed: format, lint, typecheck, 229 Unit, 38 environment-neutral Integration, 25 Security,
+7 Replay, 172 documentation assertions, 41 Web component tests, 45 PostgreSQL tests, 3 Playwright
+E2E tests, 45 deterministic evals, 3 LIVE suites covering 12 synthetic discovery cases, and build.
+Skipped: 2 conditional environment-neutral Integration tests reported by the existing suite.
+Failed in final verification: 0.
+Blocked: 0 for this scope.
+Known pre-existing boundary: completed-cohort Direct/Explore allocation and Deep Proof remain future
+work. Resume Reveal now intentionally occurs at an ADVANCE_ELIGIBLE anonymous Human Review, per the
+current explicit product requirement, and does not imply a hiring decision.

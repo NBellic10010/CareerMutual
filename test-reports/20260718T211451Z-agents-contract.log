@@ -1,0 +1,120 @@
+Timestamp (UTC): 2026-07-18T21:14:51Z
+Scope: agents-contract
+Git branch: main
+Git commit: unavailable (repository has no HEAD commit)
+Environment: macOS / bash; application runtime mode N/A (documentation contract)
+
+RUN 1 — Initial contract test
+Command: bash tests/docs/agents-contract.sh
+Exit code: 0
+Interpretation: NOT accepted as a clean pass. The harness emitted command-substitution warnings because two expected strings containing Markdown backticks were double-quoted in Bash.
+
+Output:
+PASS: root AGENTS.md exists
+PASS: root HANDOFF.md exists
+PASS: authoritative product plan exists
+PASS: authoritative engineering design exists
+PASS: test report policy exists
+PASS: AGENTS requires tests for behavior changes
+PASS: AGENTS requires persisted test output
+tests/docs/agents-contract.sh: line 62: HANDOFF.md: command not found
+PASS: AGENTS requires HANDOFF updates
+tests/docs/agents-contract.sh: line 63: HANDOFF.md: command not found
+PASS: AGENTS protects HANDOFF during parallel work
+PASS: AGENTS preserves reviewer reservation invariant
+PASS: AGENTS preserves label reveal invariant
+PASS: AGENTS preserves backpressure invariant
+PASS: HANDOFF includes test report section
+PASS: report policy forbids false pass claims
+PASS: AGENTS defines a stable aggregate check command
+PASS: AGENTS separates operational logs from domain audit
+PASS: AGENTS.md has balanced Markdown fences
+PASS: HANDOFF.md has balanced Markdown fences
+PASS: test-reports/README.md has balanced Markdown fences
+RESULT: 19 passed, 0 failed
+
+Corrective action:
+- Changed the two patterns containing `HANDOFF.md` from Bash double-quoted strings to single-quoted strings.
+- Re-ran the complete contract test.
+
+RUN 2 — Corrected contract test
+Command: bash tests/docs/agents-contract.sh
+Exit code: 0
+
+Output:
+PASS: root AGENTS.md exists
+PASS: root HANDOFF.md exists
+PASS: authoritative product plan exists
+PASS: authoritative engineering design exists
+PASS: test report policy exists
+PASS: AGENTS requires tests for behavior changes
+PASS: AGENTS requires persisted test output
+PASS: AGENTS requires HANDOFF updates
+PASS: AGENTS protects HANDOFF during parallel work
+PASS: AGENTS preserves reviewer reservation invariant
+PASS: AGENTS preserves label reveal invariant
+PASS: AGENTS preserves backpressure invariant
+PASS: HANDOFF includes test report section
+PASS: report policy forbids false pass claims
+PASS: AGENTS defines a stable aggregate check command
+PASS: AGENTS separates operational logs from domain audit
+PASS: AGENTS.md has balanced Markdown fences
+PASS: HANDOFF.md has balanced Markdown fences
+PASS: test-reports/README.md has balanced Markdown fences
+RESULT: 19 passed, 0 failed
+
+RUN 3 — Bash syntax validation
+Command: bash -n tests/docs/agents-contract.sh
+Exit code: 0
+Output: <none>
+
+RUN 4 — Tracked diff whitespace validation
+Command: git diff --check
+Exit code: 0
+Output: <none>
+Note: New files are currently untracked, so RUN 6 separately scanned their trailing whitespace.
+
+RUN 5 — Focused/disabled test scan
+Command: rg -n '\.(only|skip)\(' tests
+Exit code: 1
+Output: <none>
+Interpretation: PASS; ripgrep exit 1 means no matches.
+
+RUN 6 — New-file trailing whitespace scan
+Command: rg -n '[[:blank:]]+$' AGENTS.md HANDOFF.md test-reports/README.md tests/docs/agents-contract.sh
+Exit code: 1
+Output: <none>
+Interpretation: PASS; ripgrep exit 1 means no matches.
+
+RUN 7 — Final contract test after HANDOFF and report creation
+Command: bash tests/docs/agents-contract.sh
+Exit code: 0
+Output summary: RESULT: 19 passed, 0 failed
+
+RUN 8 — Handoff report-link validation
+Command: test -s test-reports/20260718T211451Z-agents-contract.log
+Exit code: 0
+Output: <none>
+
+Command: rg -n 'test-reports/20260718T211451Z-agents-contract\.log|\*\*状态：\*\* Complete' HANDOFF.md
+Exit code: 0
+Output:
+18:**状态：** Complete
+57:- 测试报告：[test-reports/20260718T211451Z-agents-contract.log](test-reports/20260718T211451Z-agents-contract.log)。
+
+SUMMARY
+Passed:
+- Corrected Agent Contract test: 19 assertions passed, 0 failed.
+- Bash syntax validation.
+- Git tracked diff whitespace validation.
+- No .only or .skip calls in tests.
+- No trailing whitespace in the new contract files.
+
+Failed:
+- None after the test harness correction.
+
+Skipped / Blocked:
+- Application lint, typecheck, unit, integration, security, eval, E2E, replay and offline demo suites are not configured because the application scaffold does not exist yet.
+
+Known pre-existing failures:
+- None observed; no application test suite exists yet.

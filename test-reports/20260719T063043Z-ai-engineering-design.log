@@ -1,0 +1,210 @@
+Timestamp (UTC): 2026-07-19T06:30:43Z
+Scope: Standalone OnlyBoth AI engineering design, documentation contract, and cross-links
+Git branch: main
+Git commit: unavailable; the repository has no HEAD commit and all current files are untracked
+Environment: Node.js v22.14.0, pnpm 11.9.0
+Runtime mode: N/A (documentation-only change; no OpenAI API, database, or Sandbox call)
+
+COMMAND 1
+pnpm test:docs
+Exit code: 1
+
+Relevant output:
+$ bash tests/docs/agents-contract.sh && bash tests/docs/ai-engineering-design-contract.sh
+PASS: root AGENTS.md exists
+PASS: root HANDOFF.md exists
+PASS: authoritative product plan exists
+PASS: authoritative engineering design exists
+PASS: root README exists
+PASS: test report policy exists
+PASS: AGENTS requires tests for behavior changes
+PASS: AGENTS requires persisted test output
+PASS: AGENTS requires HANDOFF updates
+PASS: AGENTS protects HANDOFF during parallel work
+PASS: AGENTS preserves reviewer reservation invariant
+PASS: AGENTS preserves label reveal invariant
+PASS: AGENTS preserves backpressure invariant
+PASS: HANDOFF includes test report section
+PASS: report policy forbids false pass claims
+PASS: AGENTS defines a stable aggregate check command
+PASS: AGENTS separates operational logs from domain audit
+PASS: AGENTS preserves the English documentation rule
+PASS: AGENTS.md has balanced Markdown fences
+PASS: HANDOFF.md has balanced Markdown fences
+PASS: AGENTS prose is English
+PASS: HANDOFF prose is English
+PASS: README.md has balanced Markdown fences
+FAIL: README.md prose is English (found Han-script prose in README.md)
+PASS: apps/worker/README.md has balanced Markdown fences
+PASS: apps/worker/README.md prose is English
+PASS: test-reports/README.md has balanced Markdown fences
+PASS: test-reports/README.md prose is English
+RESULT: 27 passed, 1 failed
+[ELIFECYCLE] Command failed with exit code 1.
+
+Diagnosis and fix:
+The English README checker allowed the two existing Chinese source-document filenames but
+did not yet remove the new Chinese AI design filename before scanning for Han-script prose.
+The README prose remained English. The checker was updated to allow the new filename, and
+the AI contract assertion was kept in English.
+
+COMMAND 2
+pnpm test:docs
+Exit code: 0
+
+Complete output:
+$ bash tests/docs/agents-contract.sh && bash tests/docs/ai-engineering-design-contract.sh
+PASS: root AGENTS.md exists
+PASS: root HANDOFF.md exists
+PASS: authoritative product plan exists
+PASS: authoritative engineering design exists
+PASS: root README exists
+PASS: test report policy exists
+PASS: AGENTS requires tests for behavior changes
+PASS: AGENTS requires persisted test output
+PASS: AGENTS requires HANDOFF updates
+PASS: AGENTS protects HANDOFF during parallel work
+PASS: AGENTS preserves reviewer reservation invariant
+PASS: AGENTS preserves label reveal invariant
+PASS: AGENTS preserves backpressure invariant
+PASS: HANDOFF includes test report section
+PASS: report policy forbids false pass claims
+PASS: AGENTS defines a stable aggregate check command
+PASS: AGENTS separates operational logs from domain audit
+PASS: AGENTS preserves the English documentation rule
+PASS: AGENTS.md has balanced Markdown fences
+PASS: HANDOFF.md has balanced Markdown fences
+PASS: AGENTS prose is English
+PASS: HANDOFF prose is English
+PASS: README.md has balanced Markdown fences
+PASS: README.md prose is English
+PASS: apps/worker/README.md has balanced Markdown fences
+PASS: apps/worker/README.md prose is English
+PASS: test-reports/README.md has balanced Markdown fences
+PASS: test-reports/README.md prose is English
+RESULT: 28 passed, 0 failed
+PASS: AI engineering design exists
+PASS: design defines contract compilation
+PASS: design defines MatchEdge drafting
+PASS: design defines Challenge recommendation
+PASS: design defines Evidence compression
+PASS: design forbids AI tools
+PASS: design disables Responses application-state storage
+PASS: design uses Responses Structured Outputs
+PASS: design specifies provider request correlation
+PASS: design defines typed refusal handling
+PASS: design defines stale-result handling
+PASS: design defines superseded requests
+PASS: design preserves human Challenge authority
+PASS: design explicitly protects private labels
+PASS: design specifies Replay parity
+PASS: design rejects an MVP multi-agent workflow
+PASS: authoritative engineering design links the AI design
+PASS: root README links the AI design
+PASS: OnlyBoth-AI工程设计.md has balanced Markdown fences
+RESULT: 19 passed, 0 failed
+
+COMMAND 3
+pnpm check
+Exit code: 0
+
+Relevant complete output (absolute repository path redacted as <repo>):
+$ pnpm format:check && pnpm lint && pnpm typecheck && pnpm test:unit && pnpm test:integration && pnpm test:security && pnpm replay:verify && pnpm test:docs
+$ prettier --check .
+Checking formatting...
+All matched files use Prettier code style!
+$ eslint . --max-warnings=0
+$ pnpm -r --if-present typecheck
+Scope: 12 of 13 workspace projects
+All package and application TypeScript checks completed successfully.
+$ vitest run --config vitest.unit.config.ts
+RUN  v4.1.10 <repo>
+Test Files  9 passed (9)
+Tests  51 passed (51)
+$ vitest run --config vitest.integration.config.ts
+RUN  v4.1.10 <repo>
+Test Files  1 passed (1)
+Tests  4 passed (4)
+$ vitest run --config vitest.security.config.ts
+RUN  v4.1.10 <repo>
+Test Files  1 passed (1)
+Tests  6 passed (6)
+$ vitest run --config vitest.replay.config.ts
+RUN  v4.1.10 <repo>
+Test Files  1 passed (1)
+Tests  3 passed (3)
+$ bash tests/docs/agents-contract.sh && bash tests/docs/ai-engineering-design-contract.sh
+RESULT: 28 passed, 0 failed
+RESULT: 19 passed, 0 failed
+
+COMMAND 4
+git diff --check
+Exit code: 0
+Output: <empty>
+
+COMMAND 5
+rg -n "\.(only|skip)\(" tests apps packages
+Exit code: 1
+Output: <empty; ripgrep uses exit code 1 for no matches>
+Interpretation: Passed; no focused or skipped tests were found.
+
+COMMAND 6 (after HANDOFF and report creation)
+pnpm test:docs
+Exit code: 0
+Output summary:
+RESULT: 28 passed, 0 failed
+RESULT: 19 passed, 0 failed
+
+COMMAND 7 (after HANDOFF and report creation)
+pnpm format:check
+Exit code: 0
+Complete output:
+$ prettier --check .
+Checking formatting...
+All matched files use Prettier code style!
+
+COMMAND 8 (after HANDOFF and report creation)
+git diff --check
+Exit code: 0
+Output: <empty>
+
+COMMAND 9 (after HANDOFF and report creation)
+rg -n "\.(only|skip)\(" tests apps packages
+Exit code: 1
+Output: <empty; ripgrep uses exit code 1 for no matches>
+Interpretation: Passed; no focused or skipped tests were found.
+
+SUMMARY
+Passed:
+- Final documentation contract: 28 agent/repository assertions and 19 AI-design assertions.
+- Formatting, lint, and all package/application type checks.
+- Unit: 51 tests.
+- Integration: 4 tests.
+- Security: 6 tests.
+- Replay: 3 tests.
+- git diff whitespace check.
+- .only/.skip scan found no matches.
+
+Failed and fixed:
+- The first documentation-contract run failed 1 of 28 repository assertions because the
+  English README checker did not recognize the new Chinese source-document filename. The
+  checker was corrected and the complete suite passed on rerun.
+
+Skipped / not run:
+- pnpm build: not run because this task changes behavior-defining documentation and tests,
+  not runtime output; pnpm check covered formatting, lint, types, unit, integration,
+  security, Replay, and documentation contracts.
+- pnpm demo:offline: not run for the same reason.
+- pnpm test:e2e and pnpm test:evals: not run; these future suites currently contain no
+  implemented test files and are not represented as passed.
+- No LIVE OpenAI call, PostgreSQL migration, Docker Sandbox, or remote network demo ran.
+
+Known pre-existing conditions:
+- The repository has no HEAD commit and all current files are untracked.
+- The live Responses adapter, AI persistence, continuous Worker, model eval suite, durable
+  Command API, PostgreSQL adapter, and real SelectHumanChallenge vertical slice remain
+  unimplemented. The new document records these as gaps and does not claim otherwise.
+
+Security review:
+- No API key, token, cookie, database credential, real candidate data, or private label was
+  used or written to this report.

@@ -1,0 +1,107 @@
+Timestamp (UTC): 2026-07-20T22:16:05Z
+Scope: Employer AI Review Analyst LIVE OpenAI bringup preflight
+Git branch / commit: main / unavailable (repository has no resolvable HEAD commit)
+Environment / runtime mode: local macOS; Node 22.22.0; pnpm 11.9.0; OpenAI SDK 6.48.0; LIVE requested; PostgreSQL 16 and MinIO healthy on loopback
+
+Outcome: BLOCKED before any OpenAI request because the Worker environment does not contain OPENAI_API_KEY. No Synthetic, Cached, or Golden result was substituted.
+
+Official configuration audit:
+- Explicit model: gpt-5.6-sol
+- Responses API with reasoning.effort=medium
+- JavaScript SDK responses.parse with Zod text.format
+- store=false, no tools, no background mode, and no remote conversation state
+- privacy-preserving safety_identifier and unique X-Client-Request-Id
+- SDK retries disabled; bounded retry remains Worker-owned
+- deterministic schema, exact-quote, source-authority, and output-policy validation remains mandatory after Structured Outputs
+
+Command 1:
+  if [[ -n ${OPENAI_API_KEY:-} ]]; then echo OPENAI_API_KEY=present; else echo OPENAI_API_KEY=absent; fi
+Exit code: 0
+Output:
+  OPENAI_API_KEY=absent
+
+Command 2:
+  pnpm exec vitest run tests/unit/employer-review-analyst.test.ts --config vitest.unit.config.ts
+Exit code: 0
+Output:
+  Test Files  1 passed (1)
+  Tests       7 passed (7)
+  Duration    507ms
+
+Command 3:
+  pnpm --filter @onlyboth/worker test -- src/config.test.ts src/worker-runtime.test.ts
+Exit code: 0
+Output:
+  Test Files  3 passed (3)
+  Tests       9 passed (9)
+  Duration    608ms
+
+Command 4:
+  pnpm exec vitest run tests/evals/employer-review-analyst.live.eval.test.ts --config vitest.live-evals.config.ts
+Exit code: 1
+Output:
+  FAIL tests/evals/employer-review-analyst.live.eval.test.ts
+  Error: BLOCKED: LIVE buildAnswerEvidenceEdge eval requires a Worker-only OPENAI_API_KEY.
+  No synthetic or Golden result was substituted.
+  Test Files  1 failed (1)
+  Tests       no tests
+
+Command 5:
+  OPENAI_API_KEY=<unset> RUNTIME_MODE=LIVE DATABASE_URL=<redacted-local-loopback> SANDBOX_ADAPTER=docker DEMO_MODE=true pnpm live:smoke
+Exit code: 1
+Output:
+  service=worker runtime_mode=LIVE outcome=refused_to_start
+  error_code=WORKER_CONFIGURATION_INVALID synthetic=false
+
+Command 6:
+  docker compose -f infra/docker-compose.dev.yml ps
+Exit code: 0
+Output:
+  PostgreSQL 16: healthy on 127.0.0.1:5432
+  MinIO: healthy on 127.0.0.1:9000-9001
+
+Command 7:
+  curl -sS -o /dev/null -w 'web_status=%{http_code}' http://127.0.0.1:3000/login
+Exit code: 0
+Output:
+  web_status=200
+
+Command 8:
+  pnpm test:docs
+Exit code: 0
+Output:
+  Agent and English documentation contract: 44 passed, 0 failed
+  AI engineering design contract: 36 passed, 0 failed
+  Product spirit contract: 82 passed, 0 failed
+
+Command 9:
+  pnpm exec prettier --check HANDOFF.md
+Exit code: 0
+Output:
+  All matched files use Prettier code style.
+
+Command 10:
+  git diff --check
+Exit code: 0
+Output:
+  No whitespace errors.
+
+Command 11:
+  rg -n "\\.(only|skip)\\(" tests apps packages
+Exit code: 1
+Output:
+  No matches. Exit 1 is the expected ripgrep no-match result.
+
+Summary:
+- Passed: 16 relevant unit/Worker tests; 162 documentation assertions; formatting and diff checks;
+  local PostgreSQL, MinIO, and Web availability; official request-shape audit.
+- Failed: 0 implementation checks.
+- Skipped: 0.
+- Blocked: focused LIVE provider request, 30-case Employer Analyst LIVE eval, and database ANALYZING-to-READY verification.
+- Known pre-existing failures: none observed in the checks run for this bringup.
+
+Recovery:
+1. Export OPENAI_API_KEY only into the Worker/eval process environment; do not commit it or paste it into a report.
+2. Run one focused source-linked Employer Analyst LIVE request and verify the returned model and strict parsed output.
+3. Run the 30-case LIVE suite and require all hard gates plus macro-F1 >= 0.85.
+4. Start the Worker with EMPLOYER_REVIEW_AI_ENABLED=true and EMPLOYER_REVIEW_AI_MODE=LIVE, then verify PostgreSQL and UI transition from ANALYZING to READY without fallback.

@@ -1,0 +1,5 @@
+{
+  "schema_version": "hidden-test-bundle@1",
+  "bundle_ref": "payment-retry/redis-failover/hidden-tests@1",
+  "runner_image_digest": "sha256:64f848a90c7c66434eb7cb5ac35caf635906ecf38d637ce7c2ec95fac960753d"
+}

@@ -1,0 +1,134 @@
+UTC timestamp: 2026-07-20T18:54:37Z
+Scope: Candidate Evidence Passport and Candidate-only GPT job discovery signals
+Git branch: main
+Git commit: unavailable (initial worktree has no commit)
+Environment: local Node/pnpm workspace; PostgreSQL 16 and MinIO healthy; synthetic Demo data only
+Runtime modes: GOLDEN_REPLAY for the existing offline product path; LIVE only for Candidate discovery refresh
+
+Security note:
+- Database and object-store credentials are intentionally redacted from this report.
+- No API key, token, cookie, session, private label, or real Candidate data is retained here.
+- A previously exposed OpenAI-format credential was removed from the repository; revocation and rotation remain required.
+
+Verification output follows. Each section records the exact non-secret command and its exit code.
+
+COMMAND: pnpm check
+EXIT: 0
+OUTPUT (complete relevant summary):
+- Prettier: all matched files use Prettier code style.
+- ESLint: passed with zero warnings.
+- TypeScript: all 13 applicable workspace projects and the root test project passed.
+- Unit: 32 files passed; 185 tests passed.
+- Integration without explicit MinIO environment: 8 files passed, 1 skipped; 29 tests passed, 2 skipped.
+- Security: 5 files passed; 24 tests passed.
+- Replay: 2 files passed; 7 tests passed.
+- Documentation contracts: AGENTS 39 passed; AI design 31 passed; product spirit/architecture 74 passed; 0 failed.
+
+COMMAND: pnpm build
+EXIT: 0
+OUTPUT (complete relevant summary):
+- Next.js 16.2.10 compiled successfully, passed TypeScript, generated all static pages, and finalized the production build.
+- Dynamic routes include the Candidate Passport GET, Draft, Publish, and Discovery Refresh APIs.
+- Dynamic page `/candidate/evidence-passport` was included in the production route manifest.
+
+COMMAND: OBJECT_STORE_*=[redacted local test configuration] pnpm test:integration
+EXIT: 0
+OUTPUT:
+- Test files: 9 passed.
+- Tests: 31 passed; 0 failed; 0 skipped.
+- This run includes the real local MinIO integration checks omitted by the environment-neutral `pnpm check` run.
+
+COMMAND: TEST_DATABASE_URL=[redacted dedicated PostgreSQL 16 test database] pnpm test:postgres
+EXIT: 0
+OUTPUT:
+- Test files: 6 passed.
+- Tests: 37 passed; 0 failed; 0 skipped.
+- Candidate Passport coverage includes transaction atomicity, immutable Snapshot/AI Output, Candidate isolation, Employer non-disclosure, idempotency, and concurrent first-Draft serialization.
+
+COMMAND: pnpm test:evals
+EXIT: 0
+OUTPUT:
+- Test files: 3 passed.
+- Deterministic contract evaluations: 14 passed; 0 failed.
+- Candidate discovery corpus covers six evidence-connected cases, three insufficient-source cases, and three prompt-injection cases against Schema/ref/no-label/no-score hard gates.
+
+COMMAND: pnpm demo:offline
+EXIT: 0
+OUTPUT:
+- status: ok
+- runtimeMode: GOLDEN_REPLAY
+- externalWebDependencies: 0
+- replayId: payment-retry-v1
+- candidates: 2
+- projections: EMPLOYER, CANDIDATE, SYNTHETIC_JUDGE
+- catalogRef: payment-retry@1
+
+COMMAND: DATABASE_URL=[redacted development database] RUNTIME_MODE=GOLDEN_REPLAY SANDBOX_ADAPTER=replay REPLAY_ID=payment-retry-v1 pnpm db:migrate
+EXIT: 0
+OUTPUT:
+- Worker migration command reported `migrations_applied`; migration 0008 is installed in the development database.
+
+COMMAND: DATABASE_URL=[redacted development database] DEMO_MODE=true pnpm demo:reset:functional
+EXIT: 0
+OUTPUT:
+- outcome: FUNCTIONAL_DEMO_READY
+- opportunity_ref: functional-demo-job:opportunity:1
+- invitation_ref: functional-demo-queue:answer-invitation:1
+- candidate_credit: 3
+- The deterministic reset was repeated successfully after stopping a stale development Worker that had consumed the first reset's Outbox concurrently.
+
+COMMAND: DATABASE_URL=[redacted development database] RUNTIME_MODE=GOLDEN_REPLAY SANDBOX_ADAPTER=replay REPLAY_ID=payment-retry-v1 pnpm worker:once
+EXIT: 0
+OUTPUT:
+- Worker booted successfully and returned `idle`, confirming no pending synthetic job remained after reset.
+
+COMMAND: TEST_DATABASE_URL=[redacted dedicated test database] OBJECT_STORE_*=[redacted local test configuration] pnpm test:e2e
+EXIT: 0
+OUTPUT:
+- Playwright ran 2 tests with one isolated worker.
+- Persistent Candidate/Employer backed-application and sequential-review vertical: passed.
+- Candidate Evidence Passport at a 390px viewport: passed.
+- Total: 2 passed in 5.8 seconds.
+
+COMMAND: env -u OPENAI_API_KEY pnpm test:evals:live
+EXIT: 1 (expected fail-closed result)
+OUTPUT (security-preserving summary):
+- LIVE suites reported BLOCKED before running any case because no Worker-only `OPENAI_API_KEY` was configured.
+- Blocked suites: deriveCandidateJobSignals, buildMatchEdge, Candidate assistant/transcription, and recommendChallenges.
+- Candidate discovery explicitly reported that no preloaded or Golden result was substituted.
+- This check is BLOCKED, not passed and not a product-test failure.
+
+COMMAND: pnpm exec prettier --check [changed architecture documents and this report] && git diff --check && focused/skip/credential scans
+EXIT: 0
+OUTPUT:
+- Changed architecture documents and this report conform to Prettier.
+- The unstaged change set has no whitespace errors.
+- No `.only`, `.skip`, or `.todo` test declarations were found in apps, packages, tests, or scripts.
+- No OpenAI-shaped credential was found in repository files.
+
+KNOWN PRE-EXISTING / INTERMEDIATE FINDINGS:
+- The first repository scan script used `status`, a read-only zsh variable, and exited before checks; it was corrected to use `rc` and rerun successfully.
+- `git diff --cached --check` still reports historical terminal control characters and trailing whitespace in already-staged archived test reports, plus prior Markdown hard-break whitespace. These pre-existing historical artifacts were not rewritten because test reports are append-only evidence.
+- The first development Demo reset raced with a stale Worker left from the earlier interrupted run. The stale Worker was stopped; reset was repeated deterministically and the next single Worker run was idle.
+- Earlier in implementation, a real-format OpenAI credential was found in `.env.example`. The file now contains only a commented placeholder and the repository credential scan passes. The credential must nevertheless be revoked and rotated outside this repository.
+
+FINAL SUMMARY:
+- Passed: formatting, lint, typecheck, unit, integration including MinIO, security, replay, documentation contracts, production build, PostgreSQL 16, deterministic evals, offline Demo, functional reset, Worker boot, and two-role Playwright E2E.
+- Failed: none in the final product-test reruns.
+- Skipped: 2 MinIO tests only in the environment-neutral `pnpm check`; the explicit MinIO run passed all 31 integration tests with zero skips.
+- Blocked: four LIVE OpenAI suites, including the new 12-case Candidate discovery eval, because no replacement Worker-only API key is configured.
+
+COMMAND: pnpm exec prettier --check HANDOFF.md [this report] && pnpm test:docs && git diff --check
+EXIT: 0
+OUTPUT:
+- Handoff and report formatting passed.
+- Documentation contracts reran after the Handoff update: 39 + 31 + 74 assertions passed; 0 failed.
+- The final unstaged change set has no whitespace errors.
+
+COMMAND: env -u OPENAI_API_KEY pnpm dev; authenticated local HTTP smoke
+EXIT: running successfully (development session intentionally left active)
+OUTPUT:
+- Next.js development server became ready on `http://localhost:3000` in 224ms; the continuous Worker process is active in the same workspace session.
+- Home: 200; Login: 200; unauthenticated Passport: 307 to Login.
+- Candidate development session issuance: 201.
+- Authenticated Candidate Feed page: 200; Passport page: 200; Passport API: 200; Feed V2 API: 200.

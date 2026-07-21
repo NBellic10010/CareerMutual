@@ -1,0 +1,5 @@
+{
+  "schema_version": "hidden-test-bundle@1",
+  "bundle_ref": "payment-retry/duplicate-webhook/hidden-tests@1",
+  "runner_image_digest": "sha256:7ec4ecf04836b966e46619adcd475aaac6325f99f4d8249376d3540930577616"
+}

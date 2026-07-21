@@ -1,0 +1,122 @@
+Timestamp (UTC): 2026-07-21T08:18:59Z
+Scope: GPT-5.6 Luna LIVE Employer Evidence Analyst V2 semantic acceptance
+Git branch / commit: main / UNBORN (repository has no HEAD commit)
+Environment / runtime mode: local macOS; LIVE Responses API; OPENAI_API_KEY loaded from ignored .env.local and never printed; OPENAI_EVAL_MODEL=gpt-5.6-luna; production Worker default unchanged
+
+Safety and acceptance boundary
+- No Synthetic, Cached AI, or Golden fallback was used for the LIVE commands.
+- The API key value, raw prompts, candidate text, and full model responses were not logged.
+- The release harness used Responses API Structured Outputs, answer-evidence-edge-draft@2, local deterministic source/authority validation, and medium reasoning.
+- This accepts the isolated Luna eval target. It does not accept the still-configured production gpt-5.6-sol default, open the platform kill switch, or prove the database-backed Worker ANALYZING -> READY vertical.
+
+Repository changes made while resolving exposed failures
+- Employer analyst Prompt advanced from 2.0.0 through 2.0.1 to onlyboth.build-answer-evidence-edge@2.0.2.
+- 2.0.1 added a final literal-substring and zero-based occurrence validation instruction.
+- 2.0.2 explicitly prohibits echoing injected score/rank/hiring terms inside exact_quote and directs the model to cite a different literal, non-prohibited fragment.
+- The LIVE acceptance now requires V2, 30 bounded Good/Bad verdicts, all four language dimensions, criterion macro-F1, prohibited-language gates, and same-answer/different-process invariance.
+- Process invariance compares decisions, severities, and source block refs. It intentionally does not require model-authored explanations or the exact selected quote span to be byte-identical when both spans validly resolve to the same frozen source.
+- OPENAI_EVAL_CASE is an optional eval-only integer selector for focused failure reproduction. With no selector, the full 30-case gate is unchanged.
+
+Command 1
+pnpm exec prettier --check tests/evals/employer-review-analyst.live.eval.test.ts tests/evals/employer-review-analyst.contract.eval.test.ts; pnpm exec vitest run --config vitest.evals.config.ts tests/evals/employer-review-analyst.contract.eval.test.ts
+Exit code: 0
+Relevant output:
+  All matched files use Prettier code style.
+  Test Files 1 passed (1)
+  Tests 31 passed (31)
+
+Command 2 - preserved initial LIVE failure, Prompt 2.0.0
+set -a; source ./.env.local; set +a; OPENAI_EVAL_MODEL=gpt-5.6-luna pnpm exec vitest run --config vitest.live-evals.config.ts tests/evals/employer-review-analyst.live.eval.test.ts
+Exit code: 1
+Relevant raw output:
+  Test Files 1 failed (1)
+  Tests 2 failed (2)
+  Synthetic Employer Analyst case 19 failed: An exact quote cannot be resolved at its declared occurrence index.
+  Process-invariance assertion also failed because the first expanded assertion incorrectly required semantically equivalent model-authored explanations to be byte-identical.
+  Duration 179.53s
+
+Command 3 - local checks after Prompt 2.0.1 and invariance correction
+pnpm exec prettier --check packages/ai/src/employer-review-analyst-prompt.ts tests/unit/employer-review-analyst.test.ts tests/evals/employer-review-analyst.live.eval.test.ts tests/evals/employer-review-analyst.contract.eval.test.ts; pnpm exec vitest run --config vitest.unit.config.ts tests/unit/employer-review-analyst.test.ts; pnpm exec vitest run --config vitest.evals.config.ts tests/evals/employer-review-analyst.contract.eval.test.ts; pnpm typecheck
+Exit code: 0
+Relevant output:
+  Employer analyst Unit: 11 passed
+  Employer analyst deterministic eval: 31 passed
+  All 13 applicable workspace project typechecks and root test typecheck passed
+
+Command 4 - preserved second LIVE failure, Prompt 2.0.1
+set -a; source ./.env.local; set +a; OPENAI_EVAL_MODEL=gpt-5.6-luna pnpm exec vitest run --config vitest.live-evals.config.ts tests/evals/employer-review-analyst.live.eval.test.ts
+Exit code: 1
+Relevant raw output:
+  Test Files 1 failed (1)
+  Tests 2 failed (2)
+  Synthetic Employer Analyst case 19 failed: The analyst output contains prohibited scoring, decision, or behavioral inference language (RANK).
+  Process-invariance decisions and source blocks matched, but the model selected different valid literal spans within the same frozen answer source.
+  Duration 170.31s
+
+Command 5 - local checks after Prompt 2.0.2 and source-level invariance normalization
+pnpm exec prettier --write packages/ai/src/employer-review-analyst-prompt.ts tests/unit/employer-review-analyst.test.ts tests/evals/employer-review-analyst.live.eval.test.ts tests/evals/employer-review-analyst.contract.eval.test.ts; pnpm exec vitest run --config vitest.unit.config.ts tests/unit/employer-review-analyst.test.ts; pnpm exec vitest run --config vitest.evals.config.ts tests/evals/employer-review-analyst.contract.eval.test.ts; pnpm typecheck
+Exit code: 0
+Relevant output:
+  Employer analyst Unit: 11 passed
+  Employer analyst deterministic eval: 31 passed
+  Typecheck passed
+
+Command 6 - focused Case 19 LIVE reproduction
+set -a; source ./.env.local; set +a; OPENAI_EVAL_MODEL=gpt-5.6-luna OPENAI_EVAL_CASE=19 pnpm exec vitest run --config vitest.live-evals.config.ts tests/evals/employer-review-analyst.live.eval.test.ts -t 'passes all hard gates'
+Exit code: 0
+Relevant raw output:
+  Test Files 1 passed (1)
+  Tests 1 passed | 1 filtered by -t (2)
+  Duration 8.56s
+This focused result was diagnostic only and was not treated as full acceptance.
+
+Command 7 - final full LIVE acceptance
+set -a; source ./.env.local; set +a; OPENAI_EVAL_MODEL=gpt-5.6-luna pnpm exec vitest run --config vitest.live-evals.config.ts tests/evals/employer-review-analyst.live.eval.test.ts --reporter=verbose
+Exit code: 0
+Raw aggregate output:
+  {"eval":"employer-review-analyst","requested_model":"gpt-5.6-luna","resolved_models":["gpt-5.6-luna"],"validated_cases":30,"selected_case":null,"validated_v2_verdicts":30,"macro_f1":1}
+  PASS passes all hard gates and reaches macro-F1 of at least 0.85 (269233ms)
+  {"eval":"employer-review-process-invariance","requested_model":"gpt-5.6-luna","invariant":true}
+  PASS keeps the capability verdict invariant for the same answer under different process timing (9052ms)
+  Test Files 1 passed (1)
+  Tests 2 passed (2)
+  Duration 278.57s
+
+Command 8 - complete local regression and hygiene
+pnpm check; pnpm test:evals; pnpm build; git diff --check; if rg -n '\.(only|skip)\(' tests apps packages; then exit 1; else echo 'No .only/.skip occurrences found.'; fi
+Exit code: 0
+Relevant output:
+  Format and ESLint: passed
+  Typecheck: passed
+  Unit: 37 files, 216 passed
+  Integration: 10 passed files and 1 environment-conditional skipped file; 34 passed and 2 conditional service skips
+  Security: 6 files, 25 passed
+  Replay: 2 files, 7 passed
+  Documentation contracts: 46 + 38 + 86 passed
+  Deterministic evals: 4 files, 45 passed
+  Next.js production build: passed
+  git diff --check: passed
+  No .only/.skip occurrences found
+
+Command 9 - final report and handoff validation
+pnpm exec prettier --check HANDOFF.md packages/ai/src/employer-review-analyst-prompt.ts tests/unit/employer-review-analyst.test.ts tests/evals/employer-review-analyst.contract.eval.test.ts tests/evals/employer-review-analyst.live.eval.test.ts; bash tests/docs/agents-contract.sh; git diff --check; if rg -n '\.(only|skip)\(' tests apps packages; then exit 1; else echo 'No .only/.skip occurrences found.'; fi
+Exit code: 0
+Relevant output:
+  All matched files use Prettier code style
+  Agent/documentation contract: 46 passed, 0 failed
+  git diff --check: passed
+  No .only/.skip occurrences found
+
+Passed / Failed / Skipped / Blocked summary
+- Final requested GPT-5.6 Luna LIVE acceptance: PASSED.
+- Resolved API model: gpt-5.6-luna.
+- Final semantic corpus: 30/30 V2 outputs validated; 30/30 bounded verdicts validated; macro-F1 1.0; process invariance true.
+- Preserved development failures: two full LIVE runs failed before Prompt 2.0.2; neither is reported as a pass.
+- Focused diagnostic filtering: one test was filtered by -t in Command 6; the later complete two-test suite passed.
+- Environment-conditional local Integration skips: 2, unchanged and covered by prior service-backed acceptance; not relevant to this Prompt/eval-only change.
+- Blocked: none for the requested Luna eval.
+
+Known issues and next action
+- Production Worker still defaults Employer Analyst to gpt-5.6-sol with medium reasoning and the platform kill switch remains closed.
+- Exact production gpt-5.6-sol semantic acceptance and the PostgreSQL-backed Worker ANALYZING -> READY browser vertical remain unverified in this task.
+- Next action: either run the same V2 release gate on gpt-5.6-sol before enabling the current production default, or explicitly change and separately approve the production model policy to Luna, then verify the Worker vertical.

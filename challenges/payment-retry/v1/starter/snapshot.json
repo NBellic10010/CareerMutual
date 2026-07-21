@@ -1,0 +1,6 @@
+{
+  "schema_version": "starter-snapshot@1",
+  "snapshot_ref": "payment-retry@1",
+  "runtime": "nodejs",
+  "description": "Synthetic payment retry service starter snapshot. Runtime source is intentionally deferred."
+}

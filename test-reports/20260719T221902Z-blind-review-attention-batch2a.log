@@ -1,0 +1,193 @@
+Timestamp (UTC): 2026-07-19T22:19:02Z
+Scope: Blind Review Attention Batch 2a — PostgreSQL activation, deterministic Queue offer, rolling reconciliation, Credit reservation, and cross-path Q_i
+Git branch / commit: main / unavailable (repository has no HEAD)
+Environment: macOS; Node.js v22.22.0; pnpm 11.9.0; PostgreSQL 16.14 in the local Docker development service; deterministic Queue path with no OpenAI call
+Database credentials and URLs are intentionally redacted.
+
+Historical failing-first evidence:
+- test-reports/20260719T221158Z-blind-review-attention-initial.log
+- The intermediate typecheck failure recorded there was corrected by implementing the tightened PostgreSQL adapter contracts.
+
+Command 1:
+pnpm exec vitest run --config vitest.unit.config.ts tests/unit/blind-answer-contracts.test.ts tests/unit/blind-answer-domain.test.ts tests/unit/blind-review-application.test.ts apps/worker/src/interest-queue-composition.test.ts
+
+Exit code: 0
+
+Relevant output:
+Test Files  4 passed (4)
+Tests       27 passed (27)
+
+Command 2:
+pnpm exec vitest run --config vitest.integration.config.ts tests/integration/blind-answer-postgres-migration-contract.test.ts tests/integration/blind-review-postgres-migration-contract.test.ts
+
+Exit code: 0
+
+Relevant output:
+Test Files  2 passed (2)
+Tests       9 passed (9)
+
+Command 3:
+pnpm exec vitest run --config vitest.security.config.ts tests/security/blind-review-attention-boundaries.test.ts
+
+Exit code: 0
+
+Relevant output:
+Test Files  1 passed (1)
+Tests       4 passed (4)
+
+Command 4:
+TEST_DATABASE_URL=<redacted> pnpm exec vitest run --config vitest.postgres.config.ts tests/postgres/blind-review-attention.postgres.test.ts
+
+Exit code: 0
+
+Relevant output:
+Test Files  1 passed (1)
+Tests       10 passed (10)
+
+Command 5:
+TEST_DATABASE_URL=<redacted> pnpm exec vitest run --config vitest.postgres.config.ts tests/postgres/blind-answer-migration.postgres.test.ts
+
+Exit code: 0
+
+Relevant output:
+Test Files  1 passed (1)
+Tests       3 passed (3)
+
+Command 6:
+pnpm typecheck
+
+Exit code: 0
+
+Relevant output:
+All 12 applicable workspace projects completed TypeScript checking, followed by the root test TypeScript configuration.
+
+Command 7:
+pnpm lint
+
+Exit code: 0
+
+Raw output:
+$ eslint . --max-warnings=0
+
+Command 8:
+pnpm check
+
+Exit code: 0
+
+Relevant output:
+- Prettier: all matched files use Prettier code style.
+- ESLint: 0 warnings/errors.
+- TypeScript: all workspace and test configurations passed.
+- Unit: 21 files, 129 tests passed.
+- Integration: 5 files, 20 tests passed.
+- Security: 4 files, 17 tests passed.
+- Replay: 2 files, 7 tests passed.
+- Documentation contracts: AGENTS 34/34, AI design 22/22, product spirit 60/60 passed.
+
+Command 9:
+pnpm build
+
+Exit code: 0
+
+Relevant output:
+Next.js 16.2.10 compiled successfully, completed TypeScript, and generated 8/8 static pages. All workspace build scripts completed.
+
+Command 10:
+TEST_DATABASE_URL=<redacted> pnpm test:postgres
+
+Exit code: 0
+
+Raw summary:
+Test Files  4 passed (4)
+Tests       27 passed (27)
+Duration    6.23s
+
+The suite exercised PostgreSQL 16.14 and left these repository migrations registered:
+0001_challenge_recommendation_vertical
+0002_matching_vertical
+0003_blind_answer_first
+0004_blind_review_runtime_pins
+
+Command 11:
+TEST_DATABASE_URL=<redacted> pnpm test:e2e
+
+Exit code: 0
+
+Relevant output:
+Running 2 tests using 1 worker
+- Sarah's real authorization drives all three Candidate and Sandbox branches: passed
+- Direct 17 plus deterministic Explore 42 reaches the existing Redis Stage B chain: passed
+2 passed (11.8s)
+
+The Web development server emitted repeated NO_COLOR/FORCE_COLOR warnings. They did not affect the tests.
+
+Command 12:
+pnpm demo:offline
+
+Exit code: 0
+
+Raw output:
+{
+  "status": "ok",
+  "runtimeMode": "GOLDEN_REPLAY",
+  "externalWebDependencies": 0,
+  "replayId": "payment-retry-v1",
+  "candidates": 2,
+  "projections": ["EMPLOYER", "CANDIDATE", "SYNTHETIC_JUDGE"],
+  "catalogRef": "payment-retry@1"
+}
+
+Command 13:
+pnpm test:evals
+
+Exit code: 0
+
+Relevant output:
+Test Files  2 passed (2)
+Tests       2 passed (2)
+
+Command 14:
+git diff --check
+
+Exit code: 0
+Output: empty
+
+Command 15:
+rg -n "\.(only|skip)\(" tests apps packages
+
+Exit code: 1
+Output: empty
+Interpretation: expected ripgrep no-match status; no focused or skipped tests were found.
+
+Command 16:
+pnpm exec prettier --write HANDOFF.md && pnpm check
+
+Exit code: 0
+
+Relevant output:
+- HANDOFF.md was already formatted.
+- Final post-handoff Prettier, ESLint, and TypeScript gates passed.
+- Unit: 21 files, 129 tests passed.
+- Integration: 5 files, 20 tests passed.
+- Security: 4 files, 17 tests passed.
+- Replay: 2 files, 7 tests passed.
+- Documentation contracts: AGENTS 34/34, AI design 22/22, product spirit 60/60 passed.
+
+Passed summary:
+- Focused Unit, Integration, Security, and PostgreSQL suites passed.
+- Full check, build, PostgreSQL, legacy E2E regression, offline Demo, deterministic evals, and source hygiene gates passed.
+- The final PostgreSQL suite passed 27/27 tests, including 10 real Attention transaction scenarios.
+
+Failed summary:
+- 0 final commands.
+- One intentional intermediate typecheck failure is retained in the separate initial report.
+
+Skipped summary:
+- 0 tests were marked skipped.
+
+Blocked / not run:
+- LIVE OpenAI smoke/evals were not run because no Worker-only OpenAI API key is available. No LIVE result is claimed.
+
+Known pre-existing failures:
+- None observed in the executed gates.
+- The repository has no HEAD and all workspace files are untracked, so normal tracked-diff attribution is unavailable.

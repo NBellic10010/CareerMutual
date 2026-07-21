@@ -1,0 +1,47 @@
+Timestamp (UTC): 2026-07-19T19:36:31Z
+Scope: Temporary blind-answer-first runtime migration plan and documentation contract
+Git branch / commit: unavailable; repository has no HEAD commit
+Environment: documentation-only planning change; runtime implementation unchanged
+
+^D
+COMMAND: pnpm exec prettier --check OnlyBoth-运行代码迁移计划-TEMP.md HANDOFF.md
+Checking formatting...
+HANDOFF.md[2K[1GAll matched files use Prettier code style!
+EXIT CODE: 0
+
+COMMAND: pnpm test:docs
+$ bash tests/docs/agents-contract.sh && bash tests/docs/ai-engineering-design-contract.sh && bash tests/docs/product-spirit-contract.sh
+PASS: root AGENTS.md exists
+PASS: root HANDOFF.md exists
+PASS: normative product doctrine exists
+PASS: authoritative product plan exists
+PASS: authoritative engineering design exists
+PASS: root README exists
+PASS: test report policy exists
+PASS: AGENTS requires tests for behavior changes
+PASS: AGENTS requires persisted test output
+PASS: AGENTS requires HANDOFF updates
+PASS: AGENTS protects HANDOFF during parallel work
+PASS: AGENTS preserves pre-answer review obligation
+PASS: AGENTS forbids pre-answer candidate selection
+PASS: AGENTS preserves mandatory answer-review barrier
+PASS: AGENTS preserves label reveal invariant
+PASS: AGENTS preserves backpressure invariant
+PASS: HANDOFF includes test report section
+PASS: report policy forbids false pass claims
+PASS: AGENTS defines a stable aggregate check command
+PASS: AGENTS separates operational logs from domain audit
+PASS: AGENTS preserves the English documentation rule
+PASS: AGENTS.md has balanced Markdown fences
+PASS: HANDOFF.md has balanced Markdown fences
+PASS: AGENTS prose is English
+FAIL: HANDOFF prose is English (found Han-script prose in HANDOFF.md)
+PASS: README.md has balanced Markdown fences
+PASS: README.md prose is English
+PASS: apps/worker/README.md has balanced Markdown fences
+PASS: apps/worker/README.md prose is English
+PASS: test-reports/README.md has balanced Markdown fences
+PASS: test-reports/README.md prose is English
+RESULT: 30 passed, 1 failed
+[0J[ELIFECYCLE] Command failed with exit code 1.
+EXIT CODE: 1

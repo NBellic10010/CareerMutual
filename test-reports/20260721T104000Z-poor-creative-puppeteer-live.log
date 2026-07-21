@@ -1,0 +1,620 @@
+Timestamp (UTC): 2026-07-21T10:40:00Z
+Scope: Synthetic poor-Creative Candidate, Puppeteer Focus auto-submit, LIVE Employer Analyst, Human Review, and sealed Resume
+Environment: DEMO_MODE=true; dedicated PostgreSQL test database; local MinIO; Web process receives no OpenAI key; Worker explicitly pins gpt-5.6-luna
+
+Preserved initial acceptance failures (fixed in the final driver):
+- Attempt 1 exited 1: read-only drainQueue assertion joined a nonexistent answer_review_obligations.opportunity_ref column.
+- Attempt 2 exited 1 after the browser flow completed: final read-only assertion joined a nonexistent answer_sessions.opportunity_ref column.
+- Both queries now follow obligation -> blind_review_commitment -> opportunity. No business mutation path was changed to address either failure.
+
+Final LIVE Puppeteer result before regression:
+PUPPETEER_POOR_CREATIVE_LIVE_DEMO_PASSED
+candidate=candidate-27; credit=2; analyst=READY; verdict=BAD_ANSWER; human_review=NO_FURTHER_PROOF; submission=FOCUS_POLICY_AUTO; resume_reveal_count=0
+red_behavior_signals=REVISION_VOLATILITY,SUBMISSION_PRESSURE
+worker_outcomes=FOCUS_POLICY_PROGRESS,EMPLOYER_ANALYSIS_PROCESSED
+
+Regression command output follows.
+
+COMMAND: pnpm check
+$ pnpm format:check && pnpm lint && pnpm typecheck && pnpm test:unit && pnpm test:integration && pnpm test:security && pnpm replay:verify && pnpm test:docs
+$ prettier --check .
+Checking formatting...
+All matched files use Prettier code style!
+$ eslint . --max-warnings=0
+$ pnpm -r --if-present typecheck && tsc --noEmit -p tsconfig.tests.json
+Scope: 14 of 15 workspace projects
+packages/challenge-catalog typecheck$ tsc --noEmit -p tsconfig.json
+packages/contracts typecheck$ tsc -p tsconfig.json
+packages/domain typecheck$ tsc -p tsconfig.json
+packages/demo-fixtures typecheck$ tsc -p tsconfig.json
+packages/demo-fixtures typecheck: Done
+packages/domain typecheck: Done
+packages/challenge-catalog typecheck: Done
+packages/contracts typecheck: Done
+packages/projections typecheck$ tsc -p tsconfig.json
+packages/application typecheck$ tsc -p tsconfig.json
+packages/projections typecheck: Done
+packages/application typecheck: Done
+packages/demo-replay typecheck$ tsc -p tsconfig.json
+packages/sandbox typecheck$ tsc --noEmit -p tsconfig.json
+packages/testkit typecheck$ tsc -p tsconfig.json
+packages/storage typecheck$ tsc --noEmit -p tsconfig.json
+packages/demo-replay typecheck: Done
+packages/testkit typecheck: Done
+packages/sandbox typecheck: Done
+packages/storage typecheck: Done
+packages/ai typecheck$ tsc --noEmit -p tsconfig.json
+packages/db typecheck$ tsc --noEmit -p tsconfig.json
+packages/ai typecheck: Done
+packages/db typecheck: Done
+apps/web typecheck$ tsc --noEmit
+apps/worker typecheck$ tsc --noEmit -p tsconfig.json
+apps/web typecheck: Done
+apps/worker typecheck: Done
+$ vitest run --config vitest.unit.config.ts
+
+ RUN  v4.1.10 /Users/tatar/Documents/CareerMutual
+
+
+ Test Files  42 passed (42)
+      Tests  232 passed (232)
+   Start at  06:39:55
+   Duration  1.02s (transform 3.84s, setup 0ms, import 8.39s, tests 349ms, environment 2ms)
+
+$ vitest run --config vitest.integration.config.ts
+
+ RUN  v4.1.10 /Users/tatar/Documents/CareerMutual
+
+
+ Test Files  11 passed | 1 skipped (12)
+      Tests  38 passed | 2 skipped (40)
+   Start at  06:39:56
+   Duration  224ms (transform 332ms, setup 0ms, import 539ms, tests 24ms, environment 0ms)
+
+$ vitest run --config vitest.security.config.ts
+
+ RUN  v4.1.10 /Users/tatar/Documents/CareerMutual
+
+
+ Test Files  6 passed (6)
+      Tests  25 passed (25)
+   Start at  06:39:57
+   Duration  250ms (transform 402ms, setup 0ms, import 795ms, tests 23ms, environment 0ms)
+
+$ vitest run --config vitest.replay.config.ts
+
+ RUN  v4.1.10 /Users/tatar/Documents/CareerMutual
+
+
+ Test Files  2 passed (2)
+      Tests  7 passed (7)
+   Start at  06:39:57
+   Duration  173ms (transform 90ms, setup 0ms, import 167ms, tests 7ms, environment 0ms)
+
+$ bash tests/docs/agents-contract.sh && bash tests/docs/ai-engineering-design-contract.sh && bash tests/docs/product-spirit-contract.sh
+PASS: root AGENTS.md exists
+PASS: root HANDOFF.md exists
+PASS: normative product doctrine exists
+PASS: authoritative product plan exists
+PASS: authoritative engineering design exists
+PASS: root README exists
+PASS: test report policy exists
+PASS: AGENTS requires tests for behavior changes
+PASS: AGENTS requires persisted test output
+PASS: AGENTS requires HANDOFF updates
+PASS: AGENTS protects HANDOFF during parallel work
+PASS: AGENTS preserves pre-answer review obligation
+PASS: AGENTS forbids pre-answer candidate selection
+PASS: AGENTS preserves the Advancement Cohort review barrier
+PASS: AGENTS preserves label reveal invariant
+PASS: AGENTS binds résumé Reveal to an anonymous positive Human Review
+PASS: AGENTS defines the exact review outcome that authorizes résumé Reveal
+PASS: AGENTS isolates full résumés from sequential answer review
+PASS: AGENTS freezes deterministic education precedence
+PASS: AGENTS preserves per-Slot backpressure
+PASS: AGENTS forbids treating WIP as total applicant capacity
+PASS: AGENTS preserves the Interest/Application boundary
+PASS: AGENTS requires rolling queue service
+PASS: AGENTS preserves the Passport role boundary
+PASS: AGENTS registers Candidate-only discovery
+PASS: AGENTS forbids discovery-based job hiding
+PASS: AGENTS seals Employer analysis policy before consent
+PASS: AGENTS separates process context from AI capability findings
+PASS: AGENTS bounds binary answer assessment
+PASS: AGENTS requires consent before behavior profiling
+PASS: AGENTS keeps AI analysis nonblocking
+PASS: AGENTS defines the multimodal Critical Challenge manifest
+PASS: AGENTS exposes the complete Challenge before Candidate commitment
+PASS: HANDOFF includes test report section
+PASS: report policy forbids false pass claims
+PASS: AGENTS defines a stable aggregate check command
+PASS: AGENTS separates operational logs from domain audit
+PASS: AGENTS preserves the English documentation rule
+PASS: AGENTS.md has balanced Markdown fences
+PASS: HANDOFF.md has balanced Markdown fences
+PASS: AGENTS prose is English
+PASS: HANDOFF prose is English
+PASS: README.md has balanced Markdown fences
+PASS: README.md prose is English
+PASS: apps/worker/README.md has balanced Markdown fences
+PASS: apps/worker/README.md prose is English
+PASS: test-reports/README.md has balanced Markdown fences
+PASS: test-reports/README.md prose is English
+RESULT: 48 passed, 0 failed
+PASS: AI engineering design exists
+PASS: design defines contract compilation
+PASS: design defines post-answer Evidence Edge drafting
+PASS: design defines the narrowed Employer analyst port
+PASS: design limits findings to criterion-local states
+PASS: design pins the Employer analyst model
+PASS: design separates process sources from capability findings
+PASS: design versions the bounded answer verdict and language analysis
+PASS: design pins deterministic behavior severity
+PASS: design records the fail-closed analyst kill switch
+PASS: design quarantines the pre-answer Claim operation
+PASS: design forbids pre-answer Candidate AI matching
+PASS: design preserves mandatory named answer review
+PASS: design defines Challenge recommendation
+PASS: design defines Evidence compression
+PASS: design forbids AI tools
+PASS: design disables Responses application-state storage
+PASS: design uses Responses Structured Outputs
+PASS: design specifies provider request correlation
+PASS: design defines typed refusal handling
+PASS: design defines stale-result handling
+PASS: design defines superseded requests
+PASS: design preserves human Challenge authority
+PASS: design explicitly protects private labels
+PASS: design specifies Replay parity
+PASS: design rejects an MVP multi-agent workflow
+PASS: design defines the disclosed Candidate assistant boundary
+PASS: design defines the Voice Memo transcription boundary
+PASS: design defines Candidate-only job discovery
+PASS: design pins the Candidate discovery model
+PASS: design forbids discovery-based job hiding
+PASS: design requires LIVE discovery to fail closed
+PASS: design pins the Candidate assistant model
+PASS: design pins the transcription model
+PASS: design requires a sealed complete assistant trace
+PASS: authoritative engineering design links the AI design
+PASS: root README links the AI design
+PASS: OnlyBoth-AI工程设计.md has balanced Markdown fences
+RESULT: 38 passed, 0 failed
+PASS: normative blind-answer-first doctrine exists
+PASS: temporary runtime migration plan exists
+PASS: doctrine binds review before Candidate work
+PASS: doctrine forbids pre-answer selection
+PASS: doctrine requires the Advancement Cohort review barrier
+PASS: doctrine scopes backpressure to one reusable Slot
+PASS: doctrine defines the post-answer Employer action
+PASS: doctrine separates queue wait from ability conclusions
+PASS: doctrine distinguishes interest from formal application
+PASS: doctrine forbids treating Slot WIP as a total applicant cap
+PASS: doctrine guarantees a disposition for every accepted Application
+PASS: doctrine requires per-Slot recycling
+PASS: doctrine moves GPT matching after recorded answers
+PASS: doctrine scopes AI judgment to anonymous answers
+PASS: doctrine permits a verdict only for the sealed answer
+PASS: doctrine versions behavior severity rules
+PASS: doctrine requires disclosed Candidate consent
+PASS: doctrine forbids treating behavior telemetry as proof
+PASS: doctrine preserves independent human judgment
+PASS: doctrine binds positive anonymous review to Resume Reveal
+PASS: doctrine isolates full Resume presentation
+PASS: doctrine states the current runtime boundary
+PASS: doctrine defines Candidate Credit as a rate limit
+PASS: doctrine permits only the disclosed platform assistant policy
+PASS: doctrine defines Candidate-only Evidence Passport discovery
+PASS: doctrine forbids Passport-based job hiding
+PASS: doctrine prevents discovery signals from becoming pre-answer selection
+PASS: doctrine defines the role Challenge as one whole
+PASS: doctrine permits all four Challenge part types
+PASS: doctrine reveals the full Challenge before Candidate commitment
+PASS: agent contract links the doctrine
+PASS: README links the doctrine
+PASS: product plan links the doctrine
+PASS: engineering design links the doctrine
+PASS: AI design links the doctrine
+PASS: competition research links the doctrine
+PASS: engineering design defines the rolling pre-answer Commitment
+PASS: engineering design defines the public non-profile queue
+PASS: engineering design separates comparison from Slot WIP
+PASS: engineering design pins cohort membership independently of Slot completion order
+PASS: engineering design defines per-answer human review
+PASS: engineering design binds selection to recorded evidence
+PASS: engineering design freezes behavior severity at submission
+PASS: engineering design defines the reviewer-scoped Reveal aggregate
+PASS: engineering design makes review and Reveal atomic
+PASS: engineering design recycles each settled Slot
+PASS: engineering design seals the disclosed assistant trace
+PASS: engineering design versions the Critical Challenge manifest
+PASS: engineering design records the cross-domain seed
+PASS: product plan places full Resume after positive anonymous review
+PASS: product plan defines overdue review settlement
+PASS: AI assembler has no pre-answer Candidate matching call
+PASS: legacy Claim matching is quarantined
+PASS: AI cannot control the queue or impersonate review settlement
+PASS: AI design defines a separate Candidate discovery assembler
+PASS: README describes the persistent functional runtime
+PASS: product plan removes Profile-first Direct
+PASS: engineering design removes Profile-first Direct
+PASS: agent contract removes Claim-first matching authority
+PASS: migration plan preserves authority order
+PASS: migration plan includes Candidate job discovery
+PASS: migration plan distinguishes low-cost registration
+PASS: migration plan defines the backed formal submission
+PASS: migration plan defines reusable WIP
+PASS: migration plan separates post-answer comparison
+PASS: migration plan prevents recycled Slot work from entering the wrong cohort
+PASS: migration plan proves the first Slot reaches the ninth Interest
+PASS: migration plan preserves the Cohort review barrier
+PASS: migration plan moves GPT after recorded answers
+PASS: migration plan carries cross-table Q_i consistency
+PASS: migration plan disables the legacy mutation endpoint
+PASS: migration plan pins the target Direct answer
+PASS: migration plan pins deterministic Explore
+PASS: migration plan keeps Demo reset facts-only
+PASS: migration plan has a no-pre-answer-matching-AI acceptance gate
+PASS: migration plan records the implemented Resume Reveal boundary
+PASS: doctrine removes the finite-batch waitlist state
+PASS: product plan removes the one-shot eight-person cap
+PASS: engineering design removes the one-shot Batch aggregate
+PASS: migration plan does not retain the old facts-only batch wording
+PASS: OnlyBoth-产品精神.md has balanced Markdown fences
+PASS: OnlyBoth-产品方案.md has balanced Markdown fences
+PASS: OnlyBoth-工程设计.md has balanced Markdown fences
+PASS: OnlyBoth-AI工程设计.md has balanced Markdown fences
+PASS: OnlyBoth-赛事评估与竞品研究.md has balanced Markdown fences
+PASS: OnlyBoth-运行代码迁移计划-TEMP.md has balanced Markdown fences
+RESULT: 86 passed, 0 failed
+EXIT CODE: 0
+
+COMMAND: pnpm test:postgres
+$ vitest run --config vitest.postgres.config.ts
+
+ RUN  v4.1.10 /Users/tatar/Documents/CareerMutual
+
+
+ Test Files  6 passed (6)
+      Tests  45 passed (45)
+   Start at  06:40:09
+   Duration  12.74s (transform 268ms, setup 0ms, import 897ms, tests 11.46s, environment 0ms)
+
+EXIT CODE: 0
+
+COMMAND: pnpm test:e2e
+$ playwright test
+
+[WebServer] (node:32783) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+[WebServer] $ next start
+
+[WebServer] (node:32794) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 3 tests using 1 worker
+
+
+(node:32800) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+[1/3] tests/e2e/functional-product.spec.ts:66:1 › persistent roles complete the backed application and sequential human-review loop
+[2/3] tests/e2e/functional-product.spec.ts:357:1 › Candidate Evidence Passport remains operable at a 390px viewport
+[3/3] tests/e2e/functional-product.spec.ts:373:1 › full-screen Sandbox records browser focus and seals persisted work on the second departure
+  3 passed (8.5s)
+EXIT CODE: 0
+
+COMMAND: pnpm build
+$ pnpm -r --if-present build
+Scope: 14 of 15 workspace projects
+apps/web build$ next build
+apps/web build: ▲ Next.js 16.2.10 (Turbopack)
+apps/web build:   Creating an optimized production build ...
+apps/web build: ✓ Compiled successfully in 1740ms
+apps/web build:   Running TypeScript ...
+apps/web build:   Finished TypeScript in 3.1s ...
+apps/web build:   Collecting page data using 17 workers ...
+apps/web build:   Generating static pages using 17 workers (0/10) ...
+apps/web build:   Generating static pages using 17 workers (2/10) 
+apps/web build:   Generating static pages using 17 workers (4/10) 
+apps/web build:   Generating static pages using 17 workers (7/10) 
+apps/web build: ✓ Generating static pages using 17 workers (10/10) in 124ms
+apps/web build:   Finalizing page optimization ...
+apps/web build: Route (app)
+apps/web build: ┌ ƒ /
+apps/web build: ├ ƒ /_not-found
+apps/web build: ├ ƒ /api/v1/artifacts/[id]
+apps/web build: ├ ƒ /api/v1/candidate/answer-invitations/[id]/accept
+apps/web build: ├ ƒ /api/v1/candidate/answer-invitations/[id]/decline
+apps/web build: ├ ƒ /api/v1/candidate/answer-sessions/[id]
+apps/web build: ├ ƒ /api/v1/candidate/answer-sessions/[id]/activity-events
+apps/web build: ├ ƒ /api/v1/candidate/answer-sessions/[id]/artifacts/complete
+apps/web build: ├ ƒ /api/v1/candidate/answer-sessions/[id]/artifacts/presign
+apps/web build: ├ ƒ /api/v1/candidate/answer-sessions/[id]/assistant-turns
+apps/web build: ├ ƒ /api/v1/candidate/answer-sessions/[id]/drafts
+apps/web build: ├ ƒ /api/v1/candidate/answer-sessions/[id]/submit
+apps/web build: ├ ƒ /api/v1/candidate/evidence-passport
+apps/web build: ├ ƒ /api/v1/candidate/evidence-passport/discovery/refresh
+apps/web build: ├ ƒ /api/v1/candidate/evidence-passport/draft
+apps/web build: ├ ƒ /api/v1/candidate/evidence-passport/publish
+apps/web build: ├ ƒ /api/v1/candidate/opportunities
+apps/web build: ├ ƒ /api/v1/candidate/opportunities/[id]
+apps/web build: ├ ƒ /api/v1/candidate/opportunities/[id]/interests
+apps/web build: ├ ƒ /api/v1/candidate/review-windows/[id]
+apps/web build: ├ ƒ /api/v1/demo/session/candidate
+apps/web build: ├ ƒ /api/v1/demo/session/employer
+apps/web build: ├ ƒ /api/v1/demo/session/employer/matching
+apps/web build: ├ ƒ /api/v1/dev/session
+apps/web build: ├ ƒ /api/v1/employer/answer-obligations/[id]/review
+apps/web build: ├ ƒ /api/v1/employer/job-posts
+apps/web build: ├ ƒ /api/v1/employer/job-posts/[id]/review/current
+apps/web build: ├ ƒ /api/v1/employer/job-posts/drafts
+apps/web build: ├ ƒ /api/v1/employer/job-posts/drafts/[id]
+apps/web build: ├ ƒ /api/v1/employer/job-posts/drafts/[id]/publish
+apps/web build: ├ ƒ /api/v1/employer/opportunities/[id]/matching
+apps/web build: ├ ƒ /api/v1/employer/review-windows/[id]
+apps/web build: ├ ƒ /api/v1/opportunities/[id]/reserve-attention
+apps/web build: ├ ƒ /api/v1/review-windows/[id]/accept
+apps/web build: ├ ƒ /api/v1/review-windows/[id]/challenge/select
+apps/web build: ├ ƒ /api/v1/review-windows/[id]/decline
+apps/web build: ├ ƒ /audit
+apps/web build: ├ ƒ /candidate
+apps/web build: ├ ƒ /candidate/answer-sessions/[sessionRef]
+apps/web build: ├ ƒ /candidate/evidence-passport
+apps/web build: ├ ƒ /candidate/jobs/[opportunityRef]
+apps/web build: ├ ƒ /demo
+apps/web build: ├ ƒ /employer
+apps/web build: ├ ƒ /employer/candidates
+apps/web build: ├ ƒ /employer/job-posts/[opportunityRef]/review
+apps/web build: ├ ƒ /employer/matching
+apps/web build: ├ ƒ /login
+apps/web build: └ ○ /prototype
+apps/web build: ○  (Static)   prerendered as static content
+apps/web build: ƒ  (Dynamic)  server-rendered on demand
+apps/web build: Done
+EXIT CODE: 0
+
+COMMAND: pnpm test:evals
+$ vitest run --config vitest.evals.config.ts
+
+ RUN  v4.1.10 /Users/tatar/Documents/CareerMutual
+
+
+ Test Files  4 passed (4)
+      Tests  45 passed (45)
+   Start at  06:41:11
+   Duration  311ms (transform 334ms, setup 0ms, import 753ms, tests 28ms, environment 0ms)
+
+EXIT CODE: 0
+
+COMMAND: pnpm demo:offline
+$ tsx scripts/verify-offline-demo.ts
+{
+  "status": "ok",
+  "runtimeMode": "GOLDEN_REPLAY",
+  "externalWebDependencies": 0,
+  "replayId": "payment-retry-v1",
+  "candidates": 2,
+  "projections": [
+    "EMPLOYER",
+    "CANDIDATE",
+    "SYNTHETIC_JUDGE"
+  ],
+  "catalogRef": "payment-retry@1"
+}
+EXIT CODE: 0
+
+COMMAND: git diff --check
+EXIT CODE: 0
+
+COMMAND: rg -n "\.(only|skip)\(" tests apps packages
+EXIT CODE: 1 (1 means no matches)
+SAFETY SCAN: PASSED — no API key, cookie, or CSRF token pattern found.
+
+Final Puppeteer structured output:
+{
+  "outcome": "PUPPETEER_POOR_CREATIVE_LIVE_DEMO_PASSED",
+  "controlled_candidate": "candidate-27",
+  "candidate_display_name": "Avery Stone",
+  "job_title": "Senior Brand Illustrator",
+  "candidate_credit_after_start": 2,
+  "analyst_status": "READY",
+  "answer_verdict": "BAD_ANSWER",
+  "human_review_decision": "NO_FURTHER_PROOF",
+  "submission_source": "FOCUS_POLICY_AUTO",
+  "resume_reveal_count": 0,
+  "red_behavior_signals": ["REVISION_VOLATILITY", "SUBMISSION_PRESSURE"],
+  "worker_outcomes": ["FOCUS_POLICY_PROGRESS", "EMPLOYER_ANALYSIS_PROCESSED"],
+  "screenshot_directory": "/Users/tatar/Documents/CareerMutual/test-reports/puppeteer-poor-creative-demo",
+  "browser_controller": "puppeteer-core@25.3.0",
+  "web_received_openai_key": false
+}
+
+Summary:
+- Passed: fixture/unit, environment-neutral integration, typecheck, production build, final LIVE Puppeteer, pnpm check, PostgreSQL 45/45, Playwright 3/3, deterministic evals 45/45, offline demo, git diff check, and secret scan.
+- Failed then fixed: two Puppeteer-only read queries used nonexistent denormalized opportunity columns; both final joins now use obligation -> commitment -> opportunity.
+- Skipped: 2 pre-existing conditional environment-neutral integration cases during pnpm check; explicit PostgreSQL and MinIO-backed browser acceptance both passed.
+- Blocked/not run: production-default gpt-5.6-sol LIVE release gate; the requested witness explicitly uses accepted gpt-5.6-luna.
+
+FINAL COMMAND: pnpm format:check && pnpm test:docs && git diff --check
+$ prettier --check .
+Checking formatting...
+All matched files use Prettier code style!
+$ bash tests/docs/agents-contract.sh && bash tests/docs/ai-engineering-design-contract.sh && bash tests/docs/product-spirit-contract.sh
+PASS: root AGENTS.md exists
+PASS: root HANDOFF.md exists
+PASS: normative product doctrine exists
+PASS: authoritative product plan exists
+PASS: authoritative engineering design exists
+PASS: root README exists
+PASS: test report policy exists
+PASS: AGENTS requires tests for behavior changes
+PASS: AGENTS requires persisted test output
+PASS: AGENTS requires HANDOFF updates
+PASS: AGENTS protects HANDOFF during parallel work
+PASS: AGENTS preserves pre-answer review obligation
+PASS: AGENTS forbids pre-answer candidate selection
+PASS: AGENTS preserves the Advancement Cohort review barrier
+PASS: AGENTS preserves label reveal invariant
+PASS: AGENTS binds résumé Reveal to an anonymous positive Human Review
+PASS: AGENTS defines the exact review outcome that authorizes résumé Reveal
+PASS: AGENTS isolates full résumés from sequential answer review
+PASS: AGENTS freezes deterministic education precedence
+PASS: AGENTS preserves per-Slot backpressure
+PASS: AGENTS forbids treating WIP as total applicant capacity
+PASS: AGENTS preserves the Interest/Application boundary
+PASS: AGENTS requires rolling queue service
+PASS: AGENTS preserves the Passport role boundary
+PASS: AGENTS registers Candidate-only discovery
+PASS: AGENTS forbids discovery-based job hiding
+PASS: AGENTS seals Employer analysis policy before consent
+PASS: AGENTS separates process context from AI capability findings
+PASS: AGENTS bounds binary answer assessment
+PASS: AGENTS requires consent before behavior profiling
+PASS: AGENTS keeps AI analysis nonblocking
+PASS: AGENTS defines the multimodal Critical Challenge manifest
+PASS: AGENTS exposes the complete Challenge before Candidate commitment
+PASS: HANDOFF includes test report section
+PASS: report policy forbids false pass claims
+PASS: AGENTS defines a stable aggregate check command
+PASS: AGENTS separates operational logs from domain audit
+PASS: AGENTS preserves the English documentation rule
+PASS: AGENTS.md has balanced Markdown fences
+PASS: HANDOFF.md has balanced Markdown fences
+PASS: AGENTS prose is English
+PASS: HANDOFF prose is English
+PASS: README.md has balanced Markdown fences
+PASS: README.md prose is English
+PASS: apps/worker/README.md has balanced Markdown fences
+PASS: apps/worker/README.md prose is English
+PASS: test-reports/README.md has balanced Markdown fences
+PASS: test-reports/README.md prose is English
+RESULT: 48 passed, 0 failed
+PASS: AI engineering design exists
+PASS: design defines contract compilation
+PASS: design defines post-answer Evidence Edge drafting
+PASS: design defines the narrowed Employer analyst port
+PASS: design limits findings to criterion-local states
+PASS: design pins the Employer analyst model
+PASS: design separates process sources from capability findings
+PASS: design versions the bounded answer verdict and language analysis
+PASS: design pins deterministic behavior severity
+PASS: design records the fail-closed analyst kill switch
+PASS: design quarantines the pre-answer Claim operation
+PASS: design forbids pre-answer Candidate AI matching
+PASS: design preserves mandatory named answer review
+PASS: design defines Challenge recommendation
+PASS: design defines Evidence compression
+PASS: design forbids AI tools
+PASS: design disables Responses application-state storage
+PASS: design uses Responses Structured Outputs
+PASS: design specifies provider request correlation
+PASS: design defines typed refusal handling
+PASS: design defines stale-result handling
+PASS: design defines superseded requests
+PASS: design preserves human Challenge authority
+PASS: design explicitly protects private labels
+PASS: design specifies Replay parity
+PASS: design rejects an MVP multi-agent workflow
+PASS: design defines the disclosed Candidate assistant boundary
+PASS: design defines the Voice Memo transcription boundary
+PASS: design defines Candidate-only job discovery
+PASS: design pins the Candidate discovery model
+PASS: design forbids discovery-based job hiding
+PASS: design requires LIVE discovery to fail closed
+PASS: design pins the Candidate assistant model
+PASS: design pins the transcription model
+PASS: design requires a sealed complete assistant trace
+PASS: authoritative engineering design links the AI design
+PASS: root README links the AI design
+PASS: OnlyBoth-AI工程设计.md has balanced Markdown fences
+RESULT: 38 passed, 0 failed
+PASS: normative blind-answer-first doctrine exists
+PASS: temporary runtime migration plan exists
+PASS: doctrine binds review before Candidate work
+PASS: doctrine forbids pre-answer selection
+PASS: doctrine requires the Advancement Cohort review barrier
+PASS: doctrine scopes backpressure to one reusable Slot
+PASS: doctrine defines the post-answer Employer action
+PASS: doctrine separates queue wait from ability conclusions
+PASS: doctrine distinguishes interest from formal application
+PASS: doctrine forbids treating Slot WIP as a total applicant cap
+PASS: doctrine guarantees a disposition for every accepted Application
+PASS: doctrine requires per-Slot recycling
+PASS: doctrine moves GPT matching after recorded answers
+PASS: doctrine scopes AI judgment to anonymous answers
+PASS: doctrine permits a verdict only for the sealed answer
+PASS: doctrine versions behavior severity rules
+PASS: doctrine requires disclosed Candidate consent
+PASS: doctrine forbids treating behavior telemetry as proof
+PASS: doctrine preserves independent human judgment
+PASS: doctrine binds positive anonymous review to Resume Reveal
+PASS: doctrine isolates full Resume presentation
+PASS: doctrine states the current runtime boundary
+PASS: doctrine defines Candidate Credit as a rate limit
+PASS: doctrine permits only the disclosed platform assistant policy
+PASS: doctrine defines Candidate-only Evidence Passport discovery
+PASS: doctrine forbids Passport-based job hiding
+PASS: doctrine prevents discovery signals from becoming pre-answer selection
+PASS: doctrine defines the role Challenge as one whole
+PASS: doctrine permits all four Challenge part types
+PASS: doctrine reveals the full Challenge before Candidate commitment
+PASS: agent contract links the doctrine
+PASS: README links the doctrine
+PASS: product plan links the doctrine
+PASS: engineering design links the doctrine
+PASS: AI design links the doctrine
+PASS: competition research links the doctrine
+PASS: engineering design defines the rolling pre-answer Commitment
+PASS: engineering design defines the public non-profile queue
+PASS: engineering design separates comparison from Slot WIP
+PASS: engineering design pins cohort membership independently of Slot completion order
+PASS: engineering design defines per-answer human review
+PASS: engineering design binds selection to recorded evidence
+PASS: engineering design freezes behavior severity at submission
+PASS: engineering design defines the reviewer-scoped Reveal aggregate
+PASS: engineering design makes review and Reveal atomic
+PASS: engineering design recycles each settled Slot
+PASS: engineering design seals the disclosed assistant trace
+PASS: engineering design versions the Critical Challenge manifest
+PASS: engineering design records the cross-domain seed
+PASS: product plan places full Resume after positive anonymous review
+PASS: product plan defines overdue review settlement
+PASS: AI assembler has no pre-answer Candidate matching call
+PASS: legacy Claim matching is quarantined
+PASS: AI cannot control the queue or impersonate review settlement
+PASS: AI design defines a separate Candidate discovery assembler
+PASS: README describes the persistent functional runtime
+PASS: product plan removes Profile-first Direct
+PASS: engineering design removes Profile-first Direct
+PASS: agent contract removes Claim-first matching authority
+PASS: migration plan preserves authority order
+PASS: migration plan includes Candidate job discovery
+PASS: migration plan distinguishes low-cost registration
+PASS: migration plan defines the backed formal submission
+PASS: migration plan defines reusable WIP
+PASS: migration plan separates post-answer comparison
+PASS: migration plan prevents recycled Slot work from entering the wrong cohort
+PASS: migration plan proves the first Slot reaches the ninth Interest
+PASS: migration plan preserves the Cohort review barrier
+PASS: migration plan moves GPT after recorded answers
+PASS: migration plan carries cross-table Q_i consistency
+PASS: migration plan disables the legacy mutation endpoint
+PASS: migration plan pins the target Direct answer
+PASS: migration plan pins deterministic Explore
+PASS: migration plan keeps Demo reset facts-only
+PASS: migration plan has a no-pre-answer-matching-AI acceptance gate
+PASS: migration plan records the implemented Resume Reveal boundary
+PASS: doctrine removes the finite-batch waitlist state
+PASS: product plan removes the one-shot eight-person cap
+PASS: engineering design removes the one-shot Batch aggregate
+PASS: migration plan does not retain the old facts-only batch wording
+PASS: OnlyBoth-产品精神.md has balanced Markdown fences
+PASS: OnlyBoth-产品方案.md has balanced Markdown fences
+PASS: OnlyBoth-工程设计.md has balanced Markdown fences
+PASS: OnlyBoth-AI工程设计.md has balanced Markdown fences
+PASS: OnlyBoth-赛事评估与竞品研究.md has balanced Markdown fences
+PASS: OnlyBoth-运行代码迁移计划-TEMP.md has balanced Markdown fences
+RESULT: 86 passed, 0 failed
+EXIT CODES: format=0 docs=0 diff=0

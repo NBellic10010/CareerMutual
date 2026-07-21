@@ -1,0 +1,108 @@
+Timestamp (UTC): 2026-07-21T07:55:29Z
+Scope: Versioned Answer behavior severity, bounded Good/Bad Answer verdict, language analysis, and Employer review UI
+Git branch / commit: main / unborn repository (no HEAD)
+Environment: macOS local development; Node v22.22.0; pnpm 11.9.0; PostgreSQL 16 and MinIO healthy on loopback; local secrets loaded only from ignored .env.local where explicitly stated
+
+Product and compatibility boundary
+- Only ANSWER_PLUS_PROCESS + employer-ai-review-disclosure@2 produces AnswerProcessEvidence@2.
+- OFF, ANSWER_ONLY, and historical disclosure versions retain neutral AnswerProcessEvidence@1.
+- The binary verdict is scoped to THIS_SEALED_CHALLENGE_ONLY and cannot mutate or prefill the Human Review.
+- Behavior severity is deterministic under onlyboth.answer-behavior-severity@1 and is not proof of intent, integrity, or external AI use.
+
+Commands and actual results
+
+1. pnpm typecheck
+Exit code: 0
+Relevant output:
+  Scope: 13 of 14 workspace projects
+  packages/contracts, application, db, ai, apps/web, and apps/worker: Done
+  tests TypeScript project: passed
+
+2. pnpm test:unit
+Exit code: 0
+Relevant output:
+  Test Files 37 passed (37)
+  Tests 215 passed (215)
+
+3. pnpm test:evals
+Exit code: 0
+Relevant output:
+  Test Files 4 passed (4)
+  Tests 45 passed (45)
+  Includes the 30-case AnswerEvidenceEdgeDraft@2 deterministic hard gate.
+
+4. pnpm test:integration
+Exit code: 0 without service environment; 34 passed and 2 conditional service tests skipped.
+Final explicit service run:
+  set -a; source ./.env.local; set +a; pnpm test:integration
+Exit code: 0
+Relevant output:
+  Test Files 11 passed (11)
+  Tests 36 passed (36)
+
+5. pnpm test:security
+Exit code: 0
+Relevant output:
+  Test Files 6 passed (6)
+  Tests 25 passed (25)
+
+6. pnpm test:docs
+Exit code: 0
+Relevant output:
+  AGENTS contract: 46 passed, 0 failed
+  AI engineering design contract: 38 passed, 0 failed
+  Product doctrine contract: 86 passed, 0 failed
+
+7. pnpm test:postgres
+Initial attempt exit code: 1 (BLOCKED because TEST_DATABASE_URL was not loaded into that shell; no in-memory substitute was used).
+First environment-loaded development attempt exit code: 1 (four implementation/test compatibility failures: expected migration list omitted 0011 and synthetic process text echoed prohibited language). These failures were fixed without weakening validators.
+Second environment-loaded development attempt exit code: 1 (ten stale consent failures after moving the test Contract to candidate-application-terms@2). The test Candidate Interest consent was corrected to the sealed version.
+Final command:
+  set -a; source ./.env.local; set +a; pnpm test:postgres
+Final exit code: 0
+Relevant output:
+  Test Files 6 passed (6)
+  Tests 45 passed (45)
+
+8. pnpm check
+Exit code: 0
+Relevant output:
+  Formatting: passed
+  ESLint with zero warnings: passed
+  TypeScript: passed
+  Unit: 215 passed
+  Environment-neutral integration: 34 passed, 2 conditional skips
+  Security: 25 passed
+  Replay: 7 passed
+  Documentation: 170 passed, 0 failed
+
+9. pnpm build
+Exit code: 0
+Relevant output:
+  Next.js 16.2.10 production build compiled successfully.
+  TypeScript, page-data collection, and 10/10 static page generation passed.
+
+10. set -a; source ./.env.local; set +a; pnpm test:e2e
+Exit code: 0
+Relevant output:
+  Running 3 tests using 1 worker
+  3 passed (10.6s)
+
+11. git diff --check
+Exit code: 0 after removing one Markdown trailing-space finding.
+
+12. rg -n '\.(only|skip)\(' tests apps packages || true
+Exit code: 0
+Relevant output: no .only or .skip occurrence found.
+
+Passed / Failed / Skipped / Blocked summary
+- Passed: typecheck, 215 unit tests, 45 deterministic eval tests, 36 explicit integration tests, 25 security tests, 45 PostgreSQL tests, 7 replay tests, 170 documentation assertions, production build, and 3 Playwright E2E tests.
+- Failed in final state: none.
+- Skipped in final explicit integration state: none.
+- Historical blockers/failures during this task are preserved above; all were resolved in the final runs.
+- LIVE OpenAI semantic evaluation: Not Run. Prompt/output schema changed to v2, so the prior GPT-5.4 mini and unrun GPT-5.6 production acceptance results do not validate this version.
+
+Known risks
+- Good/Bad and language findings remain model judgments; Structured Outputs enforce shape, while deterministic source and consistency validators enforce bounded authority. Exact production-model semantic acceptance remains required before enabling the LIVE kill switch.
+- Candidate consent does not replace employment, privacy, accessibility, bias-audit, or automated-decision legal obligations.
+- The persistent end-to-end seed remains AI policy OFF for compatibility; new behavior presentation is covered by component, contract, deterministic eval, and PostgreSQL tests rather than the default three-test Playwright seed.

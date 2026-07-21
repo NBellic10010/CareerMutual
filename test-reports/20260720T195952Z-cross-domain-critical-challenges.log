@@ -1,0 +1,116 @@
+UTC timestamp: 2026-07-20T19:59:52Z
+Scope: twenty cross-domain Recruiter JobPosts and ordered multimodal Critical Challenges
+Git branch: main
+Git commit: unavailable (initial worktree has no commit)
+Environment: local Node/pnpm workspace; PostgreSQL 16 and MinIO healthy; synthetic Demo data only
+
+Security note:
+- Database and object-store credentials are intentionally redacted from this report.
+- No API key, token, cookie, session, private label, or real Candidate material is retained here.
+- Every new role, Challenge, image, audio clip, and file is explicitly synthetic.
+
+Verification output follows. Each section records the exact non-secret command and its exit code.
+
+COMMAND: pnpm check
+EXIT: 0
+OUTPUT (complete relevant summary):
+- Prettier: all matched files use Prettier code style.
+- ESLint: passed with zero warnings.
+- TypeScript: all 13 applicable workspace projects and the root test project passed.
+- Unit: 33 files passed; 187 tests passed.
+- Environment-neutral Integration: 8 files passed, 1 skipped; 30 tests passed, 2 conditional MinIO tests skipped.
+- Security: 5 files passed; 24 tests passed.
+- Replay: 2 files passed; 7 tests passed.
+- Documentation contracts: AGENTS 41 passed; AI design 31 passed; product spirit/architecture 79 passed; 0 failed.
+
+COMMAND: pnpm test:docs (explicit run after the new Critical Challenge document assertions)
+EXIT: 0
+OUTPUT:
+- AGENTS contract: 41 passed; 0 failed.
+- AI engineering design contract: 31 passed; 0 failed.
+- Product doctrine and architecture contract: 79 passed; 0 failed.
+
+COMMAND: pnpm build
+EXIT: 0
+OUTPUT:
+- Next.js 16.2.10 compiled successfully, completed TypeScript, generated 10 static pages, and finalized the production route manifest.
+- Dynamic Candidate Job detail, Answer Session, Employer dashboard, and Employer current-review routes were included.
+
+COMMAND: OBJECT_STORE_*=[redacted local test configuration] pnpm test:integration
+EXIT: 0
+OUTPUT:
+- Test files: 9 passed.
+- Tests: 32 passed; 0 failed; 0 skipped.
+- This explicit run includes the local MinIO tests skipped by the environment-neutral aggregate check.
+
+COMMAND: TEST_DATABASE_URL=[redacted dedicated PostgreSQL 16 test database] pnpm test:postgres
+EXIT: 0
+OUTPUT:
+- Test files: 6 passed.
+- Tests: 37 passed; 0 failed; 0 skipped.
+- The functional product suite passed the full Draft/Publish, Contract, Credit, Slot, Answer, Artifact, sequential Review, and settlement regression after adding the Critical Challenge fields.
+
+COMMAND: DEMO_MODE=true DATABASE_URL=[redacted development database] pnpm demo:reset:functional
+EXIT: 0
+OUTPUT:
+- outcome: FUNCTIONAL_DEMO_READY
+- job_post_count: 21
+- candidate_credit: 3
+- The reset published one primary engineering JobPost and twenty cross-domain JobPosts through the real Draft/Publish service path.
+
+COMMAND: read-only PostgreSQL aggregate inspection after reset
+EXIT: 0
+OUTPUT:
+- Open JobPost Contracts: 21.
+- Contracts with `critical_challenge`: 21.
+- Role categories: 12 (Technology, Finance, Business Development, Creative, Sales, Marketing, Product, Operations, People, Legal, Healthcare, and Sustainability).
+- Challenges containing AUDIO: 2; IMAGE: 2; FILE: 3. TEXT appears across the corpus.
+
+COMMAND: TEST_DATABASE_URL=[redacted] OBJECT_STORE_*=[redacted] pnpm test:e2e
+FIRST RUN EXIT: 1
+INTERMEDIATE FINDING:
+- The old Candidate privacy assertion rejected any DOM substring `Direct`. The newly added legitimate title `Director of Content Strategy` therefore created a false positive; no Direct/Explore allocation label was present.
+- The assertion was narrowed to reject exact standalone `Direct` and `Explore` labels, preserving the intended privacy boundary without rejecting ordinary role titles.
+FINAL RUN EXIT: 0
+FINAL OUTPUT:
+- Playwright ran 2 tests with one isolated worker; 2 passed in 5.4 seconds.
+- The main test verified Recruiter login wording, 21 seeded JobPosts, four named cross-domain roles, creation of a twenty-second JobPost, Candidate category filtering, the image Challenge asset, and the full backed-Application/sequential-review loop.
+- The Candidate Evidence Passport 390px viewport test also passed.
+
+COMMAND: pnpm test:evals
+EXIT: 0
+OUTPUT:
+- Test files: 3 passed.
+- Deterministic contract evaluations: 14 passed; 0 failed.
+
+COMMAND: pnpm demo:offline
+EXIT: 0
+OUTPUT:
+- status: ok
+- runtimeMode: GOLDEN_REPLAY
+- externalWebDependencies: 0
+- replayId: payment-retry-v1
+
+COMMAND: git diff --check; focused-test scan; credential-pattern scan
+EXIT: 0
+OUTPUT:
+- The unstaged change set has no whitespace errors.
+- No `.only`, `.skip`, or `.todo` test declaration was found.
+- No OpenAI-shaped credential was found in repository files outside retained reports.
+
+LIVE STATUS:
+- Not run for this batch. The change adds no OpenAI operation or prompt, and no Worker-only key is configured.
+- Existing LIVE Candidate discovery, assistant, transcription, legacy matching, and recommendation validation remains BLOCKED by the missing replacement key; no LIVE result is reported as passed.
+
+COMMAND: env -u OPENAI_API_KEY [redacted local runtime variables] pnpm dev; local HTTP smoke
+EXIT: running successfully (development session intentionally left active)
+OUTPUT:
+- Next.js became ready on http://localhost:3000 in 263ms; the continuous Worker is running in the same workspace session.
+- Home and Login returned 200. Unauthenticated Candidate and Recruiter pages returned 307 to Login.
+- Login HTML contains both `Continue as Candidate 42` and `Continue as Recruiter`.
+- Synthetic SVG, WAV, and CSV Challenge assets returned 200 with their expected byte counts.
+
+FINAL SUMMARY:
+- Passed: contract and renderer tests, formatting, lint, typecheck, Unit, Integration including MinIO, Security, Replay, documentation contracts, production build, PostgreSQL 16, functional reset, deterministic evals, offline Demo, and final two-role Playwright E2E.
+- Final product-test failures: none.
+- Known scope boundary: the current JobPost composer creates a text Challenge manifest. The Contract and all role surfaces support AUDIO, IMAGE, and FILE parts, and the synthetic seed exercises them; a verified Recruiter media-upload workflow is not implemented in this batch.

@@ -1,0 +1,6 @@
+{
+  "schema_version": "scenario-fixture@1",
+  "challenge_ref": "payment-retry/duplicate-webhook@1",
+  "fault": "duplicate_webhook_delivery",
+  "parameters": {}
+}

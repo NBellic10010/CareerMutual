@@ -1,0 +1,23 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "types": ["node", "vitest/globals"]
+  },
+  "include": [
+    "tests/**/*.ts",
+    "tests/**/*.tsx",
+    "scripts/**/*.ts",
+    "playwright.config.ts",
+    "playwright.*.config.ts",
+    "vitest.*.config.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    ".next",
+    "test-results",
+    "playwright-report",
+    "playwright-report-prototype",
+    "playwright-report-live-analyst"
+  ]
+}

@@ -1,0 +1,107 @@
+OnlyBoth Employer AI Review Analyst verification
+UTC timestamp: 2026-07-20T22:01:56Z
+Branch: main
+Commit: unavailable (repository has no committed HEAD)
+Runtime: macOS host; Node.js 22; pnpm workspace; healthy local PostgreSQL 16 and MinIO containers
+Mode: keyless local acceptance; explicit synthetic analyst only in its named PostgreSQL test; no OpenAI API key
+
+Scope
+-----
+- Sealed JobPost Employer analysis policy, criteria, Candidate disclosure, and consent.
+- Immutable Answer Process Evidence and post-submission analysis Outbox.
+- LIVE Responses adapter shape, explicit synthetic adapter, validator, retries, and failure states.
+- Employer analyst panel, Candidate-owned process summary, and independent Human Review.
+- Source/privacy separation, late-result supersession, retention, evals, and documentation.
+
+Final commands and results
+--------------------------
+
+1. pnpm check
+   Exit code: 0
+   Result:
+   - Prettier: passed.
+   - ESLint: passed with zero warnings.
+   - TypeScript workspace and test projects: passed.
+   - Unit: 36 files, 205 passed.
+   - Environment-neutral integration: 10 passed files, 1 conditional file skipped;
+     33 passed tests, 2 conditional MinIO tests skipped.
+   - Security: 6 files, 25 passed.
+   - Replay: 2 files, 7 passed.
+   - Documentation: 44 Agent/Handoff assertions, 36 AI-design assertions, and
+     82 product-doctrine assertions passed.
+
+2. TEST_DATABASE_URL=<redacted dedicated local test database> pnpm test:postgres
+   Exit code: 0
+   Result: 6 files, 45 passed against PostgreSQL 16.
+   Coverage includes fresh/rollback migration 0010, Submission/Process/Outbox atomicity,
+   immutable Process Evidence/AI Output/AnswerEvidenceEdge, OFF and source-validated synthetic
+   paths, semantic NEEDS_HUMAN mapping, independent consulted Human Review, queued and in-flight
+   SUPERSEDED races, and 24-hour deletion of only non-final rich-text bodies.
+
+3. OBJECT_STORE_*<redacted local MinIO configuration> pnpm test:integration
+   Exit code: 0
+   Result: 11 files, 35 passed, 0 skipped. Private presigned upload, checksum, create-only write,
+   authorized read, and cleanup paths used the healthy local MinIO service.
+
+4. pnpm build
+   Exit code: 0
+   Result: Next.js 16.2.10 production build compiled, typechecked, generated static pages, and
+   emitted all persistent Candidate/Employer/API routes.
+
+5. TEST_DATABASE_URL=<redacted dedicated local test database>
+   OBJECT_STORE_*<redacted local MinIO configuration> pnpm test:e2e
+   Exit code: 0
+   Result: 3 passed in 9.9 seconds.
+   - Persistent Candidate/Recruiter backed Application and sequential Human Review.
+   - Candidate-owned Process Summary after immutable submission.
+   - Default-OFF Employer Evidence Analyst remains transparent and nonblocking.
+   - Candidate Evidence Passport at 390px and Focus Policy automatic seal regression.
+
+6. pnpm test:evals
+   Exit code: 0
+   Result: 4 files, 45 deterministic contract evals passed. Employer Analyst includes a
+   30-case hard-gate corpus and same-answer/different-process capability-verdict invariance.
+
+7. pnpm demo:offline
+   Exit code: 0
+   Raw result:
+   {
+     "status": "ok",
+     "runtimeMode": "GOLDEN_REPLAY",
+     "externalWebDependencies": 0,
+     "replayId": "payment-retry-v1",
+     "candidates": 2,
+     "projections": ["EMPLOYER", "CANDIDATE", "SYNTHETIC_JUDGE"],
+     "catalogRef": "payment-retry@1"
+   }
+
+8. pnpm test:evals:live
+   Exit code: 1
+   Result: BLOCKED as designed. Five LIVE suites refused to run without a Worker-only
+   OPENAI_API_KEY. The Employer Analyst error was:
+   "BLOCKED: LIVE buildAnswerEvidenceEdge eval requires a Worker-only OPENAI_API_KEY.
+   No synthetic or Golden result was substituted."
+   Tests run: none. No result is reported as passed.
+
+Acceptance findings resolved during this run
+--------------------------------------------
+- Employer Process Context initially parsed the full strict Process Evidence object and rejected
+  the intentionally private revision/timestamp fields. The projection schema now strips those
+  fields at the role boundary; Candidate self-access retains them.
+- A legacy security assertion rejected every GOLDEN_REPLAY token in Worker composition. It now
+  verifies the actual fail-closed invariant: synthetic analyst output requires the explicit
+  enabled+SYNTHETIC branch, while a missing LIVE key produces no fallback.
+- The initial E2E launch found a prior OnlyBoth dev server on port 3000. The owned dev process was
+  stopped, then Playwright started an isolated production server and passed.
+- Semantic refusal/incomplete/schema/source/policy errors are mapped to NEEDS_HUMAN instead of
+  FAILED; provider/configuration failures remain FAILED. Both paths leave Human Review available.
+
+Summary
+-------
+Passed: check, PostgreSQL 45/45, MinIO 35/35, production build, Playwright 3/3,
+deterministic evals 45/45, offline Demo.
+Failed: none remaining in keyless local acceptance.
+Skipped: 2 conditional MinIO assertions in the aggregate check; both passed in the explicit
+MinIO-enabled run.
+Blocked: 5 LIVE OpenAI suites because no Worker-only OPENAI_API_KEY was supplied.
+Known pre-existing failures: none in the executed keyless suites.

@@ -1,0 +1,32 @@
+{
+  "name": "@onlyboth/db",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./postgres-challenge-store": "./src/postgres-challenge-store.ts",
+    "./postgres-matching-store": "./src/postgres-matching-store.ts",
+    "./postgres-proof-window-decision-store": "./src/postgres-proof-window-decision-store.ts",
+    "./postgres-candidate-interest-store": "./src/postgres-candidate-interest-store.ts",
+    "./postgres-answer-invitation-decision-store": "./src/postgres-answer-invitation-decision-store.ts",
+    "./postgres-functional-product-store": "./src/postgres-functional-product-store.ts",
+    "./postgres-candidate-discovery-store": "./src/postgres-candidate-discovery-store.ts",
+    "./postgres-pool": "./src/postgres-pool.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@onlyboth/application": "workspace:*",
+    "@onlyboth/contracts": "workspace:*",
+    "@onlyboth/domain": "workspace:*",
+    "@onlyboth/demo-replay": "workspace:*",
+    "pg": "8.22.0"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "@types/pg": "8.20.0",
+    "typescript": "catalog:"
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "schema_version": "scenario-fixture@1",
+  "challenge_ref": "payment-retry/redis-failover@1",
+  "fault": "acknowledgement_loss_after_payment_acceptance",
+  "parameters": {}
+}

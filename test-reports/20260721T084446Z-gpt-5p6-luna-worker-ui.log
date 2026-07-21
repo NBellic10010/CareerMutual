@@ -1,0 +1,181 @@
+UTC timestamp: 2026-07-21T08:44:46Z
+Scope: GPT-5.6 Luna Employer Evidence Analyst Worker -> PostgreSQL -> Employer READY UI vertical
+Branch: main
+Commit: unavailable; repository has no HEAD commit
+Node: v22.22.0
+pnpm: 11.9.0
+Services: PostgreSQL 16 and MinIO healthy on loopback
+Runtime: LIVE Employer analyst in Worker; Golden Replay only for unrelated Web sandbox configuration
+Data: synthetic Candidate 42 and synthetic Senior Backend Reliability Engineer JobPost
+Secrets: OPENAI_API_KEY loaded from .env.local into the Worker/test process only and redacted here
+
+CHANGE SUMMARY
+
+- Added a fail-closed Employer analyst runtime policy with disabled/Sol defaults and an explicit
+  gpt-5.6-sol | gpt-5.6-terra | gpt-5.6-luna allowlist.
+- Added an explicit policy-on synthetic reset path while preserving the normal OFF default.
+- Added a dedicated LIVE Playwright vertical with the API key removed from the Web child process.
+- Persisted and asserted the real Luna request, run, output, edge, and READY Employer projection.
+
+INITIAL FAILURES RETAINED
+
+1. Command:
+   pnpm exec prettier --write .env.example .gitignore <TypeScript files...>
+   Exit code: 2
+   Relevant output:
+   [error] No parser could be inferred for file ".env.example".
+   [error] No parser could be inferred for file ".gitignore".
+   Resolution: formatting was rerun only for parser-supported TypeScript/JSON files. The aggregate
+   format check later passed for the full repository using its configured ignore rules.
+
+2. First aggregate command:
+   pnpm check
+   Exit code: 1
+   Relevant output:
+   FAIL tests/security/functional-product-boundaries.test.ts
+   expected Worker source to contain the retired local expression:
+   analystMode === "SYNTHETIC"
+   Security summary at failure: 1 failed, 24 passed.
+   Resolution: updated the static security contract to assert the centralized fail-closed policy
+   loader, analystPolicy.mode, allowlisted model pin, and Worker-only adapter construction. No
+   runtime behavior was weakened.
+
+FOCUSED POLICY AND SHAPE TESTS
+
+Command:
+  pnpm exec vitest run --config vitest.unit.config.ts \
+    apps/worker/src/employer-review-analyst-policy.test.ts
+Exit code: 0
+Output:
+  Test Files  1 passed (1)
+  Tests       5 passed (5)
+
+Command:
+  pnpm exec vitest run --config vitest.integration.config.ts \
+    tests/integration/workspace-shape.test.ts
+Exit code: 0
+Output:
+  Test Files  1 passed (1)
+  Tests       6 passed (6)
+
+Command:
+  pnpm typecheck
+Exit code: 0
+Output:
+  All 13 configured workspace project type checks and tsconfig.tests.json passed.
+
+LIVE PERSISTENT VERTICAL
+
+Command, run 1:
+  set -a; source ./.env.local; set +a; pnpm test:e2e:live-analyst
+Exit code: 0
+Output:
+  tests/e2e-live/employer-review-analyst-live.spec.ts
+  persists Luna analysis and renders READY evidence in the Employer review UI
+  1 passed (15.2s)
+
+Command, final state-preserving run after all existing E2E regressions:
+  set -a; source ./.env.local; set +a; pnpm test:e2e:live-analyst
+Exit code: 0
+Output:
+  tests/e2e-live/employer-review-analyst-live.spec.ts
+  persists Luna analysis and renders READY evidence in the Employer review UI
+  1 passed (14.6s)
+
+The test asserted all of the following:
+  - Candidate received and accepted a disclosure@2 ANSWER_PLUS_PROCESS Backed Offer.
+  - Candidate submitted a real immutable rich-text answer.
+  - Employer UI showed ANALYZING and the deterministic behavior profile before model completion.
+  - The functional Worker returned EMPLOYER_ANALYSIS_PROCESSED.
+  - Reloaded Employer UI showed READY, GOOD ANSWER, Language analysis, SUPPORTED criterion evidence,
+    behavior profile, and the still-required Human Review receipt form.
+  - Employer review DOM did not contain Candidate 42's identity label.
+  - PostgreSQL projection status: READY.
+  - PostgreSQL synthetic flag: false.
+  - PostgreSQL requested model: gpt-5.6-luna.
+  - PostgreSQL resolved model: gpt-5.6-luna.
+  - PostgreSQL model run status: SUCCEEDED.
+  - PostgreSQL prompt version: 2.0.2.
+  - PostgreSQL output schema: answer-evidence-edge-draft@2.
+
+AGGREGATE AND REGRESSION VERIFICATION
+
+Command:
+  pnpm check
+Exit code: 0
+Output:
+  Formatting: passed.
+  ESLint: passed with zero warnings.
+  Type checks: passed.
+  Unit: 38 files passed; 221 tests passed.
+  Integration: 10 files passed, 1 skipped; 35 tests passed, 2 conditional service tests skipped.
+  Security: 6 files passed; 25 tests passed.
+  Replay: 2 files passed; 7 tests passed.
+  Agent documentation contract: 46 passed, 0 failed.
+  AI engineering contract: 38 passed, 0 failed.
+  Product doctrine contract: 86 passed, 0 failed.
+
+Command:
+  pnpm build
+Exit code: 0
+Output:
+  Next.js optimized production build compiled successfully.
+  TypeScript, page data, and 10/10 static pages completed.
+
+Command:
+  pnpm test:evals
+Exit code: 0
+Output:
+  Test Files  4 passed (4)
+  Tests       45 passed (45)
+
+Command:
+  pnpm demo:offline
+Exit code: 0
+Output:
+  status: ok
+  runtimeMode: GOLDEN_REPLAY
+  externalWebDependencies: 0
+  replayId: payment-retry-v1
+
+Command:
+  set -a; source ./.env.local; set +a; pnpm test:postgres
+Exit code: 0
+Output:
+  Test Files  6 passed (6)
+  Tests       45 passed (45)
+
+Command:
+  set -a; source ./.env.local; set +a; pnpm test:e2e
+Exit code: 0
+Output:
+  persistent roles complete the backed application and sequential human-review loop
+  Candidate Evidence Passport remains operable at a 390px viewport
+  full-screen Sandbox records browser focus and seals persisted work on the second departure
+  3 passed (9.9s)
+
+Command after documentation and handoff updates:
+  pnpm check && git diff --check && scan apps/packages/scripts/tests for .only/.skip
+Exit code: 0
+Output:
+  pnpm check passed with the same counts reported above.
+  git diff --check passed.
+  PASS: no .only/.skip test focus markers.
+
+BLOCKED / NOT RUN
+
+- The in-app Browser skill's required browser runtime/MCP interface was not exposed in this
+  session. No manual in-app-browser visual pass is claimed. The real Chromium Playwright test
+  above performed browser rendering, interaction, visibility, privacy, and state-transition checks.
+- Exact production-default gpt-5.6-sol LIVE semantic acceptance was not run. Luna acceptance does
+  not authorize Sol or open the kill switch.
+- Candidate assistant and Voice Memo transcription LIVE verification were outside this scope.
+
+FINAL SUMMARY
+
+Passed: focused policy/shape/type checks; two Luna LIVE persistent browser runs; aggregate check;
+production build; 45 deterministic evals; offline Demo; 45 PostgreSQL tests; 3 existing browser
+E2E tests.
+Failed then fixed: unsupported direct Prettier input selection; one stale static security assertion.
+Skipped: 2 conditional environment-neutral integration cases as reported by pnpm check.
+Blocked: in-app Browser runtime and exact default-Sol release gate.

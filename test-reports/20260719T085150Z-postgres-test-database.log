@@ -1,0 +1,202 @@
+Timestamp (UTC): 2026-07-19T08:51:50Z
+Scope: Start a local PostgreSQL 16 service, create onlyboth_test, remove real-database and browser acceptance blockers, and verify the Candidate 42 Golden vertical slice.
+Git branch / commit: main / no HEAD commit exists
+Environment: macOS arm64; Docker Desktop 29.4.0; postgres:16-alpine; PostgreSQL 16.14; GOLDEN_REPLAY; synthetic Candidate 42 only
+
+SECURITY NOTE
+The local database URL, password, session tokens, cookies, and generated receipts are redacted from this report. Commands below use <redacted-local-test-url> in place of TEST_DATABASE_URL.
+
+SERVICE START AND DATABASE CREATION
+
+Command: native PostgreSQL and service discovery
+Exit code: 0
+Relevant output:
+  No PostgreSQL binary or active service was found in the checked Homebrew, Postgres.app,
+  MacPorts, Nix, asdf, mise, or /Library/PostgreSQL paths.
+  FOUND /Applications/Docker.app/Contents/Resources/bin/docker
+  PORT_5432_OPEN=no
+
+Command: /Applications/Docker.app/Contents/Resources/bin/docker version
+Exit code: 1
+Relevant output:
+  Client version 29.4.0 was installed.
+  failed to connect to the docker API at unix:///var/run/docker.sock
+
+Command: /usr/bin/open -a Docker
+Exit code: 0
+Relevant output:
+  Docker server 29.4.0 is ready
+
+Command: docker compose -f infra/docker-compose.dev.yml up -d postgres
+Exit code: 1
+Relevant output:
+  error getting credentials - err: exec: "docker-credential-desktop": executable file not found in $PATH
+
+Command: PATH=<Docker-Desktop-bin-and-system-paths> docker compose -f infra/docker-compose.dev.yml up -d postgres
+Exit code: 0
+Relevant output:
+  Image postgres:16-alpine Pulled
+  Network onlyboth-dev_default Created
+  Volume onlyboth-dev_onlyboth-postgres-data Created
+  Container onlyboth-dev-postgres-1 Started
+
+Command: docker exec onlyboth-dev-postgres-1 createdb -U onlyboth -O onlyboth onlyboth_test (guarded by an existence query)
+Exit code: 0
+Raw verification output:
+  onlyboth_test|onlyboth|160014
+  container=onlyboth-dev-postgres-1 status=Up (healthy) ports=127.0.0.1:5432->5432/tcp
+
+FAILURES DISCOVERED BY FIRST REAL ACCEPTANCE
+
+Command: TEST_DATABASE_URL=<redacted-local-test-url> pnpm test:postgres
+Exit code: 1
+Relevant raw output:
+  Test Files  1 failed (1)
+  Tests       6 failed | 1 passed (7)
+  error: syntax error at or near "."
+  PostgresChallengeRecommendationWorkerStore.loadStageAContext
+  packages/db/src/postgres-challenge-worker-store.ts:208:20
+Cause: review_windows used the reserved PostgreSQL keyword WINDOW as an unquoted SQL alias.
+
+Command: TEST_DATABASE_URL=<redacted-local-test-url> pnpm test:e2e
+Exit code: 1
+Relevant raw output:
+  Error: browserType.launch: Executable doesn't exist at
+  <user-home>/Library/Caches/ms-playwright/chromium_headless_shell-1228/...
+  1 failed
+Cause: the Playwright 1.61.1 Chromium runtime had not been downloaded.
+
+Command: pnpm exec playwright install chromium
+Exit code: 0
+Relevant output:
+  Chrome for Testing 149.0.7827.55 (playwright chromium v1228) downloaded
+  FFmpeg (playwright ffmpeg v1011) downloaded
+  Chrome Headless Shell 149.0.7827.55 (playwright chromium-headless-shell v1228) downloaded
+
+Command: TEST_DATABASE_URL=<redacted-local-test-url> pnpm test:e2e (diagnostic attempts after the browser install)
+Exit code: 1 for each diagnostic attempt
+Relevant raw failures, in discovery order:
+  1. getByText('CHECKPOINT_PENDING'): element(s) not found after Candidate login.
+     The issuer redirected from 127.0.0.1 to localhost, so its host-only Candidate cookie did not follow.
+  2. locator('.authorization-receipt'): element(s) not found.
+     Next.js rejected 127.0.0.1 development resources, preventing client hydration and the button POST.
+  3. locator('.authorization-receipt'): element(s) not found after the command committed.
+     A lagging projection with authorization:null erased the transaction receipt returned by the POST.
+  4. Expected STALE_AGGREGATE_VERSION/409; received COMMAND_FAILED/503.
+     instanceof did not survive the Next.js server bundle boundary for the typed application error.
+
+FIXES VERIFIED
+
+- Replaced every SQL alias named window in the PostgreSQL Worker paths and acceptance SQL with review_window.
+- Changed both synthetic session issuers to same-origin relative 303 Location headers.
+- Allowed only 127.0.0.1 as a Next.js development origin; no wildcard origin was added.
+- Preserved a committed local Human Authorization Receipt while the Employer projection catches up.
+- Added an allowlisted structural application-error normalizer with exact code/status matching and two unit tests.
+
+FINAL VERIFICATION
+
+Command: pnpm exec vitest run --config vitest.unit.config.ts tests/unit/select-human-challenge.test.ts
+Exit code: 0
+Raw result:
+  Test Files  1 passed (1)
+  Tests       10 passed (10)
+
+Command: pnpm check
+Exit code: 0
+Raw result:
+  Prettier: All matched files use Prettier code style
+  ESLint: passed with max warnings 0
+  TypeScript: all 12 applicable workspace projects and root test config passed
+  Unit:       14 files passed; 85 tests passed
+  Integration: 2 files passed; 8 tests passed
+  Security:    2 files passed; 9 tests passed
+  Replay:      2 files passed; 7 tests passed
+  Documentation contracts: 28 + 19 assertions passed; 0 failed
+
+Command: pnpm build
+Exit code: 0
+Raw result:
+  Next.js 16.2.10 optimized production build compiled successfully.
+  /demo remained static.
+  Employer, Candidate, both session issuers, role queries, and challenge/select remained dynamic.
+
+Command: TEST_DATABASE_URL=<redacted-local-test-url> pnpm test:postgres
+Exit code: 0
+Raw result:
+  Test Files  1 passed (1)
+  Tests       7 passed (7)
+  Duration    702ms
+
+Command: TEST_DATABASE_URL=<redacted-local-test-url> pnpm test:e2e
+Exit code: 0
+Raw result:
+  Running 1 test using 1 worker
+  Sarah's real authorization drives all three Candidate and Sandbox branches
+  1 passed (6.3s)
+Notes: the suite used isolated Employer/Candidate browser contexts and covered all three Catalog branches, role cookies, CSRF/RBAC, idempotent replay, stale 409, Candidate polling, Replay Sandbox parity, and zero external browser requests.
+
+Command: pnpm demo:offline
+Exit code: 0
+Raw result:
+  status: ok
+  runtimeMode: GOLDEN_REPLAY
+  externalWebDependencies: 0
+  replayId: payment-retry-v1
+
+Command: pnpm test:evals
+Exit code: 0
+Raw result:
+  Test Files  1 passed (1)
+  Tests       1 passed (1) (the aggregate 12-case deterministic contract corpus)
+
+Command: git diff --check
+Exit code: 0
+Raw result: no output
+
+Command: rg -n '\.(only|skip)\(' tests apps packages --glob '!**/.next/**'
+Exit code: 1 (expected no-match status)
+Raw result: no output; no focused or skipped tests were found.
+
+Command: docker inspect / in-container PostgreSQL version check
+Exit code: 0
+Raw result:
+  image=postgres:16-alpine health=healthy running=true
+  onlyboth_test|onlyboth|16.14
+
+Command: pnpm format:check (after the final engineering-design, report, and handoff updates)
+Exit code: 0
+Raw result:
+  All matched files use Prettier code style!
+
+Command: pnpm test:docs (after the final handoff update)
+Exit code: 0
+Raw result:
+  Agent/handoff/report contracts: 28 passed, 0 failed
+  AI engineering-design contracts: 19 passed, 0 failed
+
+SUMMARY
+
+Passed:
+- PostgreSQL service startup, health, loopback binding, database and owner verification
+- 85 unit tests, 8 integration tests, 9 security tests, 7 Replay tests
+- 7 real PostgreSQL acceptance tests
+- 1 full three-branch Playwright E2E scenario
+- build, offline verification, deterministic evals, formatting, lint, type checks, and docs contracts
+
+Failed then fixed:
+- Reserved SQL alias
+- Cross-host session redirect
+- Blocked local development hydration
+- Employer receipt/projection race
+- Cross-bundle typed error mapping
+
+Skipped: none
+
+Blocked / not run:
+- LIVE Responses smoke and LIVE model evals were not run because no Worker-only OPENAI_API_KEY was provided. Golden Replay did not substitute for LIVE.
+
+Known pre-existing failures:
+- None among the suites that were run. The repository still has no HEAD commit and all workspace files are untracked.
+
+Operational note:
+- The Docker volume persists the databases, but Docker Desktop and onlyboth-dev-postgres-1 must be running. Re-run the existing compose up command after a Docker shutdown.

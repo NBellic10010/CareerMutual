@@ -1,0 +1,15 @@
+DROP TABLE IF EXISTS candidate_review_window_projections;
+DROP TABLE IF EXISTS employer_review_window_projections;
+DROP TABLE IF EXISTS inbox_messages;
+DROP TABLE IF EXISTS outbox_messages;
+DROP TABLE IF EXISTS domain_events;
+DROP TRIGGER IF EXISTS ai_outputs_immutable ON ai_outputs;
+DROP FUNCTION IF EXISTS reject_ai_output_mutation();
+DROP TABLE IF EXISTS ai_output_consumptions;
+DROP TABLE IF EXISTS ai_outputs;
+DROP TABLE IF EXISTS ai_source_refs;
+DROP TABLE IF EXISTS ai_model_runs;
+DROP TABLE IF EXISTS hiring_intelligence_requests;
+DROP TABLE IF EXISTS stage_a_evidence;
+DROP TABLE IF EXISTS proof_sessions;
+DROP TABLE IF EXISTS review_windows;

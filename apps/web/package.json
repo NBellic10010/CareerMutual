@@ -1,0 +1,34 @@
+{
+  "name": "@onlyboth/web",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@onlyboth/application": "workspace:*",
+    "@onlyboth/challenge-catalog": "workspace:*",
+    "@onlyboth/contracts": "workspace:*",
+    "@onlyboth/db": "workspace:*",
+    "@onlyboth/demo-fixtures": "workspace:*",
+    "@onlyboth/demo-replay": "workspace:*",
+    "@onlyboth/storage": "workspace:*",
+    "@tiptap/react": "3.8.0",
+    "@tiptap/starter-kit": "3.8.0",
+    "next": "16.2.10",
+    "react": "19.2.7",
+    "react-dom": "19.2.7",
+    "zod": "4.3.6"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "typescript": "6.0.3",
+    "vitest": "4.1.10"
+  }
+}

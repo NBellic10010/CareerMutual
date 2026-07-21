@@ -1,0 +1,111 @@
+Timestamp (UTC): 2026-07-19T21:20:33Z
+Scope: Rolling blind-review Batch 0/1 contracts and pure domain foundation
+Git branch: main
+Git commit: unavailable; the repository has no HEAD revision
+Environment: Node.js v22.22.0, pnpm 11.9.0, macOS local workspace
+Runtime mode: N/A for strict contract parsing and pure domain tests; no adapter was invoked
+
+Changed behavior
+- Added strict versioned contracts that distinguish low-cost Candidate Interest from a backed formal Application.
+- Added a public Opportunity projection, Candidate Queue projection, and an Employer projection that cannot contain pre-answer Candidate cards.
+- Added the onlyboth.interest-queue@1 pure Queue policy and rolling Blind Review state model.
+- Added eight reusable review Slots independently from fixed eight-Answer Advancement Cohort Seats.
+- Added backed Offer, Accept, Answer Submit, evidence-linked Human Review settlement, immediate per-Slot reuse, and the 8/8 Cohort barrier.
+
+Failure evidence retained separately
+- test-reports/20260719T211229Z-rolling-review-domain-initial.log records the intentional failing-first test run before the contracts and domain implementation existed.
+
+Command: pnpm exec vitest run --config vitest.unit.config.ts tests/unit/blind-answer-contracts.test.ts tests/unit/blind-answer-domain.test.ts
+Exit code: 0
+Relevant output:
+ RUN  v4.1.10 /workspace
+ Test Files  2 passed (2)
+      Tests  9 passed (9)
+
+Command: pnpm typecheck (first post-implementation attempt)
+Exit code: 2
+Relevant output:
+ packages/domain typecheck: src/blind-answer/rolling-blind-review.ts(373,3): error TS4104: The type 'readonly AdvancementCohort[]' is 'readonly' and cannot be assigned to the mutable type 'AdvancementCohort[]'.
+Resolution:
+- Declared the local Cohort collection as readonly, preserving the aggregate immutability boundary.
+
+Command: pnpm typecheck (after the fix)
+Exit code: 0
+Relevant output:
+ Scope: 12 of 13 workspace projects
+ packages/domain typecheck: Done
+ packages/contracts typecheck: Done
+ packages/application typecheck: Done
+ packages/projections typecheck: Done
+ packages/demo-replay typecheck: Done
+ packages/testkit typecheck: Done
+ packages/sandbox typecheck: Done
+ packages/db typecheck: Done
+ packages/ai typecheck: Done
+ apps/worker typecheck: Done
+ apps/web typecheck: Done
+
+Command: pnpm check
+Exit code: 0
+Relevant output:
+ prettier --check .: All matched files use Prettier code style.
+ eslint . --max-warnings=0: passed.
+ TypeScript: 12 of 13 workspace projects and test configuration passed.
+ Unit: 19 files passed; 109 tests passed.
+ Integration: 2 files passed; 8 tests passed.
+ Security: 3 files passed; 13 tests passed.
+ Replay: 2 files passed; 7 tests passed.
+ Documentation: 34 AGENTS, 22 AI-design, and 60 product/migration assertions passed.
+
+Command: pnpm build
+Exit code: 0
+Relevant output:
+ apps/web build: Next.js 16.2.10
+ apps/web build: Compiled successfully.
+ apps/web build: TypeScript completed.
+ apps/web build: Generated static pages (8/8).
+ apps/web build: Done.
+
+Command: pnpm exec prettier --write HANDOFF.md && pnpm format:check && pnpm test:docs
+Exit code: 0
+Relevant output:
+ HANDOFF.md: unchanged by Prettier.
+ All matched files use Prettier code style.
+ Documentation: 34 AGENTS assertions passed, 22 AI-design assertions passed, and 60 product/migration assertions passed.
+
+Command: git diff --check
+Exit code: 0
+Output: no whitespace errors reported.
+Note: the repository has no HEAD and all workspace files are untracked, so this check cannot provide normal tracked-diff coverage.
+
+Command: rg -n "\\.(only|skip)\\(" tests apps packages
+Exit code: 1
+Output: no matches.
+Interpretation: ripgrep returns 1 when it finds no focused or skipped tests; no .only or .skip usage exists in the scanned paths.
+
+Passed summary
+- Focused contract/domain tests: 9/9.
+- Full unit suite: 109/109.
+- Full integration suite: 8/8.
+- Full security suite: 13/13.
+- Replay suite: 7/7.
+- Documentation contracts: 116/116.
+- Type checking, formatting, lint, and production build passed.
+
+Failed summary
+- The expected failing-first run is retained in the initial report.
+- The first post-implementation typecheck found one readonly-array mismatch; it was fixed and the complete typecheck passed.
+
+Skipped summary
+- No test was marked skipped.
+
+Blocked / not run
+- PostgreSQL tests: not run because this slice adds no SQL migration, repository, transaction, or Application Command implementation.
+- Playwright E2E: not run because no API route, role UI, browser behavior, or runtime composition changed.
+- Offline Demo and deterministic/LIVE evals: not run because no Replay fixture, prompt, AI adapter, Sandbox adapter, or Demo behavior changed.
+- LIVE verification remains blocked on a Worker-only OpenAI API key, but LIVE behavior is outside this slice.
+
+Known pre-existing failures and risks
+- There are no failing regression checks after this change.
+- The active Web/Worker flow remains the legacy pre-answer Claim/MatchEdge selector; the new contracts and domain are not yet composed into PostgreSQL, Application Commands, Workers, APIs, or UI.
+- Decline, expiry, Activity Lease, Credit persistence, Opportunity closure, breach/remediation, Answer Evidence AI, post-answer allocation, and legacy endpoint cutover remain for later batches.

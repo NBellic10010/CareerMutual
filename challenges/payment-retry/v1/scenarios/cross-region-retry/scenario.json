@@ -1,0 +1,6 @@
+{
+  "schema_version": "scenario-fixture@1",
+  "challenge_ref": "payment-retry/cross-region-retry@1",
+  "fault": "delayed_retry_after_region_handoff",
+  "parameters": {}
+}

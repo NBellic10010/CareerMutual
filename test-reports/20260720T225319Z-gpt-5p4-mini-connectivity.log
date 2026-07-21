@@ -1,0 +1,73 @@
+Timestamp (UTC): 2026-07-20T22:53:19Z
+Scope: Low-cost OpenAI Responses connectivity canary using GPT-5.4 mini
+Git branch / commit: main / unavailable (repository has no resolvable HEAD commit)
+Environment / runtime mode: local macOS; Node 22.22.0; pnpm 11.9.0; OpenAI SDK 6.48.0; direct synthetic-only LIVE connectivity request
+
+Outcome: PASSED for connectivity only. This result does not validate Employer Analyst semantics, strict source-linked Structured Outputs, the 30-case calibrated eval, or production GPT-5.6 behavior.
+
+Official model check:
+- Requested model ID: gpt-5.4-mini
+- Official current snapshot: gpt-5.4-mini-2026-03-17
+- Supported endpoint used: Responses API
+- Reasoning effort: none
+- Application-state storage: store=false
+- No tools, files, web, candidate data, résumé data, private labels, or business-state mutation
+
+Command 1:
+  OPENAI_API_KEY=<loaded-from-ignored-env> one-shot Responses API request using gpt-5.4-mini, reasoning.effort=none, store=false, max_output_tokens=16, and a unique X-Client-Request-Id
+Exit code: 0
+Output metadata:
+  outcome=completed
+  status=completed
+  requested_model=gpt-5.4-mini
+  resolved_model=gpt-5.4-mini-2026-03-17
+  response_id=resp_07dba05c58400da8016a5ea6c2b79c8199aa848c560c85967d
+  client_request_id=332f1776-3da2-4cc7-93b7-f788a0f5ba51
+  duration_ms=2337
+  input_tokens=11
+  output_tokens=5
+  reasoning_tokens=0
+  cached_input_tokens=0
+  store=false
+  Response text was intentionally not logged.
+
+Command 2:
+  Compare the current ignored runtime Key against unreachable local Git blobs without printing the Key
+Exit code: 0
+Output:
+  current_key_in_unreachable_git_blob=false
+  matching_unreachable_blob_count=0
+  Git reported that main is an unborn branch; there is no reachable commit history.
+
+Command 3:
+  pnpm exec prettier --check HANDOFF.md && pnpm test:docs
+Exit code: 0
+Output:
+  HANDOFF formatting passed.
+  44 Agent/English + 36 AI design + 82 product-spirit assertions passed.
+
+Command 4:
+  git diff --check and report secret-pattern scan
+Exit code: 0
+Output:
+  No whitespace errors.
+  No API-key-shaped value appears in HANDOFF or this report.
+
+Command 5:
+  Exact-key scan over `git ls-files --cached --others --exclude-standard`
+Exit code: 0
+Output:
+  tracked_or_unignored_key_occurrences=0
+
+Test-plan decision:
+- GPT-5.4 mini is suitable for a cheap connectivity canary: authentication, quota, DNS/TLS, Responses endpoint access, request correlation, store=false, and optionally basic schema parsing.
+- Deterministic unit, integration, security, replay, and contract tests remain model-independent.
+- GPT-5.4 mini may be used to debug the eval harness, but its semantic scores cannot authorize a GPT-5.6 production release.
+- Production release gates must run the exact production model, snapshot/alias policy, reasoning effort, prompt version, schema version, validator, and representative corpus.
+- The Employer Analyst 30-case macro-F1, source anchoring, prompt-injection, refusal, and same-answer/different-process invariance gates therefore remain required on gpt-5.6-sol before LIVE production acceptance.
+
+Summary:
+- Passed: one GPT-5.4 mini connectivity request; model access; quota; request completion; safe metadata capture; current-key dangling-Blob check; 162 documentation assertions; formatting, diff, and secret scans.
+- Failed: 0.
+- Skipped: 0.
+- Not claimed: GPT-5.6 connectivity or semantic quality, Employer Analyst Structured Output validity, 30-case eval, Worker kill-switch vertical.

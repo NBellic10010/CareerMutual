@@ -1,0 +1,53 @@
+Timestamp (UTC): 2026-07-19T20:57:25Z
+Scope: Initial documentation-contract validation for rolling reusable review slots and the public Interest Queue
+Git branch / commit: unavailable; repository has no HEAD and workspace files are untracked
+Environment / runtime mode: local macOS; documentation-only change; runtime mode not applicable
+
+Command: pnpm test:docs
+Exit code: 1
+
+Relevant raw output:
+
+PASS: root AGENTS.md exists
+PASS: AGENTS preserves the Advancement Cohort review barrier
+PASS: AGENTS preserves per-Slot backpressure
+PASS: AGENTS forbids treating WIP as total applicant capacity
+PASS: AGENTS preserves the Interest/Application boundary
+PASS: AGENTS requires rolling queue service
+RESULT: 34 passed, 0 failed
+
+PASS: AI engineering design exists
+PASS: design defines post-answer Evidence Edge drafting
+PASS: design preserves mandatory named answer review
+PASS: design specifies Replay parity
+RESULT: 22 passed, 0 failed
+
+PASS: doctrine binds review before Candidate work
+PASS: doctrine forbids pre-answer selection
+PASS: doctrine requires the Advancement Cohort review barrier
+PASS: doctrine scopes backpressure to one reusable Slot
+PASS: doctrine separates queue wait from ability conclusions
+FAIL: doctrine distinguishes interest from formal application (missing text in OnlyBoth-产品精神.md: Interest 不是 Application)
+PASS: doctrine forbids treating Slot WIP as a total applicant cap
+PASS: doctrine guarantees a disposition for every accepted Application
+PASS: doctrine requires per-Slot recycling
+tests/docs/product-spirit-contract.sh: line 96: OfferNextQueuedInterest: command not found
+PASS: engineering design recycles each settled Slot
+tests/docs/product-spirit-contract.sh: line 114: 7/8: No such file or directory
+PASS: migration plan preserves the Cohort review barrier
+RESULT: 59 passed, 1 failed
+[ELIFECYCLE] Command failed with exit code 1.
+
+Summary:
+- Passed: AGENTS contract and AI-design contract; 59 product/migration assertions.
+- Failed: one product-doctrine assertion.
+- Additional test-script defects: two backtick-containing fixed strings were double-quoted and invoked shell command substitution.
+- Skipped: none within pnpm test:docs.
+- Blocked: none.
+
+Resolution applied after this report:
+- Added an explicit normative sentence that Interest is not Application.
+- Single-quoted the two fixed-string patterns containing Markdown backticks.
+- A new report records the subsequent full verification; this failure report is intentionally retained.
+
+Known pre-existing failures: none relevant to this documentation suite.

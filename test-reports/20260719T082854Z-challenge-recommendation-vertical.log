@@ -1,0 +1,234 @@
+Timestamp (UTC): 2026-07-19T08:28:54Z
+Scope: Candidate 42 Challenge recommendation vertical slice
+Git: branch main; no HEAD commit exists, so no commit hash is available
+Environment: macOS; Node v22.22.0; pnpm 11.9.0; RUNTIME_MODE=GOLDEN_REPLAY for local deterministic checks
+Data: synthetic Candidate 42 only; no real hiring data, credentials, cookies, or private labels retained
+
+DEPENDENCY INSTALLATION
+
+Command: pnpm install
+Exit code: 0
+Relevant output: installed openai 6.48.0, pg 8.22.0, @types/pg 8.20.0, and @playwright/test 1.61.1 in the existing workspace.
+
+Command: pnpm install --frozen-lockfile
+Exit code: 0
+Output:
+Scope: all 13 workspace projects
+Already up to date
+Done in 148ms using pnpm v11.9.0
+
+INTERMEDIATE FAILURES RETAINED
+
+1. Command: pnpm --filter @onlyboth/ai test
+   Exit code: 1
+   Result: 4 LIVE-adapter tests failed while the response format used a root discriminated union.
+   Relevant provider-helper error: Root schema must have type object.
+   Fix: retained one strict top-level object with a decision discriminator and semantic superRefine rules. The final AI tests pass.
+
+2. Command: pnpm typecheck
+   Exit code: 2
+   Relevant output:
+   tests/e2e/challenge-vertical.spec.ts: Property 'allHeaders' does not exist on type 'never'.
+   tests/postgres/challenge-vertical.postgres.test.ts: Type 'RollbackProbe' is not assignable to ReviewWindow event types.
+   tests/security/challenge-slice-boundaries.test.ts: Property 'input' does not exist on type 'never'.
+   Fix: used mutable capture holders for callback observations and an allowed synthetic StageASubmitted rollback probe. Final typecheck passes.
+
+3. Command: pnpm lint
+   Exit code: 1
+   Relevant output:
+   tests/postgres/challenge-vertical.postgres.test.ts: consistent-type-imports
+   tests/unit/select-human-challenge.test.ts: unused import
+   Fix: corrected type-only and unused imports. Final lint passes.
+
+4. Command: pnpm check
+   Exit code: 1
+   Relevant output:
+   FAIL workspace scaffold > keeps Golden Replay as the keyless default runtime
+   expected .env.example not to contain OPENAI_API_KEY
+   Fix: kept the default environment example entirely keyless and documented LIVE key injection separately.
+
+5. Command: pnpm build
+   Exit code: 1
+   Relevant output:
+   Turbopack build failed with 16 errors: TypeScript workspace sources could not resolve local './*.js' specifiers in @onlyboth/db and @onlyboth/challenge-catalog.
+   Fix: used bundler-compatible source specifiers and explicit DB subpath exports.
+
+6. Command: pnpm build
+   Exit code: 1
+   Relevant output:
+   Failed to collect configuration for /candidate and /employer: ERR_INVALID_ARG_TYPE while a bundled runtime read used a URL object.
+   Fix: Web composition imports the pinned Catalog manifest/lock as static JSON and imports only the required DB subpaths.
+
+7. Command: pnpm check
+   Exit code: 1
+   Relevant output:
+   Prettier reported tests/unit/challenge-recommendation-worker.test.ts.
+   Fix: formatted the new test. The complete final gate below passes.
+
+FINAL NON-ENVIRONMENT-GATED VERIFICATION
+
+Command: pnpm check
+Exit code: 0
+Output summary:
+- Prettier: all matched files use Prettier code style
+- ESLint: 0 warnings, 0 errors
+- TypeScript: 12 workspace projects plus root tests/configs passed
+- Unit: 14 files passed, 83 tests passed
+- Integration contracts: 2 files passed, 8 tests passed
+- Security: 2 files passed, 9 tests passed
+- Replay: 2 files passed, 7 tests passed
+- Agent/English documentation contract: 28 passed, 0 failed
+- AI engineering design contract: 19 passed, 0 failed
+
+Command: pnpm build
+Exit code: 0
+Relevant output:
+Next.js 16.2.10 compiled successfully, completed TypeScript, and generated 7 static pages.
+Dynamic routes emitted:
+- /api/v1/candidate/review-windows/[id]
+- /api/v1/demo/session/candidate
+- /api/v1/demo/session/employer
+- /api/v1/employer/review-windows/[id]
+- /api/v1/review-windows/[id]/challenge/select
+- /candidate
+- /employer
+The existing /demo route remains static.
+
+Command: pnpm test:evals
+Exit code: 0
+Output:
+Test Files  1 passed (1)
+Tests       1 passed (1)
+The single aggregate assertion executed the full versioned 12-case corpus: 6 normal, 3 insufficient-evidence, and 3 prompt-injection cases. All 12 passed Schema/source/Catalog/no-leak/no-decision hard gates; contract fixtures hit the expert set in at least 5 of 6 normal cases.
+
+Command: pnpm demo:offline
+Exit code: 0
+Output:
+{
+  "status": "ok",
+  "runtimeMode": "GOLDEN_REPLAY",
+  "externalWebDependencies": 0,
+  "replayId": "payment-retry-v1",
+  "candidates": 2,
+  "projections": ["EMPLOYER", "CANDIDATE", "SYNTHETIC_JUDGE"],
+  "catalogRef": "payment-retry@1"
+}
+
+Command: RUNTIME_MODE=GOLDEN_REPLAY DATABASE_URL=<local-placeholder> SANDBOX_ADAPTER=replay REPLAY_ID=payment-retry-v1 pnpm --filter @onlyboth/worker smoke
+Exit code: 0
+Relevant structured output:
+{"service":"worker","runtime_mode":"GOLDEN_REPLAY","command_or_job":"golden-replay-scaffold-smoke","outcome":"smoke_succeeded","fixture_ref":"payment-retry-v1","verification_ref":"verification-42-redis-failover","synthetic":true}
+
+Command: built-server localhost route smoke
+Exit code: 0 for every HTTP request; the server was then intentionally stopped with SIGINT
+Output:
+/demo 200
+/employer 200
+/candidate 200
+/employer demo issuer 303
+
+ENVIRONMENT-GATED ACCEPTANCE
+
+Command: env -u TEST_DATABASE_URL pnpm test:postgres
+Exit code: 1
+Status: BLOCKED, not Passed and not Skipped
+Raw relevant output:
+FAIL tests/postgres/challenge-vertical.postgres.test.ts
+Error: BLOCKED: test:postgres requires an accessible PostgreSQL 16 TEST_DATABASE_URL. No in-memory store was substituted.
+Test Files  1 failed (1)
+Tests       no tests
+
+Command: env -u TEST_DATABASE_URL pnpm test:e2e
+Exit code: 1
+Status: BLOCKED, not Passed and not Skipped
+Raw relevant output:
+Error: BLOCKED: Playwright requires an accessible PostgreSQL 16 TEST_DATABASE_URL. No in-memory Web state is permitted.
+
+Command: env -u OPENAI_API_KEY pnpm test:evals:live
+Exit code: 1
+Status: BLOCKED, not Passed and not Skipped
+Raw relevant output:
+FAIL tests/evals/recommend-challenges.live.eval.test.ts
+Error: BLOCKED: test:evals:live requires a Worker-only OPENAI_API_KEY. No case was skipped or substituted.
+Test Files  1 failed (1)
+Tests       no tests
+
+Command: env -u OPENAI_API_KEY RUNTIME_MODE=LIVE DATABASE_URL=<local-placeholder> SANDBOX_ADAPTER=docker pnpm live:smoke
+Exit code: 1
+Status: BLOCKED, not Passed and not Skipped
+Relevant structured output:
+{"service":"worker","runtime_mode":"LIVE","command_or_job":"bootstrap","outcome":"refused_to_start","error_code":"WORKER_CONFIGURATION_INVALID","synthetic":false}
+
+Prerequisite probe:
+psql: unavailable
+docker: unavailable
+podman: unavailable
+postgres-port-5432: unreachable
+
+The PostgreSQL acceptance file is present and typechecked. When supplied a dedicated PostgreSQL 16 database whose name contains a test segment, it performs fresh down/up migration, rollback, optimistic concurrency, immutable output, source veil, duplicate Stage job, concurrent idempotent click, Event/Outbox/output-consumption atomicity, and all three Candidate/Sandbox branch checks. None of those database assertions is reported as executed in this environment.
+
+The Playwright file is present and typechecked. It uses two isolated browser sessions, role-bound cookies, CSRF/RBAC checks, all three reset/selection branches, a repeated receipt, a stale 409, 600 ms Candidate polling, a 2-second assertion window, exact Sandbox branch parity, and an external-request deny assertion. It did not start because the required database was absent.
+
+SUMMARY
+
+Passed:
+- dependency and frozen-lock installation
+- format, lint, workspace and test/config type checks
+- 83 unit, 8 integration-contract, 9 security, and 7 Replay tests
+- 47 documentation assertions
+- 12-case deterministic recommendation contract corpus
+- Next.js production build
+- offline Cold Open verification
+- keyless Golden Sandbox smoke
+- built localhost route smoke
+
+Failed then fixed:
+- root Structured Output union
+- callback type narrowing and rollback-probe typing
+- lint imports
+- keyless environment contract
+- two Turbopack packaging failures
+- one final test-file formatting issue
+
+Blocked:
+- PostgreSQL 16 migration/transaction acceptance
+- PostgreSQL-backed Playwright E2E
+- LIVE OpenAI smoke
+- LIVE 12-case model eval
+
+Skipped: 0. No .only or .skip marker was added.
+
+Known pre-existing repository condition:
+- The repository has no HEAD commit; all workspace files are untracked, so a commit-based diff is unavailable.
+
+Recovery steps:
+1. Provide a reachable PostgreSQL 16 test database, for example a database named onlyboth_test, through TEST_DATABASE_URL.
+2. Run pnpm test:postgres, then pnpm test:e2e.
+3. Provide OPENAI_API_KEY only to the Worker shell and run pnpm live:smoke and pnpm test:evals:live.
+4. Do not mark this milestone Complete until those environment-gated acceptance checks pass.
+
+POST-HANDOFF INTEGRITY CHECKS
+
+Command: pnpm test:docs
+Exit code: 0
+Output summary: 28 Agent/English documentation assertions passed; 19 AI engineering design assertions passed.
+
+Command: pnpm format:check
+Exit code: 0
+Output: All matched files use Prettier code style.
+
+Command: pnpm lint
+Exit code: 0
+Output: 0 warnings, 0 errors.
+
+Command: pnpm typecheck
+Exit code: 0
+Output summary: all 12 workspace projects and the root test/config TypeScript project passed.
+
+Command: git diff --check
+Exit code: 0
+Output: no tracked diff errors. This is limited evidence because the repository has no HEAD and all files are untracked.
+
+Command: rg -n "\.(only|skip)\(" tests apps packages
+Exit code: 1 from rg because there were no matches; wrapper exit code: 0
+Output: No .only/.skip markers found.

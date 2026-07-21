@@ -1,0 +1,40 @@
+Timestamp (UTC): 2026-07-19T22:11:58Z
+Scope: Blind Review Attention Batch 2a failing-first and agent-loop findings
+Git branch / commit: main / unavailable (repository has no HEAD)
+Environment: macOS, Node.js workspace, PostgreSQL 16 Docker service available; runtime path under test is deterministic Interest Queue scheduling (no OpenAI call)
+
+Command 1:
+pnpm typecheck
+
+Exit code: 2
+
+Relevant raw output:
+$ pnpm -r --if-present typecheck && tsc --noEmit -p tsconfig.tests.json
+Scope: 12 of 13 workspace projects
+packages/db typecheck: src/postgres-interest-queue-worker-store.ts(541,16): error TS2416: Property 'findWorkerReceipt' in type 'PostgresBlindReviewTransaction' is not assignable to the same property in base type 'BlindReviewTransaction'.
+packages/db typecheck:   Type '(consumer: "interest-queue-worker", idempotencyKey: string) => Promise<OfferNextQueuedInterestReceipt | null>' is not assignable to type '(consumer: "interest-queue-worker", message: ClaimedOfferNextQueuedInterestMessage) => Promise<OfferNextQueuedInterestReceipt | null>'.
+packages/db typecheck: src/postgres-interest-queue-worker-store.ts(1099,14): error TS2420: Class 'PostgresInterestQueueStore' incorrectly implements interface 'InterestQueueWorkerStore'.
+packages/db typecheck:   Property 'scheduleNextAvailableSlot' is missing in type 'PostgresInterestQueueStore' but required in type 'InterestQueueWorkerStore'.
+packages/db typecheck: Failed
+@onlyboth/db typecheck exited with status 2.
+
+This was an expected intermediate failure after failing-first Application ports were tightened and before the PostgreSQL adapter implemented the new payload-verification and late-Interest scheduling contracts. It was not suppressed or treated as a pass.
+
+Independent read-only review findings preserved before correction:
+- Worker produced a bare SHA-256 digest while SQL required sha256:<64 lowercase hex>.
+- Offer loading used only the activation-time aggregate and could not see a later SQL Interest.
+- A NO_WAITING receipt could collide with a later dispatch for the unchanged Slot.
+- Inbox payload_hash contained the idempotency key and was not verified on replay.
+- Queue public seed was trusted from the message instead of checked against locked authority.
+- The applied 0003 migration had been edited, producing schema drift in the existing test database.
+- The old Hold uniqueness predicate prohibited historical Slot reuse.
+- The 0003 down migration failed on an Answer-first ReviewWindow.
+- Legacy and Answer-first allocation did not yet share the same Q_i=1 lease/lock.
+- Terminal Queue Worker failure was not visible as an explicit platform event.
+
+Summary:
+Passed: 0 commands in this report
+Failed: 1 command (intentional integration checkpoint)
+Skipped: 0
+Blocked: 0
+Known pre-existing failures: none classified; the repository has no HEAD, so tracked-diff attribution is unavailable.

@@ -1,0 +1,17 @@
+{
+  "name": "@onlyboth/testkit",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@onlyboth/application": "workspace:*",
+    "@onlyboth/contracts": "workspace:*",
+    "@onlyboth/domain": "workspace:*"
+  }
+}

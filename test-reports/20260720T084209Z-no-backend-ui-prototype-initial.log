@@ -1,0 +1,25 @@
+Timestamp (UTC): 2026-07-20T08:42:09Z
+Scope: No-backend UI prototype failing-first reducer and role-boundary tests
+Git branch / commit: main / unavailable (repository has no HEAD)
+Environment: macOS; Node.js v22.22.0; pnpm 11.9.0; no database, OpenAI, Cookie, or API dependency
+
+Command 1:
+pnpm exec vitest run --config vitest.unit.config.ts apps/web/src/components/prototype/prototype-state.test.ts apps/web/src/components/prototype/prototype-boundaries.test.tsx
+
+Exit code: 1
+
+Relevant output:
+- Test Files: 2 failed (2)
+- Tests: no tests collected
+- prototype-boundaries.test.tsx could not import ./prototype-experience
+- prototype-state.test.ts could not import ./prototype-state
+
+Interpretation:
+- Expected failing-first result. The approved prototype state model and UI had not yet been implemented.
+- No existing production test or runtime failure was observed by this focused command.
+
+Passed: 0
+Failed: 2 suites, expected failing-first imports
+Skipped: 0
+Blocked: 0
+Known pre-existing failures: none evaluated by this focused command

@@ -1,0 +1,45 @@
+{
+  "schema_version": "challenge-catalog@1",
+  "catalog_id": "payment-retry",
+  "catalog_version": 1,
+  "base_snapshot_version": "payment-retry@1",
+  "manifest_hash": "sha256:0c18eb5d79ae4f22e13509a446b4fdcdb6b9c46cedea82ca65f4c108a2d81ee5",
+  "challenges": [
+    {
+      "id": "payment-retry/redis-failover",
+      "version": 1,
+      "capability_refs": ["inspect_state_transition", "revise_under_failover"],
+      "difficulty_band": "mvp-1",
+      "base_snapshot_version": "payment-retry@1",
+      "scenario_fixture": "scenarios/redis-failover/scenario.json",
+      "hidden_test_bundle": "hidden-tests/redis-failover/bundle.json",
+      "time_limit_seconds": 180,
+      "candidate_notice": "The reviewer chose to test acknowledgement loss during Redis failover.",
+      "hash": "sha256:a20268c8c7fde4504a695f91f22a6fdb15a9420cf500dafbdefa36424e37b61b"
+    },
+    {
+      "id": "payment-retry/duplicate-webhook",
+      "version": 1,
+      "capability_refs": ["inspect_state_transition", "design_verification"],
+      "difficulty_band": "mvp-1",
+      "base_snapshot_version": "payment-retry@1",
+      "scenario_fixture": "scenarios/duplicate-webhook/scenario.json",
+      "hidden_test_bundle": "hidden-tests/duplicate-webhook/bundle.json",
+      "time_limit_seconds": 180,
+      "candidate_notice": "The reviewer chose to test duplicate webhook delivery after payment acceptance.",
+      "hash": "sha256:46579e687453689a2594845d9a3b978bf1d92a5bfc4627864ab3b74e92d7cf09"
+    },
+    {
+      "id": "payment-retry/cross-region-retry",
+      "version": 1,
+      "capability_refs": ["clarify_ambiguous_failure", "revise_under_failover"],
+      "difficulty_band": "mvp-1",
+      "base_snapshot_version": "payment-retry@1",
+      "scenario_fixture": "scenarios/cross-region-retry/scenario.json",
+      "hidden_test_bundle": "hidden-tests/cross-region-retry/bundle.json",
+      "time_limit_seconds": 180,
+      "candidate_notice": "The reviewer chose to test a delayed retry crossing regional ownership boundaries.",
+      "hash": "sha256:ac08ab8393cb8d7aa89c62a4794bf9e2d06c019829db0adc950c2ee2be8f33cc"
+    }
+  ]
+}

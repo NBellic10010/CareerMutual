@@ -1,0 +1,5 @@
+{
+  "schema_version": "hidden-test-bundle@1",
+  "bundle_ref": "payment-retry/cross-region-retry/hidden-tests@1",
+  "runner_image_digest": "sha256:f5c1e681ab4a7f5dd57df180ca387498047f60cb0f9e9ab93bf72334dd51dc12"
+}

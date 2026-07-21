@@ -1,0 +1,8 @@
+SYNTHETIC INCIDENT PACKET
+
+08:42 — East distribution center reports a 31% pick-rate drop.
+08:47 — Carrier API latency rises from 240 ms to 4.8 seconds.
+08:55 — Inventory snapshots disagree across two facilities.
+09:03 — Customer support queue exceeds the staffed threshold.
+
+Constraint: no irreversible customer promise may be made until inventory truth is reconciled.
