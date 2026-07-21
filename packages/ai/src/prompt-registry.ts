@@ -14,6 +14,10 @@ import {
   EMPLOYER_REVIEW_ANALYST_PROMPT_HASH,
   EMPLOYER_REVIEW_ANALYST_PROMPT_VERSION,
 } from "./employer-review-analyst-prompt.js";
+import {
+  CANDIDATE_ELIGIBILITY_PROMPT_HASH,
+  CANDIDATE_ELIGIBILITY_PROMPT_VERSION,
+} from "./candidate-eligibility-prompt.js";
 
 export type HiringIntelligenceOperation =
   | "compileContract"
@@ -21,6 +25,7 @@ export type HiringIntelligenceOperation =
   | "recommendChallenges"
   | "compressEvidence"
   | "deriveCandidateJobSignals"
+  | "deriveCandidateEligibilityMatches"
   | "buildAnswerEvidenceEdge";
 
 export interface PromptSpec {
@@ -80,6 +85,16 @@ export const PROMPT_REGISTRY = Object.freeze({
     promptHash: CANDIDATE_DISCOVERY_PROMPT_HASH,
     inputSchemaVersion: "candidate-job-discovery-input@2",
     outputSchemaVersion: "candidate-job-discovery-output@1",
+    permitsTools: false,
+    permitsRemoteConversationState: false,
+  },
+  deriveCandidateEligibilityMatches: {
+    operation: "deriveCandidateEligibilityMatches",
+    promptId: "onlyboth.derive-candidate-eligibility-matches",
+    promptVersion: CANDIDATE_ELIGIBILITY_PROMPT_VERSION,
+    promptHash: CANDIDATE_ELIGIBILITY_PROMPT_HASH,
+    inputSchemaVersion: "candidate-eligibility-match-input@1",
+    outputSchemaVersion: "candidate-eligibility-match-output@1",
     permitsTools: false,
     permitsRemoteConversationState: false,
   },

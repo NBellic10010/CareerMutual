@@ -27,6 +27,7 @@ export interface InMemoryCandidateInterestOptions {
   readonly publicSeed: string;
   readonly runtimeMode: "LIVE" | "CACHED_AI" | "GOLDEN_REPLAY";
   readonly eligibilityPredicates: readonly EligibilityPredicate[];
+  readonly backgroundAccess?: CandidateInterestSubmissionSnapshot["backgroundAccess"];
   readonly now: Date;
   readonly failAt: InMemoryCandidateInterestFailurePoint;
 }
@@ -43,6 +44,7 @@ interface InMemoryCandidateInterestState {
   readonly runtimeMode: "LIVE" | "CACHED_AI" | "GOLDEN_REPLAY";
   readonly synthetic: boolean;
   readonly eligibilityPredicates: readonly EligibilityPredicate[];
+  readonly backgroundAccess: CandidateInterestSubmissionSnapshot["backgroundAccess"];
   interest: StoredCandidateInterest | null;
   eligibility: EligibilityEdge | null;
   persistedHardFacts: CandidateInterestCommand["hard_facts"];
@@ -99,6 +101,12 @@ export class InMemoryCandidateInterestUnitOfWork implements CandidateInterestUni
       runtimeMode: options.runtimeMode,
       synthetic: options.runtimeMode === "GOLDEN_REPLAY",
       eligibilityPredicates: structuredClone(options.eligibilityPredicates),
+      backgroundAccess: structuredClone(
+        options.backgroundAccess ?? {
+          basis: "OPEN_TO_ALL",
+          eligibilityPolicyRef: "eligibility-policy:test-open",
+        },
+      ),
       interest: null,
       eligibility: null,
       persistedHardFacts: [],
@@ -153,6 +161,7 @@ export class InMemoryCandidateInterestUnitOfWork implements CandidateInterestUni
           runtimeMode: pending.runtimeMode,
           synthetic: pending.synthetic,
           eligibilityPredicates: structuredClone(pending.eligibilityPredicates),
+          backgroundAccess: structuredClone(pending.backgroundAccess),
           existingInterest: existingInterest === null ? null : structuredClone(existingInterest),
         };
         return snapshot;

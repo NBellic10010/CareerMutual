@@ -20,8 +20,11 @@ export default async function CandidateJobPage({
   const { opportunityRef: encodedOpportunityRef } = await params;
   const opportunityRef = decodeRouteRef(encodedOpportunityRef);
   const [detail, feed] = await Promise.all([
-    getFunctionalServices().store.getCandidateJobDetail(actor.actorId, opportunityRef),
-    getFunctionalServices().store.getCandidateOpportunityFeed(actor.actorId),
+    getFunctionalServices().candidateEligibilityStore.getCandidateJobDetail(
+      actor.actorId,
+      opportunityRef,
+    ),
+    getFunctionalServices().candidateEligibilityStore.getCandidateOpportunityFeed(actor.actorId),
   ]);
   if (detail === null) notFound();
   return (

@@ -1,0 +1,57 @@
+OnlyBoth test report
+Change: Candidate legal and logistical declarations layout repair
+Timestamp (UTC): 2026-07-21T14:12:05Z
+Branch: feat/ui-ux-optimization
+Baseline commit: 2f0ae15 feat: add two-layer candidate opportunity feed
+Environment: local Next.js, PostgreSQL 16, MinIO, GOLDEN_REPLAY functional E2E
+
+Scope
+- Replaced the long fieldset legend with a short semantic legend and a normal-flow section heading.
+- Added a shrink-safe single-column grid for authorization, time-zone, and language declarations.
+- Added bounded input widths, explicit checkbox alignment, wrapping, focus compatibility, and the
+  existing Candidate coral visual treatment.
+- Added static semantic markup coverage and a real 390px Playwright overflow assertion.
+
+Verification
+1. pnpm --filter @onlyboth/web typecheck
+   Exit code: 0
+   PASS: no TypeScript diagnostics.
+
+2. pnpm test:unit
+   Exit code: 0
+   PASS: 47 files, 250 tests.
+   New coverage verifies the short semantic legend, visible long heading, checkbox row, and
+   shrink-safe text-field container.
+
+3. pnpm build
+   Exit code: 0
+   PASS: Next.js production compile, TypeScript, page-data collection, static generation, and route
+   finalization.
+
+4. source .env.local && PLAYWRIGHT_PORT=3100 pnpm test:e2e
+   Exit code: 0
+   PASS: 4 Playwright tests in 12.0 seconds.
+   New 390px assertion verifies that the document, declaration fieldset, and both text inputs remain
+   within the viewport while the OPEN_TO_ALL Job detail is rendered from PostgreSQL.
+
+5. pnpm check
+   Exit code: 0
+   PASS: Prettier and ESLint with zero warnings.
+   PASS: all workspace and test TypeScript checks.
+   PASS: Unit — 47 files, 250 tests.
+   PASS: Integration — 12 files passed, 1 conditionally skipped; 42 tests passed, 2 skipped.
+   PASS: Security — 6 files, 25 tests.
+   PASS: Replay — 2 files, 7 tests.
+   PASS: documentation contracts — 49 + 40 + 87 assertions.
+
+6. curl http://127.0.0.1:3000/
+   Exit code: 0
+   PASS: HTTP 200 after the change; Web and Worker development processes remain running.
+
+7. git diff --check
+   Exit code: 0
+   PASS: no whitespace errors.
+
+Skipped and blocked
+- Two existing conditional integration assertions were skipped by their own environment guards.
+- No required layout verification was blocked.

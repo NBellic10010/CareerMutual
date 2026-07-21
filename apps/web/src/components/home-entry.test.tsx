@@ -13,6 +13,9 @@ describe("primary home entry", () => {
     expect(markup).toContain('href="/employer"');
     expect(markup).not.toContain('href="/prototype"');
     expect(markup).not.toContain('href="/demo"');
-    expect(markup).toContain("Every opened answer creates a review debt.");
+    expect(markup).toContain("Interest is mutual.");
+    expect(markup).toContain("Attention is backed.");
+    expect(markup).toContain("Signals genuine interest");
+    expect(markup).toContain("Commits named attention");
   });
 });

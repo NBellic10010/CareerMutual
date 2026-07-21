@@ -1,0 +1,71 @@
+CareerMutual Railway deployment report
+Timestamp: 2026-07-21T20:09:08Z
+Scope: synthetic Build Week Web, Worker, PostgreSQL, and private Object Store deployment
+Result: PASS
+
+REMOTE TOPOLOGY
+- Railway project: CareerMutual / production
+- Public Web: https://web-production-c1a5.up.railway.app
+- Private Worker: deployed without a public domain
+- PostgreSQL: private service with Railway TCP proxy used only for one-time synthetic seed
+- Object Store: private Railway Bucket with exact Web-origin CORS
+- Runtime: DEMO_MODE=true, RUNTIME_MODE=GOLDEN_REPLAY
+- LIVE AI: BLOCKED by design; no OPENAI_API_KEY was uploaded
+
+CLOUD DEPLOYMENT EVIDENCE
+1. Initial Web deployment 3595d0a8-aa10-4eff-984d-46c03ff9cd99: FAILED.
+   Cause: @onlyboth/application imported zod without a declared production dependency.
+   Fix: added zod to packages/application/package.json and refreshed pnpm-lock.yaml.
+2. Corrected Web deployment 8757d433-a6e3-4c03-a982-b74e7dee8e98: SUCCESS.
+   Evidence: Next.js production compile/typecheck/static generation passed; migrations_applied;
+   next start reported ready on the Railway PORT.
+3. Initial Worker deployment 0a0b96d5-4a28-4ad4-8b11-f60df742600e: SUCCESS.
+4. Final Web deployment 9dd56561-0000-4cd1-97a7-34b47000eef1: SUCCESS.
+5. Final Worker deployment 568ab257-9ce5-4a30-81d7-d374c51ff4d8: SUCCESS.
+6. Remote Object Store initialization:
+   PRIVATE_OBJECT_BUCKET_READY
+7. Remote synthetic functional seed:
+   First local-process attempt: FAILED because the injected DATABASE_URL was Railway-private.
+   Corrected one-time run through Railway's public TCP proxy: PASS.
+
+PUBLIC SMOKE
+- GET /: 200; CareerMutual brand present.
+- GET /login: 200; CareerMutual brand present.
+- POST /api/v1/dev/session as CANDIDATE: 201; allowlisted actor candidate-42.
+- GET /api/v1/candidate/opportunities: 200; candidate-opportunity-feed@3; 1 visible role.
+- POST /api/v1/dev/session as EMPLOYER: 201; allowlisted actor reviewer-sarah-chen.
+- GET /api/v1/employer/job-posts: 200; employer-job-dashboard@1; 27 persisted JobPosts.
+- No session token, cookie, database URL, Object Store credential, or API key is retained here.
+
+LOCAL VERIFICATION
+- Focused S3 configuration Unit: 2/2 passed.
+- Workspace shape Integration: 11/11 passed.
+- Production pnpm build: passed; Next.js generated 10/10 static pages.
+- pnpm check: PASS.
+  - Formatting: passed.
+  - ESLint: passed.
+  - TypeScript: passed across all workspaces and test config.
+  - Unit: 51 files, 259/259 tests passed.
+  - Integration: 12 files passed, 1 conditionally skipped; 46 passed, 2 skipped.
+  - Security: 6 files, 25/25 tests passed.
+  - Replay: 2 files, 7/7 tests passed.
+  - Documentation contracts: AGENTS 49/49, AI design 40/40, product spirit 87/87.
+- Local MinIO initialization: PRIVATE_OBJECT_BUCKET_READY.
+- Focused local MinIO Integration: 2/2 passed, including write-once behavior.
+- git diff --check: passed.
+- Prohibited .only/.skip marker scan: none found.
+
+CORRECTED CHECK FAILURES
+- The first combined Prettier invocation included .env.example and .gitignore, for which Prettier
+  cannot infer a parser. Source formatting was rerun on supported files and the repository-wide
+  format gate passed.
+- The first full pnpm check stopped on five no-undef findings in scripts/start-railway.mjs. An
+  explicit node:process import fixed the findings; the full gate then passed.
+- The first focused MinIO run attempted PutBucketCors against an API that MinIO does not implement.
+  Local initialization now relies on the already configured host-level MinIO CORS setting, while
+  Railway continues to receive Bucket CORS. Initialization and the 2/2 integration tests passed.
+
+REMAINING BOUNDARIES
+- Synthetic Demo only; temporary allowlisted session issuer, not production IdP.
+- LIVE AI smoke/evals are BLOCKED because no OpenAI key was intentionally configured.
+- No custom domain, production backups, external monitoring, or real-data operational approval.

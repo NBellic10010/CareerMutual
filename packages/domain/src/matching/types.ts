@@ -37,12 +37,17 @@ export interface EligibilityPredicateResult {
 }
 
 export interface EligibilityEdge {
+  readonly schemaVersion: "eligibility-edge@1" | "eligibility-edge@2";
   readonly eligibilityEdgeRef: string;
   readonly opportunityRef: string;
   readonly candidateRef: string;
   readonly contractVersionRef: string;
   readonly eligible: boolean;
   readonly predicateResults: readonly EligibilityPredicateResult[];
+  readonly backgroundAccessBasis: "OPEN_TO_ALL" | "AI_POSITIVE_EVIDENCE" | null;
+  readonly eligibilityPolicyRef: string | null;
+  readonly passportSnapshotRef: string | null;
+  readonly eligibilityMatchRef: string | null;
 }
 
 export interface MatchEdge {

@@ -24,14 +24,25 @@ This file records OnlyBoth’s current implementation state and development hand
   scheduling.
 - The functional demo now has seven allowlisted synthetic Candidate actors plus Sarah. `Start as`
   issues a distinct signed Session for the selected actor; each Candidate has an independent Credit
-  account, Evidence Passport, immutable Snapshot, Candidate-only discovery projection, and Resume
-  Snapshot. The Candidate Feed still returns every open Job and uses signals only to explain
-  evidence connections and unknowns. Employer, Eligibility, Queue, Invitation, and Attention paths
-  cannot read these signals. Highest education is required, with an explicit no-formal-degree path.
-- The functional seed now publishes one primary engineering role and twenty additional synthetic
-  cross-domain roles across twelve categories. Every Contract contains one ordered
-  `critical-challenge@1` manifest; the corpus covers text, audio, image, and file Parts. Candidate
-  detail, Answer Session, and Recruiter review resolve that same sealed manifest.
+  account, Evidence Passport, immutable Snapshot, Candidate-only Eligibility projection, and Resume
+  Snapshot. The Candidate Feed now returns only `OPEN_TO_ALL` roles, roles with a current validated
+  positive Evidence-to-tag connection, and already-active Candidate journeys. Unauthorized roles do
+  not enter Feed, Detail, or Interest responses; active Candidate journeys retain their original
+  access pin. Recruiters cannot read Passport contents, Eligibility connections, or a pre-answer
+  matched-Candidate list. Highest education is required, with an explicit no-formal-degree path.
+- The primary Home, Candidate, and Employer surfaces now use a shared mutual-intent hiring identity:
+  coral represents Candidate intent, teal represents backed Recruiter attention, and the two signals
+  visibly lock only when a funded review Slot exists. These are projections of existing business
+  state, not a new matching score, queue rule, or authorization path.
+- Candidate and Employer Home surfaces now have deliberately separate role identities. Candidate
+  uses a coral/oxblood editorial-comic palette and a forward-moving job-seeker illustration;
+  Employer uses a teal/navy palette and an accountable anonymous-review illustration. The signed
+  role also themes the sticky header, while public pages retain the shared two-signal identity.
+- The functional seed now publishes one primary engineering role, twenty additional synthetic
+  cross-domain roles across twelve categories, and six technology Match Lab roles for the six
+  engineering-oriented Candidates. Every Contract contains one ordered `critical-challenge@1`
+  manifest; the corpus covers text, audio, image, and file Parts. Candidate detail, Answer Session,
+  and Recruiter review resolve that same sealed manifest.
 - `/candidate`, `/candidate/jobs/:ref`, and `/candidate/answer-sessions/:ref` are real projections
   and Commands. `/employer` supports JobPost Draft/Publish and funded slots; the review route can
   never prefetch the next anonymous answer before the current review Receipt commits.
@@ -54,6 +65,9 @@ This file records OnlyBoth’s current implementation state and development hand
   Resume Snapshot pin on Answer consent, and immutable reviewer-scoped Resume Reveal records.
   Existing Review Receipt V2 rows are upgraded to V3 with a null Reveal ref; they do not gain
   retrospective access.
+- Migrations `0013` and `0014` add the exact 100-tag Eligibility taxonomy, sealed per-Job access
+  policies, immutable Candidate-only AI match sets, Feed projections, Interest pins, operation
+  allowlisting, and the corrected per-Job policy-hash scope.
 - MinIO is the local `ObjectStorePort` adapter. Presigned and server writes are create-only,
   owner-bound, MIME/size/SHA-256 verified, and sealed by immutable refs. Orphans are cleaned by the
   Worker after 24 hours.
@@ -61,8 +75,9 @@ This file records OnlyBoth’s current implementation state and development hand
   Memo transcription uses `gpt-4o-mini-transcribe`. The original audio remains authoritative and
   a complete independent `GPT_TRACE`, including failures, is disclosed to the reviewer.
 - The continuous normal Worker now consumes functional assistant, transcription, Employer
-  Evidence Analyst, answer deadline, database-time Focus automatic submission, Employer review
-  breach, and orphan-cleanup work alongside the retained legacy workers.
+  Evidence Analyst, Candidate discovery, Candidate Eligibility Match, answer deadline, database-time
+  Focus automatic submission, Employer review breach, and orphan-cleanup work alongside the
+  retained legacy workers.
 - Employer Evidence Analyst is sealed per JobPost as `OFF`, `ANSWER_ONLY`, or
   `ANSWER_PLUS_PROCESS`; default and platform kill switch are both closed. Output V2 adds a
   source-linked Good/Bad verdict scoped to one sealed Answer plus logic, clarity, consistency, and
@@ -77,6 +92,9 @@ This file records OnlyBoth’s current implementation state and development hand
   discovery, Interest, backed Slot, disclosed revision/focus behavior, Focus Policy auto-submit,
   LIVE Luna `BAD_ANSWER`, and Sarah's independent `NO_FURTHER_PROOF` Review. Its pinned Resume
   remains sealed and the Recruiter Resume workspace remains empty.
+- Candidate Eligibility LIVE evaluation passes three consecutive 36-decision rounds on
+  `gpt-5.6-sol`: 108/108 outputs pass strict Schema/ref/privacy validation, each round recalls 12/12
+  positive cases, and near-negative plus Prompt Injection false positives remain zero.
 - Local acceptance services are healthy PostgreSQL 16 and MinIO containers on loopback. A
   synthetic-only GPT-5.4 mini connectivity canary passes with available API quota, but repeated
   semantic runs do not pass the release gates: Candidate discovery produced an unrelated-source
@@ -86,10 +104,1000 @@ This file records OnlyBoth’s current implementation state and development hand
   invariance, and a real Candidate Submit → Worker → PostgreSQL → Employer `READY` browser
   vertical. The production default remains `gpt-5.6-sol`, its acceptance is not reported, and the
   kill switch remains closed by default.
-- Immediate next step: run the updated `answer-evidence-edge-draft@2` source-linked Employer
-  Analyst smoke and calibrated 30-case release gate on the exact production-default
-  `gpt-5.6-sol` configuration. Completed-cohort allocation and Deep Proof attention remain the next
-  product slice; post-Review Resume Reveal is now implemented.
+- Immediate next step: tighten Eligibility positive-edge specificity against the six-by-six Match
+  Lab. The first validated LIVE run over-unlocked adjacent technology roles for several Candidates.
+  Decide separately whether the MVP should add real source verification behind
+  `SYNTHETIC_SOURCE_ATTACHED` or keep the Passport explicitly self-attested for Build Week.
+  Completed-cohort allocation and Deep Proof attention remain the next product slice; post-Review
+  Resume Reveal is already implemented.
+
+---
+
+## 2026-07-21 — Railway synthetic environment deployment
+
+**Status:** Complete
+
+### Goal
+
+Deploy the current CareerMutual monorepo as a usable synthetic Build Week environment without
+placing browser credentials, database secrets, Object Store credentials, or an OpenAI key in the
+repository or Web runtime.
+
+### Actual outcome
+
+- Created a Railway project with separate public `web` and private `worker` services, Railway
+  PostgreSQL, and a private Railway Bucket.
+- Published the Web service at
+  `https://web-production-c1a5.up.railway.app`; the checked `railway.json` uses Railpack and the
+  shared `start:railway` entrypoint selects the runtime from `SERVICE_ROLE`.
+- Web startup runs the idempotent SQL migration command before `next start`; Worker startup runs
+  the continuous background loop without exposing a public domain.
+- Initialized Bucket CORS for the exact Web origin. Local MinIO continues to use its host-level
+  `MINIO_API_CORS_ALLOW_ORIGIN` configuration because its compatibility API does not implement
+  `PutBucketCors`.
+- Applied all PostgreSQL migrations and seeded the remote database once with synthetic functional
+  Demo data. Public authenticated smoke tests returned Candidate Feed V3 for Candidate 42 and 27
+  persisted JobPosts for Sarah.
+- Kept the deployment in `GOLDEN_REPLAY`, left Employer analysis closed, and did not configure an
+  OpenAI key. LIVE assistant, transcription, analysis, and refresh paths therefore fail visibly
+  closed rather than falling back.
+
+### Acceptance fixes
+
+- The first Web cloud build correctly failed because `@onlyboth/application` imported `zod`
+  without declaring a production dependency. Added the direct dependency and refreshed the frozen
+  lockfile.
+- Moved the Worker runtime's `tsx` dependency out of `devDependencies`, since migrations and the
+  production Worker entrypoint execute through it.
+- Added an explicit Node `process` import to the Railway entrypoint after the full lint gate exposed
+  the missing global declaration.
+- Kept S3 Bucket CORS provisioning for Railway while bypassing that unsupported API only for the
+  loopback MinIO initializer; local private-object and write-once tests now pass.
+- The first remote seed attempt used a Railway private database address from a local process and
+  was rejected. The corrected one-time seed used Railway's public TCP proxy without opening the
+  database service or logging its connection string.
+
+### Files changed
+
+- `railway.json`
+- `scripts/start-railway.mjs`
+- `scripts/init-object-store.ts`
+- `packages/storage/src/s3-object-store.ts`
+- `packages/storage/src/s3-object-store.test.ts`
+- `packages/application/package.json`
+- `apps/worker/package.json`
+- `apps/web/src/server/functional-services.ts`
+- `apps/worker/src/functional-product-composition.ts`
+- `tests/integration/object-store-minio.integration.test.ts`
+- `tests/integration/workspace-shape.test.ts`
+- `.env.example`
+- `.gitignore`
+- `package.json`
+- `pnpm-lock.yaml`
+- `README.md`
+- `test-reports/20260721T200908Z-railway-deployment.log`
+- `HANDOFF.md`
+
+### Verification
+
+- Final Railway Web deployment: `SUCCESS`.
+- Final Railway Worker deployment: `SUCCESS`.
+- Remote PostgreSQL migrations: passed.
+- Remote synthetic functional seed: passed.
+- Railway private Bucket initialization and Web-origin CORS: passed.
+- Public `/` and `/login`: HTTP 200 with CareerMutual brand.
+- Public signed Candidate 42 feed: HTTP 200, `candidate-opportunity-feed@3`.
+- Public signed Recruiter dashboard: HTTP 200, `employer-job-dashboard@1`, 27 JobPosts.
+- `pnpm check`: passed — 259 Unit, 46 Integration with two conditional skips, 25 Security, 7
+  Replay, and all documentation contracts.
+- Production `pnpm build`: passed.
+- MinIO initializer and focused integration: passed — 2/2.
+- `git diff --check`: passed; `.only/.skip` marker scan found none.
+- Full evidence:
+  `test-reports/20260721T200908Z-railway-deployment.log`.
+
+### Environment and remaining boundary
+
+- This is an allowlisted synthetic Demo environment with long-lived temporary sessions. It is not
+  production authentication and must not receive real hiring data.
+- No OpenAI key is configured on Railway. Keyless product paths and recorded Eligibility data are
+  available; LIVE AI operations remain unavailable by design.
+- The generated Railway domain is suitable for judging. A custom domain, production IdP, backups,
+  alerting, and real-data operational controls remain future production work.
+
+---
+
+## 2026-07-21 — Candidate View Role column balance
+
+**Status:** Complete
+
+### Goal
+
+Remove the large empty area below “What the work asks for” on the Candidate View Role page without
+compressing or hiding the complete Critical Challenge.
+
+### Actual outcome
+
+- Grouped the Public Contract and sealed Critical Challenge into one continuous primary content
+  column.
+- Kept Candidate Credits, Eligibility declarations, and the Interest/Application action in an
+  independent sticky secondary column on desktop.
+- Changed the mobile reading order to Public Contract → complete Critical Challenge → application
+  controls, preserving the product requirement that Candidate work context is visible before
+  commitment.
+- Added browser geometry checks for the 20px Contract-to-Challenge gap, aligned primary-column
+  edges, non-overlapping columns, and use of the former blank area.
+
+### Files changed
+
+- `apps/web/src/components/functional/candidate-job-detail.tsx`
+- `apps/web/app/globals.css`
+- `apps/web/src/components/functional/candidate-job-detail-ui.test.tsx`
+- `tests/e2e/functional-product.spec.ts`
+- `test-reports/20260721T183340Z-candidate-role-layout-balance.log`
+- `HANDOFF.md`
+
+### Product and engineering decisions
+
+- Critical Challenge is treated as the immediate continuation of the Public Contract rather than a
+  full-width section delayed by the taller action column.
+- The action card remains sticky and no Candidate eligibility, Credit, Interest, Attention, privacy,
+  or AI behavior changed.
+
+### Tests and verification
+
+- Focused Unit: 6/6 passed.
+- Production build: passed.
+- PostgreSQL/MinIO Playwright: 6/6 passed, including explicit desktop column-balance geometry and
+  existing mobile coverage.
+- `pnpm check`: passed — 257 Unit, 45 Integration with two existing conditional skips, 25 Security,
+  7 Replay, and all documentation contracts.
+- `git diff --check`: passed; `.only/.skip` marker scan found none.
+- Full retained output:
+  [test-reports/20260721T183340Z-candidate-role-layout-balance.log](test-reports/20260721T183340Z-candidate-role-layout-balance.log).
+
+### Checks not run and environment notes
+
+- Full `pnpm test:postgres` was not run because no migration or persistence behavior changed; the
+  dedicated PostgreSQL E2E vertical passed.
+- LIVE AI evals were not run because no AI behavior changed.
+- No asset, environment variable, migration, API, or runtime-state contract changed.
+
+### Next action
+
+Refresh a Candidate View Role page and evaluate the updated content rhythm on the final demo display.
+
+---
+
+## 2026-07-21 — Full-bleed role artwork correction
+
+**Status:** Complete
+
+### Goal
+
+Make the Candidate View Role and Recruiter Operations comic illustrations fill their complete Hero
+backgrounds without a fade, blank strip, or exposed image boundary.
+
+### Actual outcome
+
+- Removed the bottom transparency mask that deliberately faded each illustration before the Hero
+  ended.
+- Expanded and repositioned both decorative layers across desktop, tablet, and mobile breakpoints.
+- Kept `background-size: cover` and added Playwright geometry assertions proving the artwork bounds
+  contain all four edges of the associated Candidate Hero and Recruiter Review Header.
+- Preserved the existing responsive focal crops, role-specific opacity, `aria-hidden`, and pointer
+  isolation.
+
+### Files changed
+
+- `apps/web/app/globals.css`
+- `tests/e2e/functional-product.spec.ts`
+- `test-reports/20260721T182621Z-role-artwork-full-bleed.log`
+- `HANDOFF.md`
+
+### Product and engineering decisions
+
+- “Fill” now means both full raster cover and full geometric containment of the visible Hero, not
+  merely a computed `background-size: cover` value.
+- The source WebP assets remain unchanged; the remaining defect was caused by the mask and undersized
+  responsive artwork boxes.
+- No Candidate/Recruiter projection, privacy boundary, Queue, Attention, Credit, Review, or AI
+  behavior changed.
+
+### Tests and verification
+
+- Focused Unit: 6/6 passed.
+- Production build: passed.
+- PostgreSQL/MinIO Playwright: 6/6 passed, including full-bleed Candidate and Recruiter geometry
+  assertions.
+- `pnpm check`: passed — 256 Unit, 45 Integration with two existing conditional skips, 25 Security,
+  7 Replay, and all documentation contracts.
+- `git diff --check`: passed; `.only/.skip` marker scan found none.
+- Full retained output:
+  [test-reports/20260721T182621Z-role-artwork-full-bleed.log](test-reports/20260721T182621Z-role-artwork-full-bleed.log).
+
+### Checks not run and environment notes
+
+- Full `pnpm test:postgres` was not run because no migration or persistence behavior changed; the
+  dedicated PostgreSQL E2E vertical passed.
+- LIVE AI evals were not run because no AI behavior changed.
+- No asset, environment variable, migration, API, or runtime-state contract changed.
+
+### Next action
+
+Refresh the running local Candidate View Role and Recruiter Operations pages and confirm that the
+chosen focal crop communicates the intended gesture on the final demo display.
+
+---
+
+## 2026-07-21 — Role artwork edge-coverage correction
+
+**Status:** Complete
+
+### Goal
+
+Remove the visible raster boundary that appeared when the new Candidate and Recruiter role-detail
+backgrounds were smaller than their responsive containers.
+
+### Actual outcome
+
+- Replaced height/percentage-based background sizing with `background-size: cover` for both role
+  illustrations, so every desktop, tablet, and mobile container is fully covered and the raster
+  edge cannot enter the visible layer.
+- Removed the mobile `74%` and `72%` size overrides that directly exposed empty space around the
+  images.
+- Added palette-matched near-black fallback colors beneath each layer while preserving the existing
+  masks, right-side focal crops, opacity, `aria-hidden`, and pointer isolation.
+- Extended Playwright to assert Cover sizing on the 390px Candidate View Role and Recruiter
+  Operations pages.
+
+### Files changed
+
+- `apps/web/app/globals.css`
+- `tests/e2e/functional-product.spec.ts`
+- `test-reports/20260721T182054Z-role-artwork-edge-coverage.log`
+- `HANDOFF.md`
+
+### Product and engineering decisions
+
+- The source WebP files remain unchanged; the defect was responsive background sizing rather than
+  image resolution.
+- No Candidate/Recruiter projection, privacy boundary, Queue, Attention, Credit, Review, or AI
+  behavior changed.
+
+### Tests and verification
+
+- Focused Unit: 6/6 passed.
+- Production build: passed.
+- PostgreSQL/MinIO Playwright: 6/6 passed, including explicit Candidate and Recruiter Cover checks.
+- `pnpm check`: passed — 256 Unit, 45 Integration with two existing conditional skips, 25 Security,
+  7 Replay, and all documentation contracts.
+- `git diff --check`: passed; `.only/.skip` marker scan found none.
+- Full retained output:
+  [test-reports/20260721T182054Z-role-artwork-edge-coverage.log](test-reports/20260721T182054Z-role-artwork-edge-coverage.log).
+
+### Checks not run and environment notes
+
+- Full `pnpm test:postgres` was not run because no migration or persistence behavior changed; the
+  dedicated PostgreSQL E2E vertical passed.
+- LIVE AI evals were not run because no AI behavior changed.
+- No asset, environment variable, migration, API, or runtime-state contract changed.
+
+### Next action
+
+Use the restarted local product to confirm the chosen right-side focal crop on the final demo
+display ratio; coverage itself is now enforced at all tested breakpoints.
+
+---
+
+## 2026-07-21 — Role-detail comic backgrounds and New JobPost layout repair
+
+**Status:** Complete
+
+### Goal
+
+Extend the established Candidate coral and Recruiter teal comic language into the role-detail
+surfaces, and repair the long New JobPost composer so the Eligibility controls remain aligned and
+reachable at desktop and mobile widths.
+
+### Actual outcome
+
+- Added a Candidate View Role background showing the same coral-shirted female Candidate rolling up
+  her sleeve before starting the Critical Challenge. The action stays on the right while the left
+  remains dark enough for JobPost copy.
+- Added an oversized teal editorial-comic eyeglasses still life to Recruiter Operations. It sits
+  over anonymous evidence sheets and stays behind all sequential Human Review content.
+- Both generated illustrations are project-local decorative WebP assets, `aria-hidden`, ignore
+  pointer input, and reduce opacity/scale at tablet and 390px widths. No identity, Candidate data,
+  résumé content, or remote asset is present in either layer.
+- Repaired the New JobPost composer by containing the long form inside the viewport, giving it an
+  internal scroll region, adding the missing Eligibility fieldset/tag/custom-tag grids, restoring
+  tag checkboxes to 18px, and collapsing the controls to one column on mobile.
+- Added browser assertions that the modal remains fully inside 1440x900 and 390x844 viewports, its
+  controls do not overflow, and the two new background images load on their correct role surfaces.
+
+### Files changed
+
+- `apps/web/public/brand/candidate-roll-up-sleeves-v1.webp`
+- `apps/web/public/brand/recruiter-glasses-review-v1.webp`
+- `apps/web/src/components/functional/role-page-artwork.tsx`
+- `apps/web/src/components/functional/role-page-artwork.test.tsx`
+- `apps/web/src/components/functional/candidate-job-detail.tsx`
+- `apps/web/src/components/functional/candidate-job-detail-ui.test.tsx`
+- `apps/web/src/components/functional/sequential-review-workspace.tsx`
+- `apps/web/src/components/functional/employer-review-analyst-ui.test.tsx`
+- `apps/web/src/components/functional/employer-dashboard.tsx`
+- `apps/web/app/globals.css`
+- `tests/e2e/functional-product.spec.ts`
+- `test-reports/20260721T181447Z-role-detail-art-and-composer-layout.log`
+- `HANDOFF.md`
+
+### Product and engineering decisions
+
+- This is presentation-only. Candidate/Recruiter projections, Label Veil, Eligibility, Queue,
+  Attention, Credit, Review order, and résumé Reveal authority are unchanged.
+- The artwork uses a dedicated role-detail component instead of reusing the Home or Login layers,
+  keeping each page to exactly one role asset and preserving modal stacking.
+- Long modal content scrolls inside a bounded dialog; the viewport backdrop no longer centers an
+  unbounded form beyond its reachable top edge.
+
+### Tests added or updated
+
+- Added generated-asset existence, decoration, and role-separation Unit coverage.
+- Extended Candidate Job Detail and Recruiter Review render tests for the correct artwork and role
+  theme.
+- Extended functional Playwright coverage for desktop/mobile composer containment, checkbox size,
+  control overflow, Candidate detail artwork, and Recruiter Operations artwork.
+
+### Verification
+
+- Focused Unit: 8/8 passed.
+- `pnpm typecheck`: passed.
+- Production build: passed.
+- PostgreSQL/MinIO Playwright: 6/6 passed.
+- `pnpm check`: passed — 256 Unit, 45 Integration with two existing conditional skips, 25 Security,
+  7 Replay, and all documentation contracts.
+- `git diff --check`: passed; `.only/.skip` marker scan found none.
+- Full retained output:
+  [test-reports/20260721T181447Z-role-detail-art-and-composer-layout.log](test-reports/20260721T181447Z-role-detail-art-and-composer-layout.log).
+
+### Checks not run and environment notes
+
+- Full `pnpm test:postgres` was not run because no migration, persistence contract, or state-machine
+  behavior changed; the dedicated PostgreSQL E2E vertical passed.
+- LIVE AI evals were not run because no AI prompt, schema, model, adapter, or authority changed.
+- No environment variable or migration changed.
+
+### Next action
+
+Run the current development server and visually review the two backgrounds against the final demo
+display calibration before recording the next pitch walkthrough.
+
+---
+
+## 2026-07-21 — Performance-first Login illustration revision
+
+**Status:** Complete
+
+### Outcome
+
+- Replaced the two front-facing Login portraits with an explicit performance-to-judgment narrative:
+  a long-haired student Candidate in a coral-red top writes a solution on a whiteboard while facing
+  right; a professional male Recruiter in a white shirt faces left and supports his chin in focused
+  thought.
+- Generated each side independently with the built-in image workflow while using the existing
+  Candidate and Employer Home illustrations only as style references. Both sides retain the same
+  editorial comic ink, halftone, grain, and near-black edge treatment as the product's established
+  artwork.
+- The composition removes all résumé, Candidate Card, ranking, and profile imagery. The two
+  opposing sight lines make the intended product order visible: Candidate performance first,
+  Recruiter judgment second.
+- Switched the component to versioned asset URLs to avoid stale browser caches and removed the
+  superseded front-facing portrait files.
+
+### Generated assets
+
+- `apps/web/public/brand/login-candidate-performance-v2.webp` — 900x900, 157KB
+- `apps/web/public/brand/login-recruiter-review-v2.webp` — 900x900, 132KB
+
+### Tests and verification
+
+- Updated the Login portrait contract to require the Candidate performance and Recruiter review
+  assets plus narrative metadata.
+- Updated Playwright to assert both new versioned background URLs while retaining the existing
+  stacking, reduced mobile opacity, and 390px horizontal-fit checks.
+- Focused Login Unit tests: 3/3 passed.
+- `pnpm check`: passed.
+- Production build: passed.
+- Playwright: 6/6 passed.
+- `git diff --check`: passed.
+- Full retained output:
+  [test-reports/20260721T175141Z-login-performance-illustrations.log](test-reports/20260721T175141Z-login-performance-illustrations.log).
+
+### Environment and compatibility
+
+- No session, identity, authorization, Candidate/Recruiter projection, Queue, Attention, AI,
+  persistence, or API behavior changed.
+
+---
+
+## 2026-07-21 — Login role portrait background
+
+**Status:** Complete
+
+### Outcome
+
+- Added two project-local, front-facing editorial-comic portraits to the Login background layer:
+  a coral/oxblood Candidate on the left and a teal/navy Recruiter on the right.
+- Generated both images with the built-in image generation workflow, compressed them to 900x900
+  WebP, and retained dark edge padding so they blend into the existing industrial UI rather than
+  appearing as rectangular cards.
+- Added a reusable decorative `LoginRolePortraits` component. It exposes no identity or business
+  data, is `aria-hidden`, ignores pointer input, and sits below the interactive Login card.
+- Added responsive treatment: full readable faces on wide screens, reduced/cropped side treatment
+  at tablet widths, and 25% opacity background silhouettes at 390px. The center card keeps a higher
+  stacking level and stronger backdrop blur.
+
+### Files and generated assets
+
+- `apps/web/src/components/functional/login-role-portraits.tsx`
+- `apps/web/src/components/functional/login-role-portraits.test.tsx`
+- `apps/web/public/brand/login-candidate-portrait.webp`
+- `apps/web/public/brand/login-recruiter-portrait.webp`
+- `apps/web/src/components/functional/login-chooser.tsx`
+- `apps/web/src/components/functional/login-chooser.test.tsx`
+- `apps/web/app/globals.css`
+- `tests/e2e/functional-product.spec.ts`
+
+### Tests and verification
+
+- Focused portrait/Login Unit tests: 3/3 passed.
+- `pnpm check`: passed.
+- Production build: passed.
+- Playwright: 6/6 passed, including asset loading, background/card stacking, reduced mobile opacity,
+  and 390px horizontal-fit assertions.
+- `git diff --check`: passed.
+- Full retained output:
+  [test-reports/20260721T173644Z-login-role-portraits.log](test-reports/20260721T173644Z-login-role-portraits.log).
+
+### Environment and compatibility
+
+- No session, identity, authorization, Candidate/Recruiter projection, Queue, Attention, AI,
+  persistence, or API behavior changed.
+- The initial macOS `sips` WebP conversion failed because that runtime could read but not write
+  WebP. The bundled Pillow conversion produced the final validated project assets.
+
+---
+
+## 2026-07-21 — CareerMutual UI brand cutover
+
+**Status:** Complete
+
+### Outcome
+
+- Replaced every user-visible `OnlyBoth` brand literal in the Web UI and page metadata with
+  `CareerMutual`; internal package scopes, cookie names, database identifiers, and historical
+  product documents remain unchanged because this request was explicitly UI-scoped.
+- Added a reusable `CareerMutualTrademark` component with a briefcase/check `HIRED` stamp. The
+  existing coral-to-teal mutual-intent mark now also carries a compact offer check, preserving the
+  established visual system while making the hiring outcome legible.
+- Applied the trademark to the shared header, login surface, footer, and retained prototype page.
+  The mobile header collapses the `HIRED` word while preserving the icon and accessible label.
+- Changed the login headline from `Enter the blind review loop.` to
+  `Let performance talk first!`.
+- Updated root metadata and the prototype description so browser titles and descriptive metadata
+  no longer expose the old brand.
+
+### Tests and verification
+
+- Added a focused trademark component test for the name, accessible `Hired` label, and check mark.
+- Extended the login component test for the new trademark and exact headline.
+- Added a workspace brand-surface contract covering the shared shell, login, footer metadata, and
+  prototype surface.
+- Added Playwright coverage at 390px for exact title/headline, three rendered trademark instances,
+  absence of the old visible brand, and horizontal-fit behavior.
+- `pnpm check`: passed — 251 Unit, 45 Integration with two existing conditional skips, 25 Security,
+  7 Replay, and all documentation contracts.
+- Production build: passed.
+- Playwright: 6/6 passed.
+- `git diff --check`: passed.
+- Full retained output:
+  [test-reports/20260721T170811Z-careermutual-ui-brand.log](test-reports/20260721T170811Z-careermutual-ui-brand.log).
+
+### Environment and compatibility
+
+- No business state, authorization, Queue, Attention, Credit, AI, migration, API, or persistence
+  semantics changed.
+- The first aggregate check exposed formatting in the preceding README-only change; README was
+  formatted and the complete gate then passed.
+
+---
+
+## 2026-07-21 — Codex and GPT-5.6 README disclosure
+
+**Status:** Complete
+
+### Outcome
+
+- Added one consolidated README section distinguishing Codex's development-time role from the
+  bounded GPT-5.6 operations used by the running product.
+- Documented Codex's contribution to architecture, implementation, synthetic demo data, UX,
+  automation, evaluation, diagrams, and documentation without presenting Codex as a runtime hiring
+  actor.
+- Listed the model policy and authority boundary for Candidate discovery, Candidate Eligibility,
+  the disclosed Candidate assistant, and the Employer Evidence Analyst.
+- Added an explicit demo provenance explanation for `LIVE`, `RECORDED_LIVE`, and
+  `SYNTHETIC_PRELOADED`, including the rule that LIVE failures never silently become fixture
+  successes.
+- Clarified that the functional Candidate and Employer routes execute real commands and persistence
+  transitions; Candidate consent, Human Review, Slot settlement, and Resume Reveal are not
+  prewritten GPT decisions.
+
+### Tests and report
+
+- Added a focused workspace integration assertion for the README disclosure and provenance terms.
+- Focused integration: 9/9 passed.
+- English/balanced-fence documentation contract: 49/49 passed.
+- `git diff --check`: passed.
+- Full output: [test-reports/20260721T164936Z-codex-gpt-readme-disclosure.log](test-reports/20260721T164936Z-codex-gpt-readme-disclosure.log).
+
+### Environment and compatibility
+
+- No runtime code, API, schema, migration, prompt, model default, business invariant, or Demo state
+  changed.
+- Full `pnpm check` and runtime E2E were not run for this documentation-only change.
+
+---
+
+## 2026-07-21 — Six-Candidate Eligibility Match Lab
+
+**Status:** Complete, with a matching-quality risk exposed by the read-only LIVE diagnostic
+
+### Goal
+
+Create enough synthetic technology JobPosts to compare the actual Candidate-side Eligibility
+behavior of six distinct engineering-oriented Passport profiles, without introducing Employer
+pre-answer selection, scores, ranks, or Queue effects.
+
+### Actual outcome
+
+- Added six sealed technology JobPosts: Payment Workflow Backend Engineer, Payments Reliability
+  Incident Lead, Partner Event Integration Engineer, Cloud Recovery Platform Engineer, Financial
+  Data Reconciliation Engineer, and Distributed Systems Verification Engineer.
+- Each role has a complete Critical Challenge, bounded capabilities, public hard requirements, and
+  a narrow set of education/work-domain tags. The functional seed now publishes 27 roles in total:
+  one primary, twenty cross-domain, and six Match Lab roles.
+- Replaced the old one-target-per-Candidate preloaded setup with a source-compatible many-to-many
+  matrix. Education tags use education refs; work-domain tags use the Candidate's Work Sample ref.
+- Candidate 42/17/03/08/11/19 now receive distinct persistent Feed sets of 4/4/3/3/2/3 roles,
+  including the shared `OPEN_TO_ALL` Customer Success role. Unmatched roles remain absent from the
+  Candidate DOM and Detail/Interest authority.
+- Added a read-only `demo:evaluate:matching-lab` command. It loads the six current synthetic
+  Passports and six Match Lab Contracts, calls LIVE `gpt-5.6-sol`, validates every Structured Output
+  through the production Eligibility validator, prints only opaque Candidate refs and public role
+  titles, and never writes business state.
+- The first LIVE six-by-six run passed every Schema/ref/privacy hard gate but exposed excessive
+  breadth: Candidate 42 and 17 each received five of six positive roles, and Candidate 03 and 08
+  received the same three-role set. The UI baseline remains disclosed as `SYNTHETIC_PRELOADED`; the
+  LIVE diagnostic is explicitly `persisted:false` and was not substituted into Demo state.
+- Corrected the reset's final diagnostic to query the authorized Eligibility Store instead of the
+  unfiltered base Functional Store. This changed only the reported Feed count, not access control.
+
+### Files changed
+
+- `scripts/functional-demo-job-fixtures.ts`
+- `scripts/reset-functional-demo.ts`
+- `scripts/evaluate-candidate-match-lab.ts`
+- `tests/integration/workspace-shape.test.ts`
+- `tests/e2e/functional-product.spec.ts`
+- `tests/docs/product-spirit-contract.sh`
+- `package.json`
+- `AGENTS.md`
+- `README.md`
+- `OnlyBoth-产品精神.md`
+- `OnlyBoth-产品方案.md`
+- `OnlyBoth-工程设计.md`
+- `test-reports/20260721T143221Z-six-candidate-match-lab.log`
+- `HANDOFF.md`
+
+These files already contained uncommitted work from the current UI/Eligibility slices; this change
+was applied incrementally and did not discard that work.
+
+### Product and engineering decisions
+
+- The Match Lab is Candidate-side diagnostic coverage only. Its outputs never enter Recruiter
+  candidate browsing, Attention allocation, Queue order, Human Review, or Direct/Explore.
+- The offline Feed uses clearly disclosed synthetic preloaded outcomes. A LIVE evaluation cannot
+  silently replace or fall back to them, and the read-only evaluator cannot mutate projections.
+- More JobPosts are useful only if they include positive overlaps and negative controls. The matrix
+  therefore permits related Candidates to unlock more than one role instead of forcing one role per
+  person.
+
+### Tests added or updated
+
+- Added fixture tests for six unique Match Lab JobPosts, complete Challenge manifests, gated access
+  policies, source-compatible tags, and a target matrix covering all six Candidate refs.
+- Added Playwright coverage that logs in as six independent Candidates, checks the exact positive
+  role set, confirms an unrelated role is absent, and confirms the shared `OPEN_TO_ALL` role.
+- Updated the Employer dashboard count from 21 to 27 and synchronized the documentation contract.
+
+### Verification
+
+- Focused fixture Integration test: 8/8 passed.
+- Typecheck: passed.
+- Synthetic functional reset: passed with 27 published roles and Candidate 42 authorized Feed count
+  four.
+- Read-only persistent Feed inspection: passed for all six Candidate refs.
+- LIVE Match Lab: six of six outputs passed the production validator on resolved model
+  `gpt-5.6-sol`; the output was not persisted.
+- Production build: passed.
+- Playwright on the configured MinIO-compatible test origin `127.0.0.1:3100`: 5/5 passed.
+- Final `pnpm check`: passed — 250 Unit, 43 Integration with two pre-existing conditional skips, 25
+  Security, 7 Replay, and all 176 documentation assertions.
+- `git diff --check`: passed. `.only/.skip` scan: no markers found.
+- Complete retained output:
+  [test-reports/20260721T143221Z-six-candidate-match-lab.log](test-reports/20260721T143221Z-six-candidate-match-lab.log).
+
+### Checks not run and environment notes
+
+- Full `pnpm test:postgres` was not run because this change adds no migration or persistence
+  contract; PostgreSQL reset and the dedicated-database Playwright vertical both passed.
+- The first E2E attempt was blocked by the running development server on port 3000. A second attempt
+  on ad hoc port 3201 passed the new tests but failed the existing presigned Voice Memo PUT because
+  that origin is outside local MinIO CORS. The project-configured port 3100 passed all five tests.
+- The first `pnpm check` retained a documentation-contract failure for the obsolete 21-role phrase;
+  the assertion was updated and the complete gate then passed.
+
+### Environment and compatibility
+
+- No migration, API, Event, Prompt, model default, authorization, or Queue contract changed.
+- Added root command: `pnpm demo:evaluate:matching-lab`.
+- The evaluator requires `DEMO_MODE=true`, a seeded `DATABASE_URL`, and a Worker-only
+  `OPENAI_API_KEY`; it fails closed otherwise.
+
+### Next action
+
+Use the recorded LIVE matrix to tighten positive-edge specificity—especially Cloud/Integration
+cross-matches—then rerun the six-by-six evaluator before recording any LIVE outputs into the Demo.
+
+---
+
+## 2026-07-21 — Candidate hard-constraint declaration layout repair
+
+**Status:** Complete
+
+### Outcome
+
+- Replaced the overflowing `Declare legal and logistical requirements` fieldset legend with a short
+  semantic `Eligibility declarations` legend and kept the full phrase as a normal-flow heading.
+- Added a shrink-safe single-column form grid, explicit checkbox alignment, full-width bounded text
+  inputs, reliable wrapping, and the existing Candidate coral treatment.
+- Added a component regression test and a real 390px Playwright assertion proving that the page,
+  fieldset, and both text inputs remain inside the viewport.
+
+### Verification and report
+
+`pnpm check`, production build, and all four functional Playwright journeys pass. Actual output is
+retained in `test-reports/20260721T141205Z-candidate-hard-facts-layout.log`.
+
+---
+
+## 2026-07-21 — AI-backed Candidate Eligibility Match vertical
+
+**Status:** Complete
+
+### Goal
+
+Replace complete-market Candidate access with a Candidate-only AI access edge while preserving the
+blind-answer product boundary: a Recruiter seals public background tags, GPT may connect one
+Candidate source to one accepted tag, deterministic code validates the result, and the public Queue
+remains unranked.
+
+### Actual outcome
+
+- Added `eligibility-match-policy@1`, an exact versioned 100-tag catalog, bounded custom tags, and
+  `EligibilityEdge@2` with separate background-access and deterministic hard-fact results.
+- Added `deriveCandidateEligibilityMatches` with strict input/output schemas, versioned Prompt,
+  semantic validation, `gpt-5.6-sol` medium reasoning, `store:false`, no tools or remote
+  conversation, SDK retry zero, and Worker-owned retry/state mapping.
+- Passport Publish fans out to all current evidence-gated Jobs; gated Job Publish fans out to every
+  latest Passport. Immutable per-Candidate/per-Job outputs become `SUPERSEDED` when pins change.
+- Feed V3, Detail, and Interest now authorize only `OPEN_TO_ALL`, current validated positive
+  Evidence match, or an active Journey pin. Unauthorized Detail and Interest return the same 404.
+- Candidate Interest V2 reloads the current Match server-side and pins policy, Passport Snapshot,
+  Match ref, and Match version before deterministic legal/language/time-zone checks.
+- Recruiter Job Composer supports access mode, searchable standard tags, and up to five bounded
+  custom tags. Recruiter projections never receive Passport contents, connections, or a matched
+  Candidate list.
+- The Demo seeds Candidate 42/17/19 for Backend, Candidate 27 for Illustration, one OPEN_TO_ALL Job,
+  and a pin-validated Candidate 42 Backend `RECORDED_LIVE` output. Runtime LIVE failure has no
+  fixture fallback.
+- Documentation now distinguishes permitted Candidate-side access matching from prohibited
+  Employer-side pre-answer Candidate selection.
+
+### Acceptance fixes
+
+- Corrected the original global unique `policy_hash` constraint with migration `0014`; multiple
+  Jobs may share an identical policy without sharing an aggregate identity.
+- Removed internal contract/policy fields from the strict provider DTO, added V1/V2 Interest Worker
+  compatibility, bounded the Demo reset lease race, and updated full migration rollback tests.
+- Added an isolated `PLAYWRIGHT_PORT` and explicit local MinIO test origin so E2E cannot accidentally
+  attach to the visible development database on port 3000.
+
+### Verification and report
+
+Full actual output and acceptance notes are retained in
+`test-reports/20260721T135828Z-ai-backed-eligibility-match.log`.
+
+- `pnpm check`: PASS — 249 Unit, 42 Integration (+2 conditional skips), 25 Security, 7 Replay, and
+  176 documentation assertions.
+- PostgreSQL: PASS — 46 tests, including fresh migration and rollback/reapply.
+- Playwright: PASS — 4 tests after the final production rebuild.
+- Build, Demo reset, offline replay, deterministic evals, and `git diff --check`: PASS.
+- LIVE Sol eval: PASS — 108/108 hard gates; all three rounds 12/12 positive recall, zero
+  near-negative false positives, and zero injection false positives.
+
+### Remaining boundary
+
+`SYNTHETIC_SOURCE_ATTACHED` remains a self-attested synthetic source state, not proof of ownership,
+employment, credentials, or capability. This slice does not introduce a production IdP, real source
+verification, Employer-side matched Candidate browsing, AI Queue ranking, or AI Human Review.
+
+---
+
+## 2026-07-21 — Role-separated palettes and comic Home artwork
+
+**Status:** Complete as part of the current uncommitted UI/UX review slice on
+`feat/ui-ux-optimization`
+
+### Goal
+
+Make Candidate and Employer workspaces distinguishable before reading their controls, and add one
+role-specific comic character to each Home without obscuring content or weakening accessibility.
+
+### Actual outcome
+
+- Candidate Home now uses a coral, burnt-copper, oxblood, and warm-cream system. Its generated
+  editorial-comic scene shows a Candidate moving toward an opportunity signal while carrying a
+  sealed work proof.
+- Employer Home now uses a teal, cyan-green, deep-navy, and cool-ivory system. Its generated scene
+  shows a Recruiter deliberately reviewing anonymous work evidence under a committed-attention
+  signal.
+- The illustrations share one industrial graphic-novel language, reserve dark negative space for
+  UI copy, contain no readable text or logos, and are decorative to assistive technology.
+- Role-aware header tint, focus color, hero emphasis, primary action treatment, discovery panels,
+  Feed controls, and attention rails now follow the signed role. Public pages retain the combined
+  coral/teal OnlyBoth identity.
+- Desktop heroes preserve the character at the right edge. Tablet and mobile overlays increase text
+  protection, reduce artwork opacity, and keep the character visible near the lower edge.
+- The source PNGs were generated through the built-in image-generation path, visually inspected,
+  resized to 1600 × 857, and encoded as project-local WebP assets: 140,688 bytes for Candidate and
+  131,376 bytes for Employer.
+- No API, database, queue, matching, AI decision, privacy, or authorization behavior changed.
+
+### Files changed
+
+- `apps/web/public/brand/candidate-intent-hero.webp`
+- `apps/web/public/brand/employer-attention-hero.webp`
+- `apps/web/src/components/functional/role-home-artwork.tsx`
+- `apps/web/src/components/functional/role-home-artwork.test.tsx`
+- `apps/web/src/components/functional/candidate-home.tsx`
+- `apps/web/src/components/functional/employer-dashboard.tsx`
+- `apps/web/src/components/functional/candidate-discovery-ui.test.tsx`
+- `apps/web/src/components/functional/employer-dashboard-ui.test.ts`
+- `apps/web/src/components/app-shell.tsx`
+- `apps/web/app/globals.css`
+- `test-reports/20260721T125324Z-role-themed-comic-homes.log`
+- `HANDOFF.md`
+
+### Tests added or updated
+
+- Added role-artwork rendering tests that prove Candidate and Employer use different assets, mark
+  both assets decorative, and ship both files from the Web public directory.
+- Extended Candidate Home rendering coverage to require the Candidate theme and forbid the Employer
+  asset.
+- Extended Employer Dashboard rendering coverage to require the Employer theme and forbid the
+  Candidate asset.
+
+### Verification and report
+
+- `pnpm --filter @onlyboth/web typecheck` — passed.
+- `pnpm --filter @onlyboth/web test` — 15 files and 49 tests passed.
+- `pnpm check` — passed: 239 Unit, 39 Integration, 25 Security, and 7 Replay tests; two pre-existing
+  conditional Integration tests remained skipped. Documentation contracts passed 48 + 38 + 86.
+- `pnpm build` — passed with the Next.js optimized production build.
+- Live authenticated rendering: Avery's `/candidate` and Sarah's `/employer` returned HTTP 200 with
+  4/4 expected role markers each. Both WebP assets returned HTTP 200 as `image/webp` with their exact
+  encoded sizes.
+- `git diff --check` — passed.
+- Complete report: `test-reports/20260721T125324Z-role-themed-comic-homes.log`.
+
+### Checks not run and remaining risk
+
+- A full-page browser screenshot pass was not run because the in-app browser control interface was
+  unavailable. Both compressed image assets were inspected directly, and the actual server-rendered
+  role pages and asset responses were verified.
+- Playwright journeys, destructive PostgreSQL suites, dedicated MinIO integration, and LIVE AI
+  evaluations were not rerun because this change is presentation-only.
+- The artwork depicts role archetypes only. It must not be reused as evidence about Candidate or
+  Employer identity, capability, demographic characteristics, or behavior.
+
+### Next action
+
+Review `/candidate` and `/employer` at 1440px and 390px in the running application. If the visual
+separation is approved, commit the complete UI/UX review slice as one follow-up commit.
+
+---
+
+## 2026-07-21 — Mutual-intent hiring UI identity
+
+**Status:** Implemented as an uncommitted UI/UX review slice on `feat/ui-ux-optimization`; the
+preceding two-layer Candidate Feed baseline is committed at `2f0ae15`
+
+### Goal
+
+Make the product legible as a hiring and career-intent exchange within the first screen, while
+giving existing Candidate Interest, backed Attention, Answer, and Human Review states a coherent
+visual language without changing their authority.
+
+### Actual outcome
+
+- The global mark now depicts two connected signals and the lockup explicitly reads
+  `Mutual-intent hiring`; the role breadcrumb still resolves to the active Candidate or Recruiter.
+- The public Home states the product promise as `Interest is mutual. Attention is backed.` and
+  explains the Candidate-intent/Recruiter-attention handshake before technical workflow details.
+- `/candidate` leads with `Signal intent. Get seen.`, shows a live Candidate/Recruiter exchange
+  rail, and maps each JobPost journey to `OPEN`, `QUEUED`, `BACKED`, or `SEALED` presentation.
+  These states derive only from the existing Interest and Answer Session projection.
+- `/employer` leads with `Commit attention. See the work.` and aggregates funded Slot capacity,
+  waiting Interests, and current Human Review debt into one attention-capacity rail.
+- Coral pulse, signal connection, and attention-lock motion communicate state transitions only.
+  Existing reduced-motion rules collapse every animation and transition.
+- No API, database schema, Worker, AI prompt, queue order, eligibility rule, or privacy boundary
+  changed.
+
+### Files changed
+
+- `apps/web/src/components/app-shell.tsx`
+- `apps/web/app/layout.tsx`
+- `apps/web/app/page.tsx`
+- `apps/web/src/components/functional/candidate-home.tsx`
+- `apps/web/src/components/functional/employer-dashboard.tsx`
+- `apps/web/app/globals.css`
+- `apps/web/src/components/home-entry.test.tsx`
+- `apps/web/src/components/functional/candidate-discovery-ui.test.tsx`
+- `apps/web/src/components/functional/employer-dashboard-ui.test.ts`
+- `apps/web/src/components/functional/employer-revealed-candidates.test.tsx`
+- `README.md`
+- `test-reports/20260721T123013Z-mutual-intent-ui.log`
+- `HANDOFF.md`
+
+### Tests added or updated
+
+- Added deterministic mapping tests for open, queued, backed, and sealed Candidate opportunity
+  signals.
+- Added an Employer capacity-summary test covering total funded Slots, available capacity, waiting
+  Interests, and review debt while asserting that no score or rank field exists.
+- Updated Home and role-breadcrumb rendering tests for the mutual-intent promise and role-aware
+  brand lockup.
+
+### Verification and report
+
+- `pnpm --filter @onlyboth/web typecheck` — passed.
+- `pnpm --filter @onlyboth/web test` — 14 files and 45 tests passed.
+- `pnpm check` — passed: 235 Unit, 39 Integration, 25 Security, and 7 Replay tests; two pre-existing
+  conditional Integration tests remained skipped. Documentation contracts passed 48 + 38 + 86.
+- `pnpm build` — passed with the Next.js optimized production build.
+- Live server rendering after restoring PostgreSQL and MinIO: `/`, Avery's `/candidate`, and Sarah's
+  `/employer` returned HTTP 200; all new identity and exchange markers were present.
+- `git diff --check` — passed.
+- `rg -n "\.(only|skip)\(" tests apps packages` — no matches.
+- Complete report: `test-reports/20260721T123013Z-mutual-intent-ui.log`.
+
+### Checks not run and remaining risk
+
+- Interactive desktop/mobile screenshot review was not run because the in-app browser control
+  interface was unavailable in this session. Server-rendered HTML, component tests, responsive CSS,
+  reduced-motion behavior, and the production build were verified instead.
+- Destructive PostgreSQL suites, dedicated MinIO integration, Playwright journeys, and LIVE AI
+  evaluations were not rerun because this slice changes presentation only.
+- `Matched for you` remains evidence-linked Candidate discovery, not a complete forward-looking
+  Candidate Intent Profile. The new brand language does not expand the current matching authority.
+
+### Next action
+
+Review the running Home, Candidate, and Employer surfaces at desktop and mobile widths. If the
+identity reads clearly, commit this review slice separately; then design the versioned forward-looking
+Candidate Intent Profile as its own product and data change.
+
+---
+
+## 2026-07-21 — Candidate two-layer opportunity feed
+
+**Status:** Historical and superseded by the AI-backed Eligibility Feed implemented later on
+2026-07-21. This entry records the earlier presentation slice and is not current access semantics.
+
+### Goal
+
+Replace the misleading all-jobs-only Candidate homepage with a two-layer feed: an evidence-linked
+default view that feels genuinely matched, plus an explicit complete-market view that preserves the
+Candidate's access to every funded open JobPost.
+
+### Actual outcome
+
+- `/candidate` now opens on `Matched for you`. It includes `EVIDENCE_CONNECTED`, `ADJACENT`, stale
+  signals that retain source/capability refs, and every active Interest/Application journey.
+- `Explore all jobs` exposes the complete open feed. Switching layers resets the role category to
+  `All`, preserves the text query, updates counts and accessible tab state, and remounts the result
+  panel with a reduced-motion-safe transition.
+- Empty matched results provide a direct route to the complete market instead of implying rejection
+  or lack of ability.
+- The selector is Candidate-side presentation only. The API continues returning the complete
+  Candidate-owned projection; GPT still has no Eligibility, Queue, Invitation, Attention, Employer,
+  or access-control authority.
+
+### Files changed
+
+- `apps/web/src/components/functional/candidate-home.tsx`
+- `apps/web/src/components/functional/candidate-discovery-ui.test.tsx`
+- `apps/web/app/globals.css`
+- `AGENTS.md`
+- `README.md`
+- `OnlyBoth-产品精神.md`
+- `OnlyBoth-产品方案.md`
+- `OnlyBoth-工程设计.md`
+- `OnlyBoth-AI工程设计.md`
+- `tests/docs/agents-contract.sh`
+- `tests/docs/ai-engineering-design-contract.sh`
+- `tests/docs/product-spirit-contract.sh`
+- `test-reports/20260721T121010Z-two-layer-candidate-feed.log`
+- `HANDOFF.md`
+
+### Product and engineering decisions
+
+- Discovery may reduce first-screen noise without removing access: `Matched for you` is the default
+  layer and `Explore all jobs` is the complete secondary layer.
+- A discovery signal remains Candidate-private guidance, not hard Eligibility, Employer matching,
+  Queue ordering, or an AI ranking.
+- The later Eligibility cutover removed this complete-market access path: historical discovery
+  signals no longer authorize Feed, Detail, or Interest access.
+- Ongoing Candidate journeys remain in the default layer even if the underlying discovery signal is
+  missing or stale, so a presentation filter cannot strand an application.
+
+### Tests added or updated
+
+- Updated the Candidate discovery component test to assert that an insufficient-source job is absent
+  from the default rendered panel while the complete-market tab remains visible.
+- Added selector tests for connected, stale-source, active-journey, insufficient-source, matched, and
+  all-jobs behavior.
+- Updated documentation contracts to require complete JobPost access through the secondary feed.
+
+### Verification and report
+
+- `pnpm --filter @onlyboth/web typecheck` — passed.
+- `pnpm --filter @onlyboth/web test` — 13 files and 43 tests passed.
+- `pnpm test:docs` — 48 + 38 + 86 assertions passed.
+- `pnpm check` — passed: 233 Unit, 39 Integration, 25 Security, and 7 Replay tests; two pre-existing
+  conditional Integration tests remained skipped.
+- `pnpm build` — passed with the Next.js optimized production build.
+- `git diff --check` — passed.
+- `rg -n "\.(only|skip)\(" tests apps packages` — no matches.
+- Complete report: `test-reports/20260721T121010Z-two-layer-candidate-feed.log`.
+
+### Checks not run and remaining risk
+
+- PostgreSQL destructive suites, MinIO integration, Playwright, and LIVE AI evals were not rerun
+  because this slice changes Candidate-side presentation and documentation only.
+- `Matched for you` currently represents Evidence Passport connections, not a complete
+  forward-looking Candidate Intent Profile. Calling it intention matching beyond this bounded
+  evidence meaning would overstate the current data model.
+- No migration, API schema, environment variable, Worker mode, AI prompt, or provider model changed.
+
+### Next action
+
+Design a versioned Candidate Intent Profile for desired role direction, work mode, location,
+compensation, and explicit exclusions, then combine its deterministic constraints with the existing
+evidence-linked explanation without giving GPT access-control authority.
 
 ---
 

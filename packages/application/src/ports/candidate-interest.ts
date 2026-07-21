@@ -34,6 +34,18 @@ export interface CandidateInterestSubmissionSnapshot {
   readonly runtimeMode: "LIVE" | "CACHED_AI" | "GOLDEN_REPLAY";
   readonly synthetic: boolean;
   readonly eligibilityPredicates: readonly EligibilityPredicate[];
+  readonly backgroundAccess:
+    | {
+        readonly basis: "OPEN_TO_ALL";
+        readonly eligibilityPolicyRef: string;
+      }
+    | {
+        readonly basis: "AI_POSITIVE_EVIDENCE";
+        readonly eligibilityPolicyRef: string;
+        readonly passportSnapshotRef: string;
+        readonly eligibilityMatchRef: string;
+        readonly eligibilityMatchVersion: number;
+      };
   readonly existingInterest: StoredCandidateInterest | null;
 }
 

@@ -12,6 +12,7 @@ export * from "./postgres-answer-invitation-decision-store";
 export * from "./postgres-functional-product-store";
 export * from "./postgres-employer-review-analyst-store";
 export * from "./postgres-candidate-discovery-store";
+export * from "./postgres-candidate-eligibility-store";
 export * from "./postgres-pool";
 export * from "./repositories";
 export * from "./types";

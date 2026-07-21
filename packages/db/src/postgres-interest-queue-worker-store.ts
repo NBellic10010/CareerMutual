@@ -653,7 +653,7 @@ class PostgresBlindReviewTransaction implements BlindReviewTransaction {
               eligible_at, interest_created_at, status, version
          FROM candidate_interests
         WHERE opportunity_ref = $1
-          AND interest_schema_version = 'candidate-interest@1'
+          AND interest_schema_version IN ('candidate-interest@1', 'candidate-interest@2')
           AND eligibility_edge_ref IS NOT NULL
           AND eligible_at IS NOT NULL
           AND status IN (
@@ -1267,7 +1267,9 @@ export class PostgresInterestQueueStore implements BlindReviewUnitOfWork, Intere
               SELECT 1 FROM candidate_interests AS interest
                WHERE interest.opportunity_ref = commitment.opportunity_ref
                  AND interest.status = 'WAITING_FOR_BACKED_SLOT'
-                 AND interest.interest_schema_version = 'candidate-interest@1'
+                 AND interest.interest_schema_version IN (
+                   'candidate-interest@1', 'candidate-interest@2'
+                 )
                  AND NOT EXISTS (
                    SELECT 1 FROM candidate_activity_leases AS activity
                     WHERE activity.candidate_ref = interest.candidate_ref

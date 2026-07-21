@@ -81,6 +81,16 @@ const MIGRATIONS: readonly MigrationDefinition[] = [
       import.meta.url,
     ),
   },
+  {
+    version: "0013_ai_backed_eligibility_match",
+    upUrl: new URL("../migrations/0013_ai_backed_eligibility_match.sql", import.meta.url),
+    downUrl: new URL("../migrations/0013_ai_backed_eligibility_match.down.sql", import.meta.url),
+  },
+  {
+    version: "0014_eligibility_policy_hash_scope",
+    upUrl: new URL("../migrations/0014_eligibility_policy_hash_scope.sql", import.meta.url),
+    downUrl: new URL("../migrations/0014_eligibility_policy_hash_scope.down.sql", import.meta.url),
+  },
 ];
 
 async function ensureMigrationTable(client: PoolClient): Promise<void> {

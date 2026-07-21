@@ -12,6 +12,7 @@
     "./postgres-answer-invitation-decision-store": "./src/postgres-answer-invitation-decision-store.ts",
     "./postgres-functional-product-store": "./src/postgres-functional-product-store.ts",
     "./postgres-candidate-discovery-store": "./src/postgres-candidate-discovery-store.ts",
+    "./postgres-candidate-eligibility-store": "./src/postgres-candidate-eligibility-store.ts",
     "./postgres-pool": "./src/postgres-pool.ts"
   },
   "scripts": {

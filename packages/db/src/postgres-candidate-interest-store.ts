@@ -114,6 +114,12 @@ class PostgresCandidateInterestTransaction implements CandidateInterestTransacti
       contract_json: unknown;
       runtime_mode: "LIVE" | "CACHED_AI" | "GOLDEN_REPLAY";
       synthetic: boolean;
+      eligibility_policy_ref: string;
+      eligibility_access_mode: "OPEN_TO_ALL" | "EVIDENCE_MATCH_REQUIRED";
+      eligibility_match_ref: string | null;
+      eligibility_match_version: number | null;
+      passport_snapshot_ref: string | null;
+      eligibility_match_state: string | null;
     }>(
       `SELECT opportunity.id AS opportunity_ref,
               opportunity.version AS opportunity_version,
@@ -122,16 +128,51 @@ class PostgresCandidateInterestTransaction implements CandidateInterestTransacti
               contract.contract_version_ref,
               contract.contract_json,
               opportunity.runtime_mode,
-              opportunity.synthetic
+              opportunity.synthetic,
+              policy.policy_ref AS eligibility_policy_ref,
+              policy.access_mode AS eligibility_access_mode,
+              eligibility_match.match_ref AS eligibility_match_ref,
+              eligibility_match.match_version AS eligibility_match_version,
+              eligibility_match.passport_snapshot_ref,
+              eligibility_match.state AS eligibility_match_state
          FROM opportunities AS opportunity
          JOIN sealed_capability_contracts AS contract
            ON contract.contract_version_ref = opportunity.current_contract_version_ref
+         JOIN job_eligibility_match_policies AS policy
+           ON policy.opportunity_ref = opportunity.id
+         LEFT JOIN LATERAL (
+           SELECT candidate_match.match_ref, candidate_match.match_version,
+                  candidate_match.passport_snapshot_ref, candidate_match.state
+             FROM candidate_job_eligibility_matches AS candidate_match
+             JOIN candidate_evidence_passport_snapshots AS passport
+               ON passport.snapshot_ref = candidate_match.passport_snapshot_ref
+            WHERE candidate_match.candidate_ref = $2
+              AND candidate_match.opportunity_ref = opportunity.id
+              AND candidate_match.opportunity_version = opportunity.version
+              AND candidate_match.contract_version_ref = opportunity.current_contract_version_ref
+              AND passport.snapshot_version = (
+                SELECT MAX(latest.snapshot_version)
+                  FROM candidate_evidence_passport_snapshots AS latest
+                 WHERE latest.candidate_ref = $2
+              )
+            ORDER BY candidate_match.created_at DESC, candidate_match.match_ref DESC
+            LIMIT 1
+         ) AS eligibility_match ON true
         WHERE opportunity.id = $1
         FOR UPDATE OF opportunity`,
-      [opportunityRef],
+      [opportunityRef, candidateRef],
     );
     const opportunity = opportunityResult.rows[0];
     if (opportunity === undefined) return null;
+    if (
+      opportunity.eligibility_access_mode === "EVIDENCE_MATCH_REQUIRED" &&
+      (opportunity.eligibility_match_state !== "POSITIVE_EVIDENCE" ||
+        opportunity.eligibility_match_ref === null ||
+        opportunity.eligibility_match_version === null ||
+        opportunity.passport_snapshot_ref === null)
+    ) {
+      return null;
+    }
 
     const commitmentResult = await this.client.query<{
       state: string;
@@ -181,6 +222,19 @@ class PostgresCandidateInterestTransaction implements CandidateInterestTransacti
       runtimeMode: opportunity.runtime_mode,
       synthetic: opportunity.synthetic,
       eligibilityPredicates: parseEligibilityPredicates(opportunity.contract_json),
+      backgroundAccess:
+        opportunity.eligibility_access_mode === "OPEN_TO_ALL"
+          ? {
+              basis: "OPEN_TO_ALL",
+              eligibilityPolicyRef: opportunity.eligibility_policy_ref,
+            }
+          : {
+              basis: "AI_POSITIVE_EVIDENCE",
+              eligibilityPolicyRef: opportunity.eligibility_policy_ref,
+              passportSnapshotRef: opportunity.passport_snapshot_ref!,
+              eligibilityMatchRef: opportunity.eligibility_match_ref!,
+              eligibilityMatchVersion: opportunity.eligibility_match_version!,
+            },
       existingInterest:
         existing === undefined
           ? null
@@ -232,9 +286,10 @@ class PostgresCandidateInterestTransaction implements CandidateInterestTransacti
          interest_ref, opportunity_ref, candidate_ref, claim_snapshot_ref, status,
          submitted_at, interest_schema_version, consent_version, hard_facts_json,
          eligibility_edge_ref, eligible_at, interest_created_at, queue_policy_version,
-         queue_tie_break, version, updated_at, contract_version_ref
-       ) VALUES ($1, $2, $3, NULL, $4, $5, 'candidate-interest@1', $6, $7::jsonb,
-                 $8, $9, $5, $10, $11, $12, $5, $13)`,
+         queue_tie_break, version, updated_at, contract_version_ref,
+         background_access_basis, passport_snapshot_ref, eligibility_match_ref
+       ) VALUES ($1, $2, $3, NULL, $4, $5, 'candidate-interest@2', $6, $7::jsonb,
+                 $8, $9, $5, $10, $11, $12, $5, $13, $14, $15, $16)`,
       [
         input.interest.interestRef,
         input.interest.opportunityRef,
@@ -249,14 +304,19 @@ class PostgresCandidateInterestTransaction implements CandidateInterestTransacti
         input.interest.queueTieBreak,
         input.interest.version,
         input.eligibility.contractVersionRef,
+        input.eligibility.backgroundAccessBasis,
+        input.eligibility.passportSnapshotRef,
+        input.eligibility.eligibilityMatchRef,
       ],
     );
     await this.client.query(
       `INSERT INTO eligibility_edges (
          eligibility_edge_ref, matching_cycle_ref, candidate_ref, claim_snapshot_ref,
          contract_version_ref, eligible, predicate_results_json, created_at,
-         opportunity_ref, interest_ref
-       ) VALUES ($1, NULL, $2, NULL, $3, $4, $5::jsonb, $6, $7, $8)`,
+         opportunity_ref, interest_ref, edge_schema_version, background_access_basis,
+         eligibility_policy_ref, passport_snapshot_ref, eligibility_match_ref
+       ) VALUES ($1, NULL, $2, NULL, $3, $4, $5::jsonb, $6, $7, $8,
+                 $9, $10, $11, $12, $13)`,
       [
         input.eligibility.eligibilityEdgeRef,
         input.interest.candidateRef,
@@ -266,6 +326,11 @@ class PostgresCandidateInterestTransaction implements CandidateInterestTransacti
         this.databaseNow,
         input.interest.opportunityRef,
         input.interest.interestRef,
+        input.eligibility.schemaVersion,
+        input.eligibility.backgroundAccessBasis,
+        input.eligibility.eligibilityPolicyRef,
+        input.eligibility.passportSnapshotRef,
+        input.eligibility.eligibilityMatchRef,
       ],
     );
     for (const event of input.events) {

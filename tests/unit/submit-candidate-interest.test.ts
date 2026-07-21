@@ -9,6 +9,7 @@ import {
   InMemoryCandidateInterestUnitOfWork,
   type InMemoryCandidateInterestFailurePoint,
 } from "../../packages/testkit/src/index";
+import type { CandidateInterestCommand } from "../../packages/contracts/src/index";
 import { describe, expect, it } from "vitest";
 
 const NOW = new Date("2026-07-19T22:00:00.000Z");
@@ -31,7 +32,10 @@ function command(
   } = {},
 ) {
   return {
-    schema_version: "candidate-interest-command@1" as const,
+    schema_version: "candidate-interest-command@2" as const,
+    background_access_basis: "OPEN_TO_ALL" as const,
+    eligibility_match_ref: null,
+    eligibility_match_version: null,
     hard_facts: [
       {
         fact_ref: "fact-work-authorization",
@@ -58,7 +62,7 @@ function request(
   overrides: {
     readonly actorId?: string;
     readonly idempotencyKey?: string;
-    readonly command?: ReturnType<typeof command>;
+    readonly command?: CandidateInterestCommand;
   } = {},
 ) {
   return {
@@ -79,6 +83,18 @@ function unitOfWork(
     readonly opportunityState?: "OPEN" | "CLOSED";
     readonly commitmentState?: "ACTIVE" | "PAUSED" | "CLOSED";
     readonly requiredConsentVersion?: string;
+    readonly backgroundAccess?:
+      | {
+          readonly basis: "OPEN_TO_ALL";
+          readonly eligibilityPolicyRef: string;
+        }
+      | {
+          readonly basis: "AI_POSITIVE_EVIDENCE";
+          readonly eligibilityPolicyRef: string;
+          readonly passportSnapshotRef: string;
+          readonly eligibilityMatchRef: string;
+          readonly eligibilityMatchVersion: number;
+        };
     readonly failAt?: InMemoryCandidateInterestFailurePoint;
   } = {},
 ) {
@@ -112,6 +128,7 @@ function unitOfWork(
         member: "TypeScript",
       },
     ],
+    ...(input.backgroundAccess === undefined ? {} : { backgroundAccess: input.backgroundAccess }),
     now: NOW,
     failAt: input.failAt ?? null,
   });
@@ -186,6 +203,50 @@ describe("SubmitCandidateInterestHandler", () => {
       eligible: false,
       queue_reconcile_requested: false,
     });
+  });
+
+  it("pins AI-positive access and rejects a stale browser Match ref", async () => {
+    const store = unitOfWork({
+      backgroundAccess: {
+        basis: "AI_POSITIVE_EVIDENCE",
+        eligibilityPolicyRef: "eligibility-policy:backend",
+        passportSnapshotRef: "passport-snapshot:candidate-42:1",
+        eligibilityMatchRef: "eligibility-match:candidate-42:backend:1",
+        eligibilityMatchVersion: 1,
+      },
+    });
+    const aiCommand = {
+      ...command(),
+      background_access_basis: "AI_POSITIVE_EVIDENCE" as const,
+      eligibility_match_ref: "eligibility-match:candidate-42:backend:1",
+      eligibility_match_version: 1,
+    };
+    await expect(
+      new SubmitCandidateInterestHandler(store, ids(), canonicalHash).execute(
+        request({ command: aiCommand }),
+      ),
+    ).resolves.toMatchObject({ state: "INTEREST_RECEIVED" });
+    expect(store.snapshot().eligibility).toMatchObject({
+      schemaVersion: "eligibility-edge@2",
+      backgroundAccessBasis: "AI_POSITIVE_EVIDENCE",
+      passportSnapshotRef: "passport-snapshot:candidate-42:1",
+      eligibilityMatchRef: "eligibility-match:candidate-42:backend:1",
+    });
+
+    const staleStore = unitOfWork({
+      backgroundAccess: {
+        basis: "AI_POSITIVE_EVIDENCE",
+        eligibilityPolicyRef: "eligibility-policy:backend",
+        passportSnapshotRef: "passport-snapshot:candidate-42:1",
+        eligibilityMatchRef: "eligibility-match:candidate-42:backend:2",
+        eligibilityMatchVersion: 2,
+      },
+    });
+    await expect(
+      new SubmitCandidateInterestHandler(staleStore, ids(), canonicalHash).execute(
+        request({ command: aiCommand }),
+      ),
+    ).rejects.toMatchObject({ code: "STALE_OPPORTUNITY_VERSION", httpStatus: 409 });
   });
 
   it("returns the same Receipt for a duplicate command and rejects key reuse", async () => {

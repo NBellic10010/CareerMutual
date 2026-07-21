@@ -1,0 +1,88 @@
+OnlyBoth test report
+Change: Role-separated palettes and comic Home artwork
+Timestamp (UTC): 2026-07-21T12:53:24Z
+Branch: feat/ui-ux-optimization
+Baseline commit: 2f0ae15 feat: add two-layer candidate opportunity feed
+
+Scope
+- Added a Candidate-only coral/oxblood visual theme and generated comic Home background.
+- Added an Employer-only teal/navy visual theme and generated comic Home background.
+- Added signed-role header themes and responsive content-protection overlays.
+- Added a shared decorative artwork component with strict Candidate/Employer asset mapping.
+- Changed no domain state, API, persistence, matching authority, queue order, or privacy boundary.
+
+Generated assets
+1. apps/web/public/brand/candidate-intent-hero.webp
+   PASS: visually inspected after WebP encoding.
+   Dimensions: 1600 x 857.
+   Encoded size: 140,688 bytes.
+   Built-in image-generation prompt summary: industrial editorial comic of one grounded Candidate
+   moving toward an opportunity signal with a sealed work-proof card; character on the far right;
+   dark negative space on the left; coral, copper, warm cream, oxblood, and charcoal only; no text,
+   logos, resumes, company marks, or watermark.
+
+2. apps/web/public/brand/employer-attention-hero.webp
+   PASS: visually inspected after WebP encoding.
+   Dimensions: 1600 x 857.
+   Encoded size: 131,376 bytes.
+   Built-in image-generation prompt summary: matching industrial editorial comic of one accountable
+   Recruiter reviewing anonymous work evidence at a standing desk under a committed-attention
+   signal; character on the far right; dark negative space on the left; teal, cyan-green, cool ivory,
+   deep navy, and charcoal only; no text, logos, resumes, company marks, or watermark.
+
+Changed behavior tests
+3. pnpm --filter @onlyboth/web typecheck
+   PASS: TypeScript completed without diagnostics.
+
+4. pnpm --filter @onlyboth/web test
+   INITIAL FAILURE: one Candidate heading assertion expected continuous plain text after the accent
+   phrase moved into a semantic span for role coloring.
+   FIX: assert the two visible heading phrases and the role-specific asset independently; no product
+   contract was weakened.
+   PASS: 15 test files passed.
+   PASS: 49 tests passed.
+   Coverage added:
+   - Candidate and Employer artwork files are distinct and present.
+   - Artwork remains decorative to assistive technology.
+   - Candidate Home cannot render the Employer artwork.
+   - Employer Home cannot render the Candidate artwork.
+
+Aggregate verification
+5. pnpm check
+   PASS: Prettier check.
+   PASS: ESLint with zero warnings.
+   PASS: repository and test TypeScript checks.
+   PASS: Unit — 44 files, 239 tests.
+   PASS: Integration — 11 files passed, 1 conditionally skipped; 39 tests passed, 2 conditionally skipped.
+   PASS: Security — 6 files, 25 tests.
+   PASS: Replay — 2 files, 7 tests.
+   PASS: documentation contracts — 48 + 38 + 86 assertions.
+
+6. pnpm build
+   PASS: Next.js optimized production build compiled and completed TypeScript, page-data collection,
+   static generation, and route finalization.
+
+7. Live server rendering and static assets
+   PASS: Avery (`candidate-27`) `/candidate` returned HTTP 200 with 4/4 Candidate theme markers.
+   PASS: Sarah (`reviewer-sarah-chen`) `/employer` returned HTTP 200 with 4/4 Employer theme markers.
+   PASS: `/brand/candidate-intent-hero.webp` returned HTTP 200, `image/webp`, 140,688 bytes.
+   PASS: `/brand/employer-attention-hero.webp` returned HTTP 200, `image/webp`, 131,376 bytes.
+   PASS: the same checks were repeated after the production build and development-service restart.
+
+8. Repository hygiene
+   PASS: git diff --check.
+   PASS: generated project assets contain no API key or Session data.
+
+Not run
+- Full-page interactive browser screenshots: BLOCKED because the in-app browser control interface
+  was unavailable. Direct asset inspection and live HTTP rendering are not reported as a substitute
+  for screenshot acceptance.
+- Playwright journeys.
+- Destructive PostgreSQL integration suites.
+- Dedicated MinIO integration suites.
+- LIVE OpenAI evaluations.
+
+Operational note
+- PostgreSQL 16 and MinIO remain available on loopback with existing persistent data.
+- The development service was restarted after the production build and is listening on port 3000.
+- No API key, signed Session token, cookie value, or other secret is present in this report.

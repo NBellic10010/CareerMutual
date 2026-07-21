@@ -5,7 +5,7 @@ import { PrototypeExperience } from "@/src/components/prototype/prototype-experi
 export const metadata: Metadata = {
   title: "No-backend UI prototype",
   description:
-    "A synthetic, local-only walkthrough of OnlyBoth's blind Answer Review and post-answer Resume Reveal experience.",
+    "A synthetic, local-only walkthrough of CareerMutual's blind Answer Review and post-answer Resume Reveal experience.",
 };
 
 export const dynamic = "force-static";

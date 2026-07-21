@@ -1,9 +1,16 @@
 "use client";
 
-import type { EmployerJobDashboard, RoleCategory } from "@onlyboth/contracts";
+import {
+  ELIGIBILITY_BACKGROUND_TAG_CATALOG,
+  type EligibilityBackgroundTag,
+  type EmployerJobDashboard,
+  type RoleCategory,
+} from "@onlyboth/contracts";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
+
+import { RoleHomeArtwork } from "./role-home-artwork";
 
 const CATEGORY_LABELS: Record<RoleCategory, string> = {
   TECHNOLOGY: "Technology",
@@ -21,6 +28,23 @@ const CATEGORY_LABELS: Record<RoleCategory, string> = {
 };
 
 const ROLE_CATEGORIES = Object.keys(CATEGORY_LABELS) as RoleCategory[];
+
+type AttentionCapacityJob = Pick<
+  EmployerJobDashboard["job_posts"][number],
+  "answer_review_wip" | "available_slot_count" | "waiting_interest_count" | "pending_review_count"
+>;
+
+export function summarizeEmployerAttention(jobs: readonly AttentionCapacityJob[]) {
+  return jobs.reduce(
+    (summary, job) => ({
+      slots: summary.slots + job.answer_review_wip,
+      available: summary.available + job.available_slot_count,
+      waiting: summary.waiting + job.waiting_interest_count,
+      reviewDebt: summary.reviewDebt + job.pending_review_count,
+    }),
+    { slots: 0, available: 0, waiting: 0, reviewDebt: 0 },
+  );
+}
 
 function publishedDate(value: string): string {
   return new Date(value).toISOString().slice(0, 10);
@@ -66,6 +90,20 @@ const DEFAULT_DRAFT = {
     },
   ],
   capability_areas: ["Distributed systems", "Payment idempotency", "Operational reasoning"],
+  eligibility_match_policy: {
+    schema_version: "eligibility-match-policy@1",
+    access_mode: "EVIDENCE_MATCH_REQUIRED",
+    taxonomy_version: "eligibility-background-tags@1",
+    accepted_tags: ELIGIBILITY_BACKGROUND_TAG_CATALOG.filter((tag) =>
+      [
+        "Computer Science",
+        "Mathematics",
+        "Information Systems",
+        "Data Engineering",
+        "Backend Engineering",
+      ].includes(tag.public_name),
+    ),
+  },
   critical_question:
     "A payment retry worker can lose Redis during a failover after a provider charge succeeds but before local acknowledgement. Explain the smallest safe recovery design, the invariants you would preserve, and the tests that would falsify your approach.",
   critical_challenge: {
@@ -142,6 +180,18 @@ export function EmployerDashboard({
     "OFF" | "ANSWER_ONLY" | "ANSWER_PLUS_PROCESS"
   >("OFF");
   const [criterion, setCriterion] = useState<string>(DEFAULT_DRAFT.review_criteria[0].statement);
+  const [accessMode, setAccessMode] = useState<"OPEN_TO_ALL" | "EVIDENCE_MATCH_REQUIRED">(
+    "EVIDENCE_MATCH_REQUIRED",
+  );
+  const [selectedTagRefs, setSelectedTagRefs] = useState<string[]>(
+    DEFAULT_DRAFT.eligibility_match_policy.accepted_tags.map((tag) => tag.tag_ref),
+  );
+  const [tagQuery, setTagQuery] = useState("");
+  const [customTags, setCustomTags] = useState<EligibilityBackgroundTag[]>([]);
+  const [customTagName, setCustomTagName] = useState("");
+  const [customTagKind, setCustomTagKind] = useState<"EDUCATION_FIELD" | "WORK_DOMAIN">(
+    "WORK_DOMAIN",
+  );
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<RoleCategory | "ALL">("ALL");
   const [busy, setBusy] = useState(false);
@@ -162,6 +212,10 @@ export function EmployerDashboard({
             .includes(normalized)),
     );
   }, [category, initialDashboard.job_posts, query]);
+  const attentionCapacity = summarizeEmployerAttention(initialDashboard.job_posts);
+  const visibleEligibilityTags = ELIGIBILITY_BACKGROUND_TAG_CATALOG.filter((tag) =>
+    `${tag.public_name} ${tag.tag_kind}`.toLowerCase().includes(tagQuery.trim().toLowerCase()),
+  );
 
   async function call(path: string, body: unknown) {
     const response = await fetch(path, {
@@ -207,6 +261,24 @@ export function EmployerDashboard({
             ],
           },
           answer_review_wip: slots,
+          eligibility_match_policy:
+            accessMode === "OPEN_TO_ALL"
+              ? {
+                  schema_version: "eligibility-match-policy@1",
+                  access_mode: "OPEN_TO_ALL",
+                  open_reasons: ["NO_BACKGROUND_REQUIRED"],
+                }
+              : {
+                  schema_version: "eligibility-match-policy@1",
+                  access_mode: "EVIDENCE_MATCH_REQUIRED",
+                  taxonomy_version: "eligibility-background-tags@1",
+                  accepted_tags: [
+                    ...ELIGIBILITY_BACKGROUND_TAG_CATALOG.filter((tag) =>
+                      selectedTagRefs.includes(tag.tag_ref),
+                    ),
+                    ...customTags,
+                  ],
+                },
           employer_ai_review_policy: aiReviewPolicy,
           review_criteria: [
             {
@@ -243,14 +315,16 @@ export function EmployerDashboard({
   }
 
   return (
-    <main className="functional-shell">
-      <section className="functional-hero compact-hero employer-hero">
+    <main className="functional-shell employer-workspace" data-role-theme="employer">
+      <section className="functional-hero compact-hero employer-hero role-home-hero employer-role-hero">
         <div>
-          <p className="eyebrow">Recruiter / Sarah Chen · attention operations</p>
-          <h1>Every opened answer creates a review debt.</h1>
+          <p className="eyebrow">Recruiter / Sarah Chen · mutual-intent hiring</p>
+          <h1>
+            Commit attention. <span>See the work.</span>
+          </h1>
           <p>
-            Publish sealed, multimodal Critical Challenges and reusable Attention Slots. A Slot is
-            released only after your evidence-linked opinion commits successfully.
+            Turn genuine Candidate interest into bounded work evidence. Every opened answer creates
+            a named review debt that must be settled before the next answer appears.
           </p>
         </div>
         <div className="employer-hero-actions">
@@ -261,6 +335,7 @@ export function EmployerDashboard({
             Create JobPost
           </button>
         </div>
+        <RoleHomeArtwork role="EMPLOYER" />
       </section>
       <section className="wallet-strip" aria-label="Employer Attention wallet">
         <div>
@@ -276,6 +351,36 @@ export function EmployerDashboard({
           <strong>v{initialDashboard.wallet.version}</strong>
         </div>
         <p>Credits stake review capacity. They are never shown to Candidates as a bid.</p>
+      </section>
+      <section className="attention-exchange" aria-label="Backed attention capacity">
+        <header>
+          <div>
+            <p className="section-kicker">Live mutual-intent exchange</p>
+            <h2>Attention turns waiting intent into visible work.</h2>
+          </div>
+          <strong>
+            {attentionCapacity.available}/{attentionCapacity.slots} Slots ready
+          </strong>
+        </header>
+        <div className="attention-exchange-flow">
+          <div className="attention-flow-end attention-flow-candidate">
+            <span>Candidate intent</span>
+            <strong>{attentionCapacity.waiting} waiting</strong>
+          </div>
+          <div className="attention-flow-track" data-active={attentionCapacity.available > 0}>
+            <i aria-hidden="true" />
+            <span>Backed attention gate</span>
+            <i aria-hidden="true" />
+          </div>
+          <div className="attention-flow-end attention-flow-employer">
+            <span>Human review debt</span>
+            <strong>{attentionCapacity.reviewDebt} open</strong>
+          </div>
+        </div>
+        <p>
+          Available Slots pull the next Interest forward. Opening an anonymous answer converts that
+          capacity into review debt until your evidence-linked opinion commits.
+        </p>
       </section>
       {initialDashboard.drafts.filter(({ state }) => state === "DRAFT").length > 0 ? (
         <section className="draft-rail">
@@ -398,9 +503,10 @@ export function EmployerDashboard({
         </p>
       )}
       {composer ? (
-        <div className="modal-backdrop">
+        <div className="modal-backdrop job-composer-backdrop">
           <section
             className="job-composer"
+            data-job-composer="new-job-post"
             role="dialog"
             aria-modal="true"
             aria-labelledby="composer-title"
@@ -442,6 +548,108 @@ export function EmployerDashboard({
                 onChange={(event) => setSlots(Number(event.target.value))}
               />
             </label>
+            <fieldset className="eligibility-policy-composer">
+              <legend>Candidate-side background access</legend>
+              <label>
+                Access mode
+                <select
+                  value={accessMode}
+                  onChange={(event) => setAccessMode(event.target.value as typeof accessMode)}
+                >
+                  <option value="EVIDENCE_MATCH_REQUIRED">
+                    Evidence match required — GPT validates a positive connection
+                  </option>
+                  <option value="OPEN_TO_ALL">Open to all — no background required</option>
+                </select>
+              </label>
+              {accessMode === "EVIDENCE_MATCH_REQUIRED" ? (
+                <>
+                  <label>
+                    Search 100 sealed background tags
+                    <input
+                      type="search"
+                      value={tagQuery}
+                      onChange={(event) => setTagQuery(event.target.value)}
+                      placeholder="Education field or work domain"
+                    />
+                  </label>
+                  <div className="eligibility-tag-selector">
+                    {visibleEligibilityTags.slice(0, 24).map((tag) => (
+                      <label key={tag.tag_ref}>
+                        <input
+                          type="checkbox"
+                          checked={selectedTagRefs.includes(tag.tag_ref)}
+                          disabled={
+                            !selectedTagRefs.includes(tag.tag_ref) &&
+                            selectedTagRefs.length + customTags.length >= 20
+                          }
+                          onChange={(event) =>
+                            setSelectedTagRefs((current) =>
+                              event.target.checked
+                                ? [...current, tag.tag_ref]
+                                : current.filter((reference) => reference !== tag.tag_ref),
+                            )
+                          }
+                        />
+                        <span>{tag.public_name}</span>
+                        <small>{tag.tag_kind.replaceAll("_", " ")}</small>
+                      </label>
+                    ))}
+                  </div>
+                  <div className="custom-eligibility-tag">
+                    <input
+                      value={customTagName}
+                      onChange={(event) => setCustomTagName(event.target.value)}
+                      placeholder="Custom public tag"
+                    />
+                    <select
+                      value={customTagKind}
+                      onChange={(event) =>
+                        setCustomTagKind(event.target.value as typeof customTagKind)
+                      }
+                    >
+                      <option value="WORK_DOMAIN">Work domain</option>
+                      <option value="EDUCATION_FIELD">Education field</option>
+                    </select>
+                    <button
+                      type="button"
+                      className="secondary-button"
+                      disabled={
+                        customTagName.trim().length < 2 ||
+                        customTags.length >= 5 ||
+                        selectedTagRefs.length + customTags.length >= 20
+                      }
+                      onClick={() => {
+                        const normalized = customTagName
+                          .trim()
+                          .toLowerCase()
+                          .replaceAll(/[^a-z0-9]+/gu, "-")
+                          .replaceAll(/^-|-$/gu, "");
+                        setCustomTags((current) => [
+                          ...current,
+                          {
+                            tag_ref: `eligibility-tag:custom:${normalized}@1`,
+                            tag_kind: customTagKind,
+                            public_name: customTagName.trim(),
+                            capability_ref: `background-capability:custom:${normalized}@1`,
+                            source: "RECRUITER_CUSTOM",
+                          },
+                        ]);
+                        setCustomTagName("");
+                      }}
+                    >
+                      Add custom tag
+                    </button>
+                  </div>
+                  <small>
+                    {selectedTagRefs.length + customTags.length}/20 tags · up to 5 custom. These
+                    tags control Candidate-side visibility only; they never rank the queue.
+                  </small>
+                </>
+              ) : (
+                <p>No Passport is required. Every Candidate can see and register Interest.</p>
+              )}
+            </fieldset>
             <label>
               Optional Employer AI Evidence Analyst
               <select

@@ -1,0 +1,107 @@
+Timestamp (UTC): 2026-07-21T18:14:47Z
+Scope: Candidate View Role and Recruiter Operations comic background layers; New JobPost modal layout repair
+Git branch / commit: feat/ui-ux-optimization / 2f0ae15
+Environment: macOS arm64; Node 22+; pnpm 11.9.0; Next.js 16.2.10; PostgreSQL 16 and MinIO healthy on loopback; DEMO_MODE=true for E2E; OPENAI_API_KEY removed from E2E
+
+Generated asset verification
+Command:
+  sips -g pixelWidth -g pixelHeight apps/web/public/brand/candidate-roll-up-sleeves-v1.webp apps/web/public/brand/recruiter-glasses-review-v1.webp
+Exit code: 0
+Relevant output:
+  candidate-roll-up-sleeves-v1.webp: 1600 x 857, 193 KiB
+  recruiter-glasses-review-v1.webp: 1600 x 857, 201 KiB
+  Both outputs were visually inspected after project-local WebP conversion.
+
+Focused Unit tests
+Command:
+  pnpm exec vitest run --config vitest.unit.config.ts apps/web/src/components/functional/role-page-artwork.test.tsx apps/web/src/components/functional/candidate-job-detail-ui.test.tsx apps/web/src/components/functional/employer-review-analyst-ui.test.tsx apps/web/src/components/functional/employer-dashboard-ui.test.ts
+Exit code: 0
+Output:
+  Test Files  4 passed (4)
+  Tests       8 passed (8)
+
+TypeScript
+Command:
+  pnpm typecheck
+Exit code: 0
+Relevant output:
+  Scope: 14 of 15 workspace projects
+  packages and apps/web/apps/worker typecheck: Done
+  test TypeScript project: passed
+
+Production build
+Command:
+  pnpm build
+Exit code: 0
+Relevant output:
+  Next.js 16.2.10
+  Compiled successfully
+  TypeScript finished
+  Static page generation 10/10
+  apps/web build: Done
+
+PostgreSQL + MinIO Playwright E2E
+Command:
+  set -a; . ./.env.local; set +a; unset OPENAI_API_KEY; PLAYWRIGHT_PORT=3100 pnpm test:e2e
+Exit code: 0
+Output:
+  Running 6 tests using 1 worker
+  1. CareerMutual branding and performance-first login remain intact on mobile
+  2. Candidate Eligibility Feed differs by Passport evidence while OPEN_TO_ALL remains shared
+  3. six Candidate Passports produce distinct many-to-many Match Lab feeds
+  4. persistent roles complete the backed application and sequential human-review loop
+  5. Candidate Evidence Passport remains operable at a 390px viewport
+  6. full-screen Sandbox records browser focus and seals persisted work on the second departure
+  6 passed (14.4s)
+
+Aggregate check
+Command:
+  pnpm check
+Exit code: 0
+Output:
+  Prettier: all matched files use Prettier code style
+  ESLint: passed with max warnings 0
+  TypeScript: all configured workspaces and tests passed
+  Unit: 50 files passed; 256 tests passed
+  Integration: 12 files passed, 1 conditional file skipped; 45 tests passed, 2 conditional tests skipped
+  Security: 6 files passed; 25 tests passed
+  Replay: 2 files passed; 7 tests passed
+  Documentation contracts: 49 + 40 + 87 assertions passed; 0 failed
+
+Diff and focused-test-marker checks
+Commands:
+  git diff --check
+  rg -n "\\.(only|skip)\\(" tests apps packages || true
+Exit codes: 0 / 0
+Output:
+  git diff --check: no output
+  marker scan: no .only or .skip call markers found
+
+Post-HANDOFF documentation verification
+Command:
+  pnpm test:docs; git diff --check; rg -n "\\.(only|skip)\\(" tests apps packages || true
+Exit code: 0
+Output:
+  Agent/HANDOFF/README contract: 49 passed, 0 failed
+  AI engineering design contract: 40 passed, 0 failed
+  Product spirit/design contract: 87 passed, 0 failed
+  git diff --check: no output
+  marker scan: no .only or .skip call markers found
+
+Summary
+Passed:
+  - Generated-asset size and visual inspection
+  - Focused Unit tests
+  - TypeScript
+  - Production build
+  - PostgreSQL/MinIO Playwright E2E at desktop and 390px layout boundaries
+  - Aggregate check
+  - Diff and test-marker checks
+Failed: none
+Skipped:
+  - Two pre-existing environment-conditional Integration assertions reported by the aggregate suite
+Blocked: none
+Not run:
+  - Full pnpm test:postgres: no migration, database constraint, state machine, or persistence implementation changed; the dedicated PostgreSQL E2E vertical passed.
+  - LIVE AI evals: no AI schema, prompt, model, adapter, or business authority changed.
+Known pre-existing failures: none observed in the commands above.

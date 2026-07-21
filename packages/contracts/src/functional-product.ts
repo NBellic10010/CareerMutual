@@ -9,6 +9,7 @@ import {
   EmployerAiReviewProjectionSchema,
   ReviewCriterionSchema,
 } from "./employer-review-analyst";
+import { EligibilityMatchPolicySchema } from "./eligibility-policy";
 
 export const CandidateAiPolicySchema = z.enum(["PROHIBITED", "PLATFORM_ASSISTANT_ALLOWED"]);
 
@@ -172,6 +173,13 @@ export const JobPostDraftInputSchema = z
       .min(1)
       .max(20),
     capability_areas: z.array(z.string().trim().min(2).max(300)).min(1).max(20),
+    eligibility_match_policy: z
+      .lazy(() => EligibilityMatchPolicySchema)
+      .default({
+        schema_version: "eligibility-match-policy@1",
+        access_mode: "OPEN_TO_ALL",
+        open_reasons: ["NO_BACKGROUND_REQUIRED"],
+      }),
     critical_question: z.string().trim().min(20).max(4_000),
     critical_challenge: CriticalChallengeSchema.default(LegacyCriticalChallenge),
     allowed_assumptions: z.array(z.string().trim().min(2).max(500)).max(20),

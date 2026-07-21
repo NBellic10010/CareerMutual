@@ -4,6 +4,7 @@ import { useReducer, type Dispatch } from "react";
 
 import { CandidatePrototype } from "./prototype-candidate";
 import { EmployerPrototype } from "./prototype-employer";
+import { CareerMutualTrademark } from "../career-mutual-trademark";
 import styles from "./prototype.module.css";
 import {
   INITIAL_PROTOTYPE_STATE,
@@ -54,7 +55,10 @@ export function PrototypeCanvas({ state, dispatch }: PrototypeCanvasProps) {
 
       <header className={styles.prototypeHeader}>
         <div className={styles.prototypeTitle}>
-          <p>OnlyBoth / Attention before labor</p>
+          <p>
+            <CareerMutualTrademark />
+            <span> / Attention before labor</span>
+          </p>
           <h1>
             Work earns the reveal.
             <span>Not pedigree.</span>

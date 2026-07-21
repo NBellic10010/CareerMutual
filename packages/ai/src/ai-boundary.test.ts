@@ -98,7 +98,7 @@ describe("prompt registry", () => {
   it("forbids tools and remote conversation state for every operation", () => {
     const promptSpecs = Object.values(PROMPT_REGISTRY);
 
-    expect(promptSpecs).toHaveLength(6);
+    expect(promptSpecs).toHaveLength(7);
     expect(promptSpecs.every((spec) => spec.permitsTools === false)).toBe(true);
     expect(promptSpecs.every((spec) => spec.permitsRemoteConversationState === false)).toBe(true);
     expect(new Set(promptSpecs.map((spec) => spec.promptId)).size).toBe(promptSpecs.length);

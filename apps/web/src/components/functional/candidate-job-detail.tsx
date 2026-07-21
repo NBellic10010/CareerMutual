@@ -1,11 +1,12 @@
 "use client";
 
-import type { CandidateAnswerSessionProjection, CandidateJobDetail } from "@onlyboth/contracts";
+import type { CandidateAnswerSessionProjection, CandidateJobDetailV2 } from "@onlyboth/contracts";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { CriticalChallengeView } from "./critical-challenge-view";
 import { AnswerSandbox } from "./answer-sandbox";
+import { RolePageArtwork } from "./role-page-artwork";
 
 type Credit = Readonly<{
   available_credits: number;
@@ -22,13 +23,16 @@ export function CandidateJobDetailView({
   csrfToken,
   candidateRef,
 }: {
-  readonly job: CandidateJobDetail;
+  readonly job: CandidateJobDetailV2;
   readonly credit: Credit;
   readonly csrfToken: string;
   readonly candidateRef: string;
 }) {
   const router = useRouter();
   const [showConsent, setShowConsent] = useState(false);
+  const [workAuthorization, setWorkAuthorization] = useState(false);
+  const [timezoneOverlap, setTimezoneOverlap] = useState("");
+  const [requiredLanguage, setRequiredLanguage] = useState("");
   const [checked, setChecked] = useState([false, false, false, false, false, false, false]);
   const [sandboxSession, setSandboxSession] = useState<CandidateAnswerSessionProjection | null>(
     null,
@@ -59,18 +63,32 @@ export function CandidateJobDetailView({
     setError(null);
     try {
       await command(`/api/v1/candidate/opportunities/${job.opportunity_ref}/interests`, {
-        schema_version: "candidate-interest-command@1",
+        schema_version: "candidate-interest-command@2",
         hard_facts: [
-          { fact_ref: `${candidateRef}:work-auth`, fact_type: "work_authorization", value: true },
-          { fact_ref: `${candidateRef}:timezone`, fact_type: "timezone_overlap", value: "ET" },
+          {
+            fact_ref: `${candidateRef}:work-auth`,
+            fact_type: "work_authorization",
+            value: workAuthorization,
+          },
+          {
+            fact_ref: `${candidateRef}:timezone`,
+            fact_type: "timezone_overlap",
+            value: timezoneOverlap,
+          },
           {
             fact_ref: `${candidateRef}:language`,
             fact_type: "required_language",
-            value: "English",
+            value: requiredLanguage,
           },
         ],
         consent_version: job.terms_version,
         expected_opportunity_version: job.opportunity_version,
+        background_access_basis:
+          job.eligibility_access.access_basis === "AI_POSITIVE_EVIDENCE"
+            ? "AI_POSITIVE_EVIDENCE"
+            : "OPEN_TO_ALL",
+        eligibility_match_ref: job.eligibility_access.match_ref,
+        eligibility_match_version: job.eligibility_access.match_version,
       });
       router.refresh();
     } catch (cause) {
@@ -128,7 +146,11 @@ export function CandidateJobDetailView({
   }
 
   return (
-    <main className="functional-shell">
+    <main
+      className="functional-shell candidate-workspace candidate-job-detail-workspace"
+      data-role-theme="candidate"
+    >
+      <RolePageArtwork surface="CANDIDATE_ROLE" />
       <a className="back-link" href="/candidate">
         ← Matched opportunities
       </a>
@@ -147,29 +169,32 @@ export function CandidateJobDetailView({
         </aside>
       </section>
       <div className="job-detail-grid">
-        <section className="functional-card">
-          <p className="section-kicker">Public contract</p>
-          <h2>What the work asks for</h2>
-          <ul className="clean-list">
-            {job.public_hard_requirements.map((item) => (
-              <li key={item}>{item}</li>
-            ))}
-          </ul>
-          <h3>Capability scope</h3>
-          <div className="tag-row">
-            {job.capability_areas.map((item) => (
-              <span key={item}>{item}</span>
-            ))}
-          </div>
-          <div className="challenge-preview-callout">
-            <span>Challenge formats</span>
-            <strong>{job.challenge_part_kinds.join(" + ")}</strong>
-            <p>
-              The entire ordered Challenge is disclosed before you register Interest or spend a
-              Credit.
-            </p>
-          </div>
-        </section>
+        <div className="job-detail-primary">
+          <section className="functional-card job-contract-card">
+            <p className="section-kicker">Public contract</p>
+            <h2>What the work asks for</h2>
+            <ul className="clean-list">
+              {job.public_hard_requirements.map((item) => (
+                <li key={item}>{item}</li>
+              ))}
+            </ul>
+            <h3>Capability scope</h3>
+            <div className="tag-row">
+              {job.capability_areas.map((item) => (
+                <span key={item}>{item}</span>
+              ))}
+            </div>
+            <div className="challenge-preview-callout">
+              <span>Challenge formats</span>
+              <strong>{job.challenge_part_kinds.join(" + ")}</strong>
+              <p>
+                The entire ordered Challenge is disclosed before you register Interest or spend a
+                Credit.
+              </p>
+            </div>
+          </section>
+          <CriticalChallengeView challenge={job.critical_challenge} />
+        </div>
         <aside className="functional-card action-card">
           <span className={`state-pill state-${job.interest_state.toLowerCase()}`}>
             {job.interest_state.replaceAll("_", " ")}
@@ -179,6 +204,44 @@ export function CandidateJobDetailView({
             Registering Interest costs nothing. Starting a backed answer costs exactly 1 Credit;
             that Credit cannot improve your position in the queue.
           </p>
+          {job.interest_state === "NOT_REGISTERED" ? (
+            <fieldset className="candidate-hard-facts">
+              <legend>Eligibility declarations</legend>
+              <div className="candidate-hard-facts-heading">
+                <span>Hard constraints</span>
+                <strong>Declare legal and logistical requirements</strong>
+              </div>
+              <label className="candidate-hard-fact-checkbox">
+                <input
+                  type="checkbox"
+                  checked={workAuthorization}
+                  onChange={(event) => setWorkAuthorization(event.target.checked)}
+                />
+                <span>I meet the stated work-authorization requirement</span>
+              </label>
+              <div className="candidate-hard-fact-fields">
+                <label>
+                  <span>Required time-zone overlap</span>
+                  <input
+                    value={timezoneOverlap}
+                    placeholder="For example: ET"
+                    onChange={(event) => setTimezoneOverlap(event.target.value)}
+                  />
+                </label>
+                <label>
+                  <span>Working language</span>
+                  <input
+                    value={requiredLanguage}
+                    placeholder="For example: English"
+                    onChange={(event) => setRequiredLanguage(event.target.value)}
+                  />
+                </label>
+              </div>
+              <small className="candidate-hard-facts-note">
+                These declarations are checked by deterministic code, never inferred by GPT.
+              </small>
+            </fieldset>
+          ) : null}
           {job.active_answer_session_ref !== null ? (
             <button
               className="primary-button"
@@ -190,7 +253,12 @@ export function CandidateJobDetailView({
           ) : job.interest_state === "NOT_REGISTERED" ? (
             <button
               className="primary-button"
-              disabled={busy}
+              disabled={
+                busy ||
+                !workAuthorization ||
+                timezoneOverlap.trim().length === 0 ||
+                requiredLanguage.trim().length === 0
+              }
               type="button"
               onClick={() => void registerInterest()}
             >
@@ -212,7 +280,6 @@ export function CandidateJobDetailView({
           )}
         </aside>
       </div>
-      <CriticalChallengeView challenge={job.critical_challenge} />
       <section className="functional-card analyst-disclosure-card">
         <p className="section-kicker">Sealed review policy</p>
         <h2>Employer AI Evidence Analyst: {job.employer_ai_review_policy.replaceAll("_", " ")}</h2>

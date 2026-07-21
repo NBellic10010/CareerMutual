@@ -20,6 +20,11 @@ const childEnvironment = Object.fromEntries(
     (entry): entry is [string, string] => entry[1] !== undefined && entry[0] !== "OPENAI_API_KEY",
   ),
 );
+const webPort = Number(process.env.PLAYWRIGHT_PORT ?? "3000");
+if (!Number.isInteger(webPort) || webPort < 1 || webPort > 65_535) {
+  throw new Error("PLAYWRIGHT_PORT must be a valid TCP port.");
+}
+const baseURL = `http://127.0.0.1:${webPort}`;
 
 export default defineConfig({
   testDir: "./tests/e2e",
@@ -29,13 +34,13 @@ export default defineConfig({
   timeout: 120_000,
   expect: { timeout: 2_000 },
   use: {
-    baseURL: "http://127.0.0.1:3000",
+    baseURL,
     trace: "retain-on-failure",
   },
   reporter: [["line"], ["html", { open: "never" }]],
   webServer: {
-    command: "pnpm --filter @onlyboth/web start",
-    url: "http://127.0.0.1:3000",
+    command: `pnpm --filter @onlyboth/web exec next start --hostname 127.0.0.1 --port ${webPort}`,
+    url: baseURL,
     reuseExistingServer: false,
     timeout: 120_000,
     env: {

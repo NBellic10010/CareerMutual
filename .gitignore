@@ -16,6 +16,7 @@ playwright-report-live-analyst/
 *.local
 .envrc
 .direnv/
+.railway/
 
 # Credentials, signing material, and provider/service-account exports.
 .secrets/

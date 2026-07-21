@@ -13,6 +13,7 @@
     "dev": "pnpm --parallel --filter @onlyboth/web --filter @onlyboth/worker dev",
     "dev:web": "pnpm --filter @onlyboth/web dev",
     "dev:worker": "pnpm --filter @onlyboth/worker dev",
+    "start:railway": "node scripts/start-railway.mjs",
     "clean": "pnpm -r --if-present clean",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
@@ -42,6 +43,7 @@
     "demo:reset": "pnpm --filter @onlyboth/worker demo:reset",
     "demo:reset:matching": "pnpm --filter @onlyboth/worker demo:reset:matching",
     "demo:reset:functional": "tsx scripts/reset-functional-demo.ts",
+    "demo:evaluate:matching-lab": "tsx scripts/evaluate-candidate-match-lab.ts",
     "worker:once": "pnpm --filter @onlyboth/worker once",
     "live:smoke": "pnpm --filter @onlyboth/worker live:smoke"
   },

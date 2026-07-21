@@ -2,15 +2,16 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 
 import { SiteHeader } from "@/src/components/app-shell";
+import { CareerMutualTrademark } from "@/src/components/career-mutual-trademark";
 
 import "./globals.css";
 
 export const metadata: Metadata = {
   title: {
-    default: "OnlyBoth",
-    template: "%s · OnlyBoth",
+    default: "CareerMutual",
+    template: "%s · CareerMutual",
   },
-  description: "Label-blind, attention-backed work proofs.",
+  description: "Mutual-intent hiring with label-blind answers and backed human attention.",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
@@ -20,8 +21,11 @@ export default function RootLayout({ children }: Readonly<{ children: ReactNode 
         <SiteHeader />
         {children}
         <footer className="site-footer">
-          <span>OnlyBoth · Persistent blind-review product slice</span>
-          <span>Hide the labels. Stake the attention. Test the work.</span>
+          <span className="site-footer-brand">
+            <CareerMutualTrademark />
+            <span>Mutual-intent hiring</span>
+          </span>
+          <span>Signal intent. Commit attention. Let the work earn the conversation.</span>
         </footer>
       </body>
     </html>

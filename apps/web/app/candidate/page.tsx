@@ -13,7 +13,7 @@ export const runtime = "nodejs";
 export default async function CandidatePage() {
   const actor = await resolveFunctionalActor("CANDIDATE");
   if (actor === null) redirect("/login");
-  const feed = await getFunctionalServices().candidateDiscoveryStore.getCandidateOpportunityFeed(
+  const feed = await getFunctionalServices().candidateEligibilityStore.getCandidateOpportunityFeed(
     actor.actorId,
   );
   const identity = findSyntheticDemoActor(actor.actorId);

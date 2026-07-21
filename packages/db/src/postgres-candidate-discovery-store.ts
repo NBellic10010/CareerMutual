@@ -11,6 +11,7 @@ import {
   CandidateEducationRecordSchema,
   CandidateEvidencePassportProjectionSchema,
   CandidateEvidencePassportReceiptSchema,
+  CandidateEligibilityProjectionSchema,
   CandidateJobDiscoveryInputSchema,
   CandidateJobDiscoveryProjectionSchema,
   CandidateJobDiscoverySignalSchema,
@@ -689,6 +690,19 @@ export class PostgresCandidateDiscoveryStore
       const signalSetRef = input.ids.nextId("signal-set");
       const opportunities = await loadOpenOpportunities(client);
       const currentJobSetHash = jobSetHash(opportunities);
+      const gatedJobs = await client.query<{
+        opportunity_ref: string;
+        contract_hash: string;
+      }>(
+        `SELECT policy.opportunity_ref, contract.contract_hash
+           FROM job_eligibility_match_policies AS policy
+           JOIN opportunities AS opportunity ON opportunity.id = policy.opportunity_ref
+           JOIN sealed_capability_contracts AS contract
+             ON contract.contract_version_ref = opportunity.current_contract_version_ref
+          WHERE policy.access_mode = 'EVIDENCE_MATCH_REQUIRED'
+            AND opportunity.status = 'OPEN'
+          ORDER BY opportunity.created_at DESC, opportunity.id`,
+      );
       await client.query(
         `INSERT INTO candidate_evidence_passport_snapshots (
            snapshot_ref, candidate_ref, snapshot_version, draft_version,
@@ -711,6 +725,13 @@ export class PostgresCandidateDiscoveryStore
             SET status = 'STALE', completed_at = COALESCE(completed_at, $1),
                 reason_code = 'PASSPORT_SUPERSEDED'
           WHERE candidate_ref = $2 AND status IN ('READY', 'GENERATING')`,
+        [now, candidateRef],
+      );
+      await client.query(
+        `UPDATE candidate_eligibility_match_sets
+            SET status = 'STALE', reason_code = 'PASSPORT_SUPERSEDED',
+                completed_at = COALESCE(completed_at, $1)
+          WHERE candidate_ref = $2 AND status IN ('MATCHING', 'READY', 'PARTIAL')`,
         [now, candidateRef],
       );
       await client.query(
@@ -771,6 +792,71 @@ export class PostgresCandidateDiscoveryStore
           signal_set_ref: signalSetRef,
         },
       });
+      const priorEligibility = await client.query<{ projection_version: number }>(
+        `SELECT projection_version FROM candidate_eligibility_projections
+          WHERE candidate_ref = $1 FOR UPDATE`,
+        [candidateRef],
+      );
+      const eligibilityProjection = CandidateEligibilityProjectionSchema.parse({
+        schema_version: "candidate-eligibility-projection@1",
+        candidate_ref: candidateRef,
+        status: gatedJobs.rows.length === 0 ? "READY" : "MATCHING",
+        passport_snapshot_ref: snapshotRef,
+        projection_version: (priorEligibility.rows[0]?.projection_version ?? 0) + 1,
+        reason_code: null,
+        updated_at: now.toISOString(),
+      });
+      await client.query(
+        `INSERT INTO candidate_eligibility_projections (
+           candidate_ref, projection_version, passport_snapshot_ref, status,
+           reason_code, projection_json, updated_at
+         ) VALUES ($1, $2, $3, $4, NULL, $5::jsonb, $6)
+         ON CONFLICT (candidate_ref) DO UPDATE
+           SET projection_version = EXCLUDED.projection_version,
+               passport_snapshot_ref = EXCLUDED.passport_snapshot_ref,
+               status = EXCLUDED.status,
+               reason_code = EXCLUDED.reason_code,
+               projection_json = EXCLUDED.projection_json,
+               updated_at = EXCLUDED.updated_at`,
+        [
+          candidateRef,
+          eligibilityProjection.projection_version,
+          snapshotRef,
+          eligibilityProjection.status,
+          JSON.stringify(eligibilityProjection),
+          now,
+        ],
+      );
+      if (gatedJobs.rows.length > 0) {
+        const matchSetRef = `eligibility-match-set:${snapshotRef}`;
+        const eligibilityJobSetHash = sha256(gatedJobs.rows);
+        await client.query(
+          `INSERT INTO candidate_eligibility_match_sets (
+             match_set_ref, candidate_ref, passport_snapshot_ref, job_set_hash,
+             status, created_at
+           ) VALUES ($1, $2, $3, $4, 'MATCHING', $5)`,
+          [matchSetRef, candidateRef, snapshotRef, eligibilityJobSetHash, now],
+        );
+        await client.query(
+          `INSERT INTO outbox_messages (
+             message_id, message_type, message_version, event_id, idempotency_key,
+             correlation_id, payload, available_at
+           ) VALUES ($1, 'CandidateEligibilityRequested', 1, $2, $3, $4, $5::jsonb, $6)`,
+          [
+            input.ids.nextId("outbox"),
+            eventId,
+            `CandidateEligibilityRequested:${matchSetRef}`,
+            input.context.correlationId,
+            JSON.stringify({
+              matchSetRef,
+              candidateRef,
+              snapshotRef,
+              opportunityRefs: gatedJobs.rows.map((job) => job.opportunity_ref),
+            }),
+            now,
+          ],
+        );
+      }
       await enqueueDiscovery(client, {
         messageId: outboxId,
         eventId,

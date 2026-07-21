@@ -1,0 +1,119 @@
+Timestamp (UTC): 2026-07-21T14:32:21Z
+Scope: Six-Candidate Eligibility Match Lab JobPost fixtures, persistent Candidate Feed matrix, and read-only LIVE GPT diagnostic
+Git branch / commit: feat/ui-ux-optimization / 2f0ae15 (working tree already contained unrelated uncommitted product and UI work)
+Environment: DEMO_MODE=true; local PostgreSQL 16 and MinIO; Candidate Feed uses synthetic preloaded Eligibility outputs; LIVE diagnostic used Worker-only gpt-5.6-sol and did not persist business state
+
+Files changed for this scope:
+- scripts/functional-demo-job-fixtures.ts
+- scripts/reset-functional-demo.ts
+- scripts/evaluate-candidate-match-lab.ts
+- tests/integration/workspace-shape.test.ts
+- tests/e2e/functional-product.spec.ts
+- tests/docs/product-spirit-contract.sh
+- package.json
+- AGENTS.md
+- README.md
+- OnlyBoth-产品精神.md
+- OnlyBoth-产品方案.md
+- OnlyBoth-工程设计.md
+- HANDOFF.md
+- test-reports/20260721T143221Z-six-candidate-match-lab.log
+
+Commands and results:
+
+1. pnpm vitest run --config vitest.integration.config.ts tests/integration/workspace-shape.test.ts && pnpm typecheck
+Exit code: 0
+Relevant output:
+  Test Files  1 passed (1)
+  Tests       8 passed (8)
+  All 14 applicable workspace project typechecks plus tsconfig.tests.json passed.
+
+2. set -a; source .env.local; set +a; pnpm demo:reset:functional
+Exit code: 0
+Final relevant output:
+  {"outcome":"FUNCTIONAL_DEMO_READY","candidate_credit":3,"candidate_feed_count":4,"published_job_post_count":27,"employer_ai_review_policy":"OFF","synthetic_candidate_count":7}
+
+The first reset run also exited 0 but reported candidate_feed_count=27 because the reset diagnostic used the unfiltered base FunctionalProductStore. Database inspection showed 26 EVIDENCE_MATCH_REQUIRED policies, one OPEN_TO_ALL policy, three Candidate 42 positive matches, and 23 negative matches. The diagnostic was corrected to use PostgresCandidateEligibilityStore, then the reset reported the authorized Candidate 42 Feed count of four. No access-control implementation was widened.
+
+3. Read-only PostgresCandidateEligibilityStore matrix inspection for six Candidate refs
+Exit code: 0
+Relevant output:
+  candidate-42: 4 roles — Customer Success Lead; Payment Workflow Backend Engineer; Payments Reliability Incident Lead; Senior Backend Reliability Engineer
+  candidate-17: 4 roles — Customer Success Lead; Payment Workflow Backend Engineer; Payments Reliability Incident Lead; Senior Backend Reliability Engineer
+  candidate-03: 3 roles — Customer Success Lead; Partner Event Integration Engineer; Payment Workflow Backend Engineer
+  candidate-08: 3 roles — Cloud Recovery Platform Engineer; Customer Success Lead; Payments Reliability Incident Lead
+  candidate-11: 2 roles — Customer Success Lead; Financial Data Reconciliation Engineer
+  candidate-19: 3 roles — Customer Success Lead; Distributed Systems Verification Engineer; Senior Backend Reliability Engineer
+
+4. set -a; source .env.local; set +a; pnpm demo:evaluate:matching-lab
+Exit code: 0
+Hard-gate result: six of six Structured Outputs passed CandidateEligibilityMatchValidator. No result was persisted.
+Actual validated LIVE positive-role output:
+  candidate-42: Cloud Recovery Platform Engineer; Distributed Systems Verification Engineer; Partner Event Integration Engineer; Payment Workflow Backend Engineer; Payments Reliability Incident Lead
+  candidate-17: Cloud Recovery Platform Engineer; Financial Data Reconciliation Engineer; Partner Event Integration Engineer; Payment Workflow Backend Engineer; Payments Reliability Incident Lead
+  candidate-03: Cloud Recovery Platform Engineer; Partner Event Integration Engineer; Payments Reliability Incident Lead
+  candidate-08: Cloud Recovery Platform Engineer; Partner Event Integration Engineer; Payments Reliability Incident Lead
+  candidate-11: Financial Data Reconciliation Engineer
+  candidate-19: Distributed Systems Verification Engineer; Payment Workflow Backend Engineer
+
+Diagnostic finding: the current positive-OR Eligibility semantics and broad synthetic Work Sample summaries over-unlock adjacent technology roles. Candidate 42 and 17 each received five of six positive roles, while Candidate 03 and 08 received the same three-role set. This is a matching-quality finding, not a schema, privacy, authorization, or runtime failure. The curated offline Feed remains explicitly SYNTHETIC_PRELOADED and is not described as the LIVE result.
+
+5. pnpm test:e2e
+Exit code: 1
+Relevant output:
+  Error: http://127.0.0.1:3000 is already used.
+Cause: the visible development server was intentionally left running.
+
+6. pnpm build
+Exit code: 0
+Relevant output:
+  Next.js optimized production build compiled, typechecked, generated 10 static pages, and completed successfully.
+
+7. PLAYWRIGHT_PORT=3201 pnpm test:e2e
+Exit code: 1
+Relevant output:
+  4 passed, 1 failed.
+  The existing Voice Memo presigned PUT failed in-browser because local MinIO CORS permits the project's test origin 3100, not ad hoc port 3201.
+  This was an environment/origin mismatch, not a Match Lab assertion failure. The new six-Candidate test passed in this run.
+
+8. PLAYWRIGHT_PORT=3100 pnpm test:e2e
+Exit code: 0
+Relevant output:
+  Running 5 tests using 1 worker
+  Candidate Eligibility Feed differs by Passport evidence while OPEN_TO_ALL remains shared — passed
+  six Candidate Passports produce distinct many-to-many Match Lab feeds — passed
+  persistent roles complete the backed application and sequential human-review loop — passed
+  Candidate Evidence Passport remains operable at a 390px viewport — passed
+  full-screen Sandbox records browser focus and seals persisted work on the second departure — passed
+  5 passed (13.0s)
+
+9. pnpm check
+Exit code: 1
+Relevant output before correction:
+  Unit 250 passed; Integration 43 passed and 2 conditional skips; Security 25 passed; Replay 7 passed.
+  Documentation contract: 86 passed, 1 failed because it still expected the old exact engineering-design phrase "1 个主工程岗和 20 个跨领域岗位".
+Correction: updated the contract to require the new "1 + 20 + 6 Match Lab" statement.
+
+10. pnpm check && git diff --check && no-.only/.skip scan
+Exit code: 0
+Relevant output:
+  Prettier: passed
+  ESLint: passed with zero warnings
+  Typecheck: passed
+  Unit: 47 files, 250 tests passed
+  Integration: 12 files passed, 1 conditionally skipped; 43 tests passed, 2 conditionally skipped
+  Security: 6 files, 25 tests passed
+  Replay: 2 files, 7 tests passed
+  Documentation: 49 Agent assertions, 40 AI-design assertions, and 87 product/engineering assertions passed
+  git diff --check: passed
+  .only/.skip scan: no markers found
+
+Summary:
+- Passed: fixture/schema test, typecheck, functional demo reset, persistent six-Candidate Feed inspection, LIVE six-Candidate validator run, production build, isolated-port Playwright 5/5, full pnpm check, diff check, and skip-marker scan.
+- Failed then corrected: documentation contract with obsolete seed-count text.
+- Environment failures retained: port 3000 already in use; port 3201 outside configured MinIO CORS origins.
+- Skipped: two pre-existing conditional Integration tests reported by pnpm check.
+- Not run: full pnpm test:postgres because this scope adds no migration or persistence contract; the actual PostgreSQL reset and Playwright vertical were run against dedicated databases. MinIO's relevant upload path passed in the final Playwright run.
+
+Known risk / next action:
+- LIVE matching is too broad for several adjacent technology profiles. Tighten the positive-edge validator or Job tag/capability specificity, then rerun this exact six-by-six Match Lab before replacing the disclosed synthetic preloaded Feed with recorded LIVE outputs.

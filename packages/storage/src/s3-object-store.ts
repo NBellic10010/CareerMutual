@@ -6,6 +6,7 @@ import {
   GetObjectCommand,
   HeadBucketCommand,
   HeadObjectCommand,
+  PutBucketCorsCommand,
   PutObjectCommand,
   S3Client,
 } from "@aws-sdk/client-s3";
@@ -26,6 +27,31 @@ export interface S3ObjectStoreOptions {
   readonly accessKeyId: string;
   readonly secretAccessKey: string;
   readonly forcePathStyle?: boolean;
+}
+
+export function resolveS3ForcePathStyle(value: string | undefined): boolean {
+  if (value === undefined || value === "true") return true;
+  if (value === "false") return false;
+  throw new Error("OBJECT_STORE_FORCE_PATH_STYLE must be either 'true' or 'false'.");
+}
+
+export function resolveObjectStoreAllowedOrigins(value: string | undefined): readonly string[] {
+  if (value === undefined) {
+    return [
+      "http://127.0.0.1:3000",
+      "http://localhost:3000",
+      "http://127.0.0.1:3100",
+      "http://localhost:3100",
+    ];
+  }
+  return [
+    ...new Set(
+      value
+        .split(",")
+        .map((origin) => origin.trim())
+        .filter(Boolean),
+    ),
+  ];
 }
 
 function checksum(body: Uint8Array): string {
@@ -82,11 +108,28 @@ export class S3ObjectStore implements ObjectStorePort {
 
   /** Explicit provisioning operation; request handlers never create buckets. */
   public async initializePrivateBucket(allowedOrigins: readonly string[]): Promise<void> {
-    void allowedOrigins;
     try {
       await this.#client.send(new HeadBucketCommand({ Bucket: this.#bucket }));
     } catch {
       await this.#client.send(new CreateBucketCommand({ Bucket: this.#bucket }));
+    }
+    if (allowedOrigins.length > 0) {
+      await this.#client.send(
+        new PutBucketCorsCommand({
+          Bucket: this.#bucket,
+          CORSConfiguration: {
+            CORSRules: [
+              {
+                AllowedOrigins: [...allowedOrigins],
+                AllowedMethods: ["GET", "PUT", "HEAD"],
+                AllowedHeaders: ["*"],
+                ExposeHeaders: ["ETag", "x-amz-checksum-sha256"],
+                MaxAgeSeconds: 3_600,
+              },
+            ],
+          },
+        }),
+      );
     }
   }
 

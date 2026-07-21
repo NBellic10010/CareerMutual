@@ -1,0 +1,81 @@
+Timestamp (UTC): 2026-07-21T12:10:10Z
+Scope: Candidate two-layer opportunity feed (Matched for you / Explore all jobs)
+Git branch / base commit: feat/ui-ux-optimization / 38f43f26fcefe9b329ef585b4d43b5a5f5a37647
+Environment: local TypeScript pnpm monorepo; PostgreSQL and MinIO available on loopback; no LIVE AI call required
+
+INITIAL PRECHECKS AND FIXES
+
+1. Initial formatting invocation included three shell contract files.
+Command: pnpm exec prettier --write <changed files including tests/docs/*.sh>
+Observed result: Prettier formatted the supported TypeScript, CSS, and Markdown files, then emitted
+"No parser could be inferred" for each shell file. The shell contract files were not changed by
+Prettier. A corrected supported-file-only formatting check passed later.
+
+2. Initial Web typecheck after adding the selector tests.
+Command: pnpm --filter @onlyboth/web typecheck
+Exit code: 2
+Relevant output: the direct selector fixture omitted role_category, employer_ai_review_policy, and
+challenge_part_kinds because the earlier schema-only test relied on Zod defaults.
+Resolution: completed the fixture DTO; no runtime type or contract was weakened.
+
+AFFECTED VERIFICATION
+
+Command: pnpm --filter @onlyboth/web typecheck
+Exit code: 0
+Output: tsc --noEmit completed without diagnostics.
+
+Command: pnpm --filter @onlyboth/web test
+Exit code: 0
+Output:
+Test Files  13 passed (13)
+Tests       43 passed (43)
+
+Command: pnpm test:docs
+Exit code: 0
+Output:
+agents-contract:                48 passed, 0 failed
+ai-engineering-design-contract: 38 passed, 0 failed
+product-spirit-contract:        86 passed, 0 failed
+
+FULL REGRESSION
+
+Command: pnpm check
+Exit code: 0
+Relevant output:
+Formatting:  PASS
+Lint:        PASS
+Typecheck:   PASS (14 of 15 workspace projects)
+Unit:        42 files passed; 233 tests passed
+Integration: 11 files passed, 1 conditionally skipped; 39 tests passed, 2 conditionally skipped
+Security:    6 files passed; 25 tests passed
+Replay:      2 files passed; 7 tests passed
+Docs:        48 + 38 + 86 contract assertions passed
+
+Command: pnpm build
+Exit code: 0
+Relevant output:
+Next.js 16.2.10 optimized production build compiled successfully.
+TypeScript, page-data collection, 10 static-page generations, and route finalization completed.
+
+Command: git diff --check
+Exit code: 0
+Output: no whitespace errors.
+
+Command: rg -n "\.(only|skip)\(" tests apps packages
+Exit code: 1 (expected no-match result)
+Output: no focused or newly skipped tests found.
+
+SUMMARY
+
+Passed: corrected formatting check, Web typecheck, 43 Web component tests, all documentation
+contracts, full pnpm check, production build, diff whitespace check, and focused/skipped-test scan.
+Failed: none after the fixture correction.
+Skipped: two pre-existing conditional integration cases reported by pnpm check; no new skip added.
+Blocked: none.
+Not run: PostgreSQL destructive suites, MinIO integration, Playwright, and LIVE AI evals. This slice
+changes Candidate-side presentation and documentation only; it does not change persistence,
+authorization, AI prompts, queue allocation, or runtime contracts.
+
+Known limitation: Matched for you currently means an evidence-linked Candidate discovery signal or
+an active Candidate journey. A structured forward-looking Candidate Intent Profile is not yet part
+of the data model.

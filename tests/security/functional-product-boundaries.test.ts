@@ -23,6 +23,8 @@ const aiAdapter = read("../../packages/ai/src/candidate-answer-adapters.ts");
 const worker = read("../../apps/worker/src/functional-product-composition.ts");
 const discoveryStore = read("../../packages/db/src/postgres-candidate-discovery-store.ts");
 const discoveryAdapter = read("../../packages/ai/src/candidate-discovery-adapter.ts");
+const eligibilityStore = read("../../packages/db/src/postgres-candidate-eligibility-store.ts");
+const eligibilityAdapter = read("../../packages/ai/src/candidate-eligibility-adapter.ts");
 const employerAnalystAdapter = read("../../packages/ai/src/employer-review-analyst-adapter.ts");
 const employerAnalystPolicy = read("../../apps/worker/src/employer-review-analyst-policy.ts");
 const candidatePassport = read(
@@ -49,6 +51,11 @@ describe("functional product privacy and authority boundaries", () => {
     expect(discoveryAdapter).toContain("model: this.#model");
     expect(discoveryAdapter).toContain("store: false");
     expect(discoveryAdapter).not.toMatch(/tools:|web_search|file_search/iu);
+    expect(eligibilityAdapter).toContain('options.model ?? "gpt-5.6-sol"');
+    expect(eligibilityAdapter).toContain('reasoning: { effort: "medium" }');
+    expect(eligibilityAdapter).toContain("store: false");
+    expect(eligibilityAdapter).toContain("maxRetries: 0");
+    expect(eligibilityAdapter).not.toMatch(/tools:|web_search|file_search/iu);
     expect(employerAnalystAdapter).toContain('options.model ?? "gpt-5.6-sol"');
     expect(employerAnalystAdapter).toContain("model: this.#model");
     expect(employerAnalystPolicy).toContain(
@@ -56,6 +63,7 @@ describe("functional product privacy and authority boundaries", () => {
     );
     expect(employerAnalystPolicy).toContain('"gpt-5.6-luna"');
     expect(worker).toContain("new LiveCandidateJobDiscoveryAdapter({ apiKey })");
+    expect(worker).toContain("new LiveCandidateEligibilityMatchAdapter({ apiKey })");
     expect(worker).toContain(
       "new LiveEmployerReviewAnalystAdapter({ apiKey, model: analystPolicy.model })",
     );
@@ -81,6 +89,11 @@ describe("functional product privacy and authority boundaries", () => {
     expect(employerDashboard).not.toMatch(/evidence.passport|discovery.signal|passport_snapshot/iu);
     expect(candidatePassport).toContain("Candidate only");
     expect(candidatePassport).toContain("Never shown to Sarah before anonymous advancement");
+    expect(eligibilityStore).not.toMatch(/employer_.*projection/iu);
+    expect(eligibilityStore).not.toMatch(/candidate_private_labels|candidate_resume_snapshots/iu);
+    expect(employerDashboard).not.toMatch(
+      /eligibility_match_ref|candidate_job_eligibility_matches/iu,
+    );
   });
 
   it("renders structured rich text without an HTML injection escape hatch", () => {

@@ -28,7 +28,7 @@ export type SubmitCandidateInterestErrorCode =
 
 const STATUSES = {
   CANDIDATE_AUTH_REQUIRED: 403,
-  OPPORTUNITY_NOT_FOUND: 422,
+  OPPORTUNITY_NOT_FOUND: 404,
   INTEREST_INTAKE_NOT_ACTIVE: 422,
   STALE_OPPORTUNITY_VERSION: 409,
   STALE_CONSENT_VERSION: 409,
@@ -36,14 +36,14 @@ const STATUSES = {
   INTEREST_ALREADY_EXISTS: 409,
   HARD_FACTS_INVALID: 422,
   ELIGIBILITY_CONFIGURATION_INVALID: 422,
-} as const satisfies Record<SubmitCandidateInterestErrorCode, 403 | 409 | 422>;
+} as const satisfies Record<SubmitCandidateInterestErrorCode, 403 | 404 | 409 | 422>;
 
 export class SubmitCandidateInterestApplicationError extends Error {
   public override readonly name = "SubmitCandidateInterestApplicationError";
 
   public constructor(
     public readonly code: SubmitCandidateInterestErrorCode,
-    public readonly httpStatus: 403 | 409 | 422,
+    public readonly httpStatus: 403 | 404 | 409 | 422,
     message: string,
   ) {
     super(message);
@@ -52,7 +52,7 @@ export class SubmitCandidateInterestApplicationError extends Error {
 
 export function submitCandidateInterestErrorDetails(error: unknown): {
   readonly code: SubmitCandidateInterestErrorCode;
-  readonly httpStatus: 403 | 409 | 422;
+  readonly httpStatus: 403 | 404 | 409 | 422;
 } | null {
   if (
     error === null ||
@@ -162,8 +162,8 @@ export class SubmitCandidateInterestHandler {
         if (snapshot === null) {
           throw new SubmitCandidateInterestApplicationError(
             "OPPORTUNITY_NOT_FOUND",
-            422,
-            "The Opportunity does not exist.",
+            404,
+            "The Opportunity is not available to this Candidate.",
           );
         }
         if (snapshot.opportunityState !== "OPEN" || snapshot.commitmentState !== "ACTIVE") {
@@ -194,6 +194,19 @@ export class SubmitCandidateInterestHandler {
             "This Candidate has already submitted Interest for the Opportunity.",
           );
         }
+        if (
+          command.background_access_basis !== snapshot.backgroundAccess.basis ||
+          (snapshot.backgroundAccess.basis === "AI_POSITIVE_EVIDENCE" &&
+            (command.eligibility_match_ref !== snapshot.backgroundAccess.eligibilityMatchRef ||
+              command.eligibility_match_version !==
+                snapshot.backgroundAccess.eligibilityMatchVersion))
+        ) {
+          throw new SubmitCandidateInterestApplicationError(
+            "STALE_OPPORTUNITY_VERSION",
+            409,
+            "The Candidate Eligibility Match changed; refresh before registering Interest.",
+          );
+        }
 
         const hardFacts = hardFactsByType(command.hard_facts);
         const interestRef = this.ids.nextId("candidate-interest");
@@ -207,6 +220,7 @@ export class SubmitCandidateInterestHandler {
             contractVersionRef: snapshot.contractVersionRef,
             predicates: snapshot.eligibilityPredicates,
             hardFacts,
+            backgroundAccess: snapshot.backgroundAccess,
           });
         } catch (error) {
           if (error instanceof MatchingInvariantError) {
@@ -294,6 +308,8 @@ export class SubmitCandidateInterestHandler {
             occurredAt: transaction.databaseNow,
             payload: {
               eligibility_edge_ref: eligibilityEdgeRef,
+              background_access_basis: eligibility.backgroundAccessBasis,
+              eligibility_match_ref: eligibility.eligibilityMatchRef,
               eligible: eligibility.eligible,
               final_state: finalState,
             },

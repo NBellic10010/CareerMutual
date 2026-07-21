@@ -164,6 +164,8 @@ describe.sequential("Candidate 42 PostgreSQL vertical acceptance", () => {
       "0010_employer_ai_review_analyst",
       "0011_answer_behavior_profile",
       "0012_candidate_education_and_review_reveal",
+      "0013_ai_backed_eligibility_match",
+      "0014_eligibility_policy_hash_scope",
     ]);
     await expect(runPostgresMigrations(pool)).resolves.toEqual([]);
 

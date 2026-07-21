@@ -70,12 +70,28 @@ export const PublicOpportunityProjectionSchema = z
 
 export const CandidateInterestCommandSchema = z
   .object({
-    schema_version: z.literal("candidate-interest-command@1"),
+    schema_version: z.literal("candidate-interest-command@2"),
     hard_facts: z.array(CandidateInterestHardFactSchema).min(1).max(40),
     consent_version: AiOpaqueRefSchema,
     expected_opportunity_version: z.number().int().positive(),
+    background_access_basis: z.enum(["OPEN_TO_ALL", "AI_POSITIVE_EVIDENCE"]),
+    eligibility_match_ref: AiOpaqueRefSchema.nullable(),
+    eligibility_match_version: z.number().int().positive().nullable(),
   })
-  .strict();
+  .strict()
+  .superRefine((command, context) => {
+    const requiresMatch = command.background_access_basis === "AI_POSITIVE_EVIDENCE";
+    if (
+      requiresMatch !==
+      (command.eligibility_match_ref !== null && command.eligibility_match_version !== null)
+    ) {
+      context.addIssue({
+        code: "custom",
+        message:
+          "AI-positive access requires a pinned Eligibility Match; open access cannot send one.",
+      });
+    }
+  });
 
 export const CandidateInterestReceiptSchema = z
   .object({
