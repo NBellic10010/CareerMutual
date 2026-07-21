@@ -1,10 +1,12 @@
 import { createHash, randomUUID } from "node:crypto";
 
 import {
+  CandidateEligibilityService,
   CandidateEvidencePassportService,
   FunctionalProductService,
   DecideAnswerInvitationHandler,
   SubmitCandidateInterestHandler,
+  type CandidateEligibilityIdFactory,
   type CandidateDiscoveryIdFactory,
   type CandidateInterestIdFactory,
   type FunctionalProductIdFactory,
@@ -12,9 +14,10 @@ import {
 import { PostgresAnswerInvitationDecisionStore } from "@onlyboth/db/postgres-answer-invitation-decision-store";
 import { PostgresCandidateInterestStore } from "@onlyboth/db/postgres-candidate-interest-store";
 import { PostgresCandidateDiscoveryStore } from "@onlyboth/db/postgres-candidate-discovery-store";
+import { PostgresCandidateEligibilityStore } from "@onlyboth/db/postgres-candidate-eligibility-store";
 import { PostgresFunctionalProductStore } from "@onlyboth/db/postgres-functional-product-store";
 import { createPostgresPool } from "@onlyboth/db/postgres-pool";
-import { S3ObjectStore } from "@onlyboth/storage";
+import { resolveS3ForcePathStyle, S3ObjectStore } from "@onlyboth/storage";
 
 const ids: FunctionalProductIdFactory = {
   nextId: (kind) => `${kind}:${randomUUID()}`,
@@ -28,6 +31,10 @@ const discoveryIds: CandidateDiscoveryIdFactory = {
   nextId: (kind) => `${kind}:${randomUUID()}`,
 };
 
+const eligibilityIds: CandidateEligibilityIdFactory = {
+  nextId: (kind) => `${kind}:${randomUUID()}`,
+};
+
 function sha256(value: string): string {
   return `sha256:${createHash("sha256").update(value, "utf8").digest("hex")}`;
 }
@@ -35,7 +42,9 @@ function sha256(value: string): string {
 interface FunctionalServiceSingleton {
   readonly store: PostgresFunctionalProductStore;
   readonly candidateDiscoveryStore: PostgresCandidateDiscoveryStore;
+  readonly candidateEligibilityStore: PostgresCandidateEligibilityStore;
   readonly candidateEvidencePassport: CandidateEvidencePassportService;
+  readonly candidateEligibility: CandidateEligibilityService;
   readonly service: FunctionalProductService;
   readonly submitInterest: SubmitCandidateInterestHandler;
   readonly decideInvitation: DecideAnswerInvitationHandler;
@@ -60,14 +69,20 @@ export function getFunctionalServices(): FunctionalServiceSingleton {
     accessKeyId: process.env.OBJECT_STORE_ACCESS_KEY_ID ?? "onlyboth-local",
     secretAccessKey:
       process.env.OBJECT_STORE_SECRET_ACCESS_KEY ?? "onlyboth-local-development-secret",
-    forcePathStyle: true,
+    forcePathStyle: resolveS3ForcePathStyle(process.env.OBJECT_STORE_FORCE_PATH_STYLE),
   });
   const pool = createPostgresPool(databaseUrl);
   const store = new PostgresFunctionalProductStore(pool, objectStore);
   const candidateDiscoveryStore = new PostgresCandidateDiscoveryStore(pool, store);
+  const candidateEligibilityStore = new PostgresCandidateEligibilityStore(pool, store);
   const services = {
     store,
     candidateDiscoveryStore,
+    candidateEligibilityStore,
+    candidateEligibility: new CandidateEligibilityService(
+      candidateEligibilityStore,
+      eligibilityIds,
+    ),
     candidateEvidencePassport: new CandidateEvidencePassportService(
       candidateDiscoveryStore,
       discoveryIds,

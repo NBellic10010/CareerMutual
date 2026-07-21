@@ -62,6 +62,17 @@ export function evaluateEligibility(input: {
   readonly contractVersionRef: string;
   readonly predicates: readonly EligibilityPredicate[];
   readonly hardFacts: Readonly<Record<string, HardFactValue>>;
+  readonly backgroundAccess?:
+    | {
+        readonly basis: "OPEN_TO_ALL";
+        readonly eligibilityPolicyRef: string;
+      }
+    | {
+        readonly basis: "AI_POSITIVE_EVIDENCE";
+        readonly eligibilityPolicyRef: string;
+        readonly passportSnapshotRef: string;
+        readonly eligibilityMatchRef: string;
+      };
 }): EligibilityEdge {
   if (input.predicates.length === 0) {
     throw new MatchingInvariantError(
@@ -73,11 +84,23 @@ export function evaluateEligibility(input: {
     evaluatePredicate(predicate, input.hardFacts),
   );
   return Object.freeze({
+    schemaVersion:
+      input.backgroundAccess === undefined ? "eligibility-edge@1" : "eligibility-edge@2",
     eligibilityEdgeRef: input.eligibilityEdgeRef,
     opportunityRef: input.opportunityRef,
     candidateRef: input.candidateRef,
     contractVersionRef: input.contractVersionRef,
     eligible: predicateResults.every((result) => result.passed),
     predicateResults: Object.freeze(predicateResults),
+    backgroundAccessBasis: input.backgroundAccess?.basis ?? null,
+    eligibilityPolicyRef: input.backgroundAccess?.eligibilityPolicyRef ?? null,
+    passportSnapshotRef:
+      input.backgroundAccess?.basis === "AI_POSITIVE_EVIDENCE"
+        ? input.backgroundAccess.passportSnapshotRef
+        : null,
+    eligibilityMatchRef:
+      input.backgroundAccess?.basis === "AI_POSITIVE_EVIDENCE"
+        ? input.backgroundAccess.eligibilityMatchRef
+        : null,
   });
 }

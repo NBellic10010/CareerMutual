@@ -1,0 +1,81 @@
+Timestamp (UTC): 2026-07-21T18:33:40Z
+Scope: Remove the large blank area below the Candidate View Role public-contract card
+Git branch / commit: feat/ui-ux-optimization / 2f0ae15
+Environment: macOS arm64; pnpm 11.9.0; Next.js 16.2.10; PostgreSQL 16 and MinIO healthy on loopback; DEMO_MODE=true for E2E; OPENAI_API_KEY removed from E2E
+
+Implementation verification
+Changed behavior:
+  - Public Contract and the complete sealed Critical Challenge now share one continuous primary column.
+  - The Candidate application/Eligibility card remains an independent sticky secondary column on desktop.
+  - Mobile source order is Public Contract, Critical Challenge, then application controls.
+  - The Candidate can still inspect the complete Challenge before registering Interest or spending Credit.
+
+Formatting, focused Unit tests, and production build
+Command:
+  pnpm exec prettier --write apps/web/src/components/functional/candidate-job-detail.tsx apps/web/app/globals.css apps/web/src/components/functional/candidate-job-detail-ui.test.tsx tests/e2e/functional-product.spec.ts && pnpm exec vitest run --config vitest.unit.config.ts apps/web/src/components/functional/candidate-job-detail-ui.test.tsx apps/web/src/components/functional/critical-challenge-view.test.tsx apps/web/src/components/functional/role-page-artwork.test.tsx && pnpm build
+Exit code: 0
+Relevant output:
+  Prettier: all four files unchanged after formatting
+  Test Files  3 passed (3)
+  Tests       6 passed (6)
+  Next.js 16.2.10
+  Compiled successfully
+  TypeScript finished
+  Static page generation 10/10
+  apps/web build: Done
+
+PostgreSQL + MinIO Playwright E2E
+Command:
+  set -a; . ./.env.local; set +a; unset OPENAI_API_KEY; PLAYWRIGHT_PORT=3100 pnpm test:e2e
+Exit code: 0
+Output:
+  Running 6 tests using 1 worker
+  Desktop Candidate View Role asserted a 20px Contract-to-Challenge gap, aligned left-column edges,
+  no column overlap, and Challenge content occupying the former blank area beside the action card.
+  Existing 390px Candidate layout and full product vertical remained covered.
+  6 passed (13.9s)
+
+Aggregate check
+Command:
+  pnpm check
+Exit code: 0
+Output:
+  Prettier: passed
+  ESLint: passed with max warnings 0
+  TypeScript: passed
+  Unit: 50 files passed; 257 tests passed
+  Integration: 12 files passed, 1 conditional file skipped; 45 tests passed, 2 conditional tests skipped
+  Security: 6 files passed; 25 tests passed
+  Replay: 2 files passed; 7 tests passed
+  Documentation contracts: 49 + 40 + 87 assertions passed; 0 failed
+
+Diff and focused-test-marker checks
+Commands:
+  git diff --check
+  rg -n "\\.(only|skip)\\(" tests apps packages || true
+Exit codes: 0 / 0
+Output:
+  git diff --check: no output
+  marker scan: no .only or .skip call markers found
+
+Summary
+Passed: focused Unit, production build, PostgreSQL/MinIO Playwright, aggregate check, diff check, marker scan
+Failed: none
+Skipped: two pre-existing environment-conditional Integration assertions in the aggregate suite
+Blocked: none
+Not run:
+  - Full pnpm test:postgres: no migration, persistence, or state-machine behavior changed; PostgreSQL E2E passed.
+  - LIVE AI evals: no AI prompt, model, schema, adapter, or authority changed.
+Known pre-existing failures: none observed in the commands above.
+
+Post-HANDOFF documentation verification
+Command:
+  pnpm exec prettier --write HANDOFF.md && pnpm test:docs && git diff --check && (rg -n "\\.(only|skip)\\(" tests apps packages || true)
+Exit code: 0
+Output:
+  HANDOFF.md: unchanged after formatting
+  Agent/HANDOFF/README contract: 49 passed, 0 failed
+  AI engineering design contract: 40 passed, 0 failed
+  Product spirit/design contract: 87 passed, 0 failed
+  git diff --check: no output
+  marker scan: no .only or .skip call markers found

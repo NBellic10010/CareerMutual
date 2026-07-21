@@ -8,6 +8,7 @@ import type {
 import { useState } from "react";
 
 import { CriticalChallengeView } from "./critical-challenge-view";
+import { RolePageArtwork } from "./role-page-artwork";
 
 function key() {
   return `human-review:${crypto.randomUUID()}`;
@@ -152,7 +153,11 @@ export function SequentialReviewWorkspace({
   }
 
   return (
-    <main className="review-shell">
+    <main
+      className="review-shell employer-workspace recruiter-operations-workspace"
+      data-role-theme="employer"
+    >
+      <RolePageArtwork surface="RECRUITER_OPERATIONS" />
       <header className="review-header">
         <div>
           <p className="eyebrow">Sequential human review / identity sealed</p>

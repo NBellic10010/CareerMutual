@@ -18,7 +18,9 @@ describeMinio("private MinIO adapter", () => {
         process.env.OBJECT_STORE_SECRET_ACCESS_KEY ?? "onlyboth-local-development-secret",
       forcePathStyle: true,
     });
-    await store.initializePrivateBucket(["http://127.0.0.1:3000"]);
+    // Local MinIO receives CORS through MINIO_API_CORS_ALLOW_ORIGIN because its
+    // S3-compatible API does not implement PutBucketCors.
+    await store.initializePrivateBucket([]);
     const objectKey = `integration/${randomUUID()}.txt`;
     const body = new TextEncoder().encode("OnlyBoth private Artifact");
     const checksum = `sha256:${createHash("sha256").update(body).digest("hex")}`;

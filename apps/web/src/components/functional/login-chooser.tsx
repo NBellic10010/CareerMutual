@@ -3,6 +3,9 @@
 import type { SyntheticDemoActor } from "@onlyboth/demo-fixtures";
 import { useState } from "react";
 
+import { CareerMutualTrademark } from "../career-mutual-trademark";
+import { LoginRolePortraits } from "./login-role-portraits";
+
 export function LoginChooser({ actors }: { readonly actors: readonly SyntheticDemoActor[] }) {
   const [actorRef, setActorRef] = useState(actors[0]?.actor_ref ?? "");
   const [error, setError] = useState<string | null>(null);
@@ -25,9 +28,13 @@ export function LoginChooser({ actors }: { readonly actors: readonly SyntheticDe
 
   return (
     <main className="login-stage">
+      <LoginRolePortraits />
       <section className="login-card" aria-labelledby="login-title">
-        <p className="eyebrow">OnlyBoth / temporary identity</p>
-        <h1 id="login-title">Enter the blind review loop.</h1>
+        <p className="eyebrow login-brandline">
+          <CareerMutualTrademark />
+          <span>/ temporary identity</span>
+        </p>
+        <h1 id="login-title">Let performance talk first!</h1>
         <p>
           Select a synthetic actor. Each Candidate receives a distinct signed Session, Evidence
           Passport, Credit account, and immutable résumé; production identity remains out of scope.

@@ -1,0 +1,45 @@
+UTC timestamp: 2026-07-21T16:49:36Z
+Change scope: Document the distinct Codex development/demo role and bounded GPT-5.6 runtime roles in the root README.
+Git branch: feat/ui-ux-optimization
+Git commit: 2f0ae15
+Environment: local macOS workspace; Node.js v22.22.0; pnpm 11.9.0
+Runtime mode: not applicable (documentation and documentation-contract verification only)
+
+Command 1:
+pnpm exec vitest run --config vitest.integration.config.ts tests/integration/workspace-shape.test.ts
+
+Exit code: 0
+
+Relevant output:
+ RUN  v4.1.10
+ Test Files  1 passed (1)
+      Tests  9 passed (9)
+   Duration  227ms
+
+Command 2:
+bash tests/docs/agents-contract.sh
+
+Exit code: 0
+
+Relevant output:
+PASS: root README exists
+PASS: README.md has balanced Markdown fences
+PASS: README.md prose is English
+PASS: apps/worker/README.md has balanced Markdown fences
+PASS: apps/worker/README.md prose is English
+PASS: test-reports/README.md has balanced Markdown fences
+PASS: test-reports/README.md prose is English
+RESULT: 49 passed, 0 failed
+
+Command 3:
+git diff --check
+
+Exit code: 0
+Output: empty (no whitespace errors)
+
+Summary:
+Passed: 9 focused integration assertions, 49 documentation-contract assertions, and git diff whitespace validation.
+Failed: 0.
+Skipped: full pnpm check and runtime/E2E suites were not run because this change only adds README disclosure and its focused documentation assertion.
+Blocked: 0.
+Known pre-existing failures: none observed in the executed checks.

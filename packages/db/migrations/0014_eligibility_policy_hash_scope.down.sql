@@ -1,0 +1,1 @@
+DROP INDEX IF EXISTS job_eligibility_match_policies_hash_idx;

@@ -184,6 +184,10 @@ describe("Employer AI Review Analyst UI", () => {
     expect(markup).toContain("Use an idempotency key");
     expect(markup).toContain("Required human receipt");
     expect(markup).toContain("Evidence-linked review comment");
+    expect(markup).toContain('data-role-theme="employer"');
+    expect(markup).toContain('data-role-page-artwork="recruiter-operations"');
+    expect(markup).toContain("recruiter-glasses-review-v1.webp");
+    expect(markup).not.toContain("candidate-roll-up-sleeves-v1.webp");
     expect(markup).not.toMatch(
       /match score|candidate score|recommend advancing|cheating probability/iu,
     );

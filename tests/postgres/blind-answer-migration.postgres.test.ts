@@ -42,6 +42,8 @@ describe.sequential("Blind-answer-first PostgreSQL migration", () => {
       "0010_employer_ai_review_analyst",
       "0011_answer_behavior_profile",
       "0012_candidate_education_and_review_reveal",
+      "0013_ai_backed_eligibility_match",
+      "0014_eligibility_policy_hash_scope",
     ]);
     const tables = await pool.query<{ table_name: string }>(
       `SELECT table_name FROM information_schema.tables
@@ -74,6 +76,12 @@ describe.sequential("Blind-answer-first PostgreSQL migration", () => {
         domain_events
       CASCADE
     `);
+    await expect(rollbackLatestPostgresMigration(pool)).resolves.toBe(
+      "0014_eligibility_policy_hash_scope",
+    );
+    await expect(rollbackLatestPostgresMigration(pool)).resolves.toBe(
+      "0013_ai_backed_eligibility_match",
+    );
     await expect(rollbackLatestPostgresMigration(pool)).resolves.toBe(
       "0012_candidate_education_and_review_reveal",
     );
@@ -115,6 +123,8 @@ describe.sequential("Blind-answer-first PostgreSQL migration", () => {
       "0010_employer_ai_review_analyst",
       "0011_answer_behavior_profile",
       "0012_candidate_education_and_review_reveal",
+      "0013_ai_backed_eligibility_match",
+      "0014_eligibility_policy_hash_scope",
     ]);
   });
 

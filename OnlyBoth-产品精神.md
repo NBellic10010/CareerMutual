@@ -2,7 +2,7 @@
 
 ## Blind answer first, attention before labor
 
-**版本：** 1.7
+**版本：** 1.8
 **日期：** 2026-07-21
 **地位：** 规范性产品原则；产品、工程、AI、Demo 与 Agent 规则不得与本文冲突。
 
@@ -108,7 +108,10 @@ No settled human obligation → That review Slot cannot serve the next candidate
 1. Candidate 开始正式回答前，必须存在具名 Reviewer、Answer Review Slot、SLA 与 `CreditHold=HELD`；
 2. Employer 在回答产生前不能收到 Candidate Claim、履历、学校、前雇主、Referral、GPT 匹配理由或候选人排名；
 3. Answer Review Slot 是可循环的并发容量，不是岗位总申请名额；Employer 不能选择谁获得回答前机会；
-4. Candidate 通过确定性 Eligibility 与公开队列规则获得下一个可用 Slot；队列规则只能使用资格通过时间、Interest 时间和公开 tie-break，不能使用 Profile、Claim、GPT 或材料包装；
+4. Candidate 先通过 Candidate-only 背景访问与确定性硬条件：背景访问只能来自 `OPEN_TO_ALL` 或
+   GPT 生成且由服务端验证的一条正向 Evidence-to-tag 连接；法律、语言、时区等 typed predicates
+   仍由确定性代码判断。进入公开队列后只能使用资格通过时间、Interest 时间和公开 tie-break，
+   不能使用 Profile、Claim、GPT 分数或材料包装；
 5. 每一份系统允许提交的正式 Application 都必须产生独立 Human Review Receipt，或进入可见 Employer Breach；
 6. Direct 的候选池只能包含已提交并在盲履历状态下得到 `ADVANCE_ELIGIBLE` 的 Answer；Allocation
    Command 只引用 Answer Evidence，不接收 Resume score 或 AI Candidate rank，但不再声称 Reviewer
@@ -164,11 +167,17 @@ Passport source refs + public Job capabilities
 → Candidate 自己决定是否登记 Interest
 ```
 
-这个机制不是回答前的 Employer Matching。Candidate Job Feed 使用两层视图：默认 `Matched for you`
-只显示 `EVIDENCE_CONNECTED | ADJACENT`、带有效旧连接的 `STALE` 岗位，以及 Candidate 已经进入
-Interest/Application 流程的岗位；次级 `Explore all jobs` 保持所有开放岗位可访问。缺少发现信号只
-影响默认发现视图，不能剥夺岗位访问或 Interest 权利。信号不得改变 Eligibility、Interest Queue、
-Answer Invitation、Attention Slot、Employer 审阅顺序或 Direct / Explore。Sarah
+这个机制不是回答前的 Employer Matching，而是 Candidate-side JobPost 访问控制。Recruiter 为岗位
+封存 `OPEN_TO_ALL` 或 `EVIDENCE_MATCH_REQUIRED`：前者始终可见；后者只有当
+`deriveCandidateEligibilityMatches` 返回至少一条服务端验证的正向 `Evidence ref ↔ accepted tag`
+连接时才进入该 Candidate 的 Feed、详情和 Interest API。没有 Passport 的 Candidate 只能看到
+`OPEN_TO_ALL`；AI 失败显示 `MATCHING | PARTIAL | FAILED | STALE`，不能写成“不合格”。已有
+Interest/Application 固定其原访问依据，不因 Passport 更新被追溯移出。
+
+该访问边只采用 OR 语义：学历、工作经历、证书或作品中的任意一项合法正向连接即可解锁；不输出
+score、rank、fit 或 Queue 顺序。法律、语言、时区等硬条件仍在 Interest 时由确定性代码判断。
+旧 `deriveCandidateJobSignals` 数据保留兼容，但不再拥有 Feed 可见性权限。以上结果不得改变
+Interest Queue、Answer Invitation、Attention Slot、Employer 审阅顺序或 Direct / Explore。Sarah
 在匿名回答被推进之前看不到 Passport、Snapshot、Signal 或 GPT 理由；通过后也只读取被授权的
 完整 Resume Snapshot，而不读取 Candidate-only discovery rationale。
 
@@ -266,8 +275,9 @@ GPT 可以：
    披露式思考辅助；输入只包括封存问题、允许假设、当前草稿和本 Session 的既有对话；完整
    user/assistant/error trace 随 Answer 冻结并向 Reviewer 展示。
 7. 从原始 Voice Memo 生成派生 Transcript；原始音频始终是事实来源，转写失败是 Platform 状态。
-8. 从 Candidate 主动发布的私有 Evidence Passport Snapshot，为 Candidate 自己生成与公开岗位
-   capability 相连的发现假设、来源引用与 `still_unknown`；该结果不能进入 Employer 路径。
+8. 从 Candidate 主动发布的私有 Evidence Passport Snapshot，为 Candidate 自己生成与 Recruiter
+   封存岗位标签相连的 Eligibility 访问假设、来源引用与 `still_unknown`；只有合法正向连接能解锁
+   evidence-gated 岗位，该结果不能进入 Employer 路径或 Queue 排序。
 
 GPT 不可以：
 
@@ -388,16 +398,17 @@ actor-bound 合成 Session、PostgreSQL JobPost/Interest/Slot/Credit、Backed Of
 顺序 Human Review、逐 Slot 释放，以及 Review SLA Breach 的 Candidate Credit 退还、Employer
 Credit 罚没和 Slot 退休。`/prototype` 不再是主入口或验收事实。
 
-Demo 现在提供六名不同履历的合成 Candidate；`Start as` 只在 `DEMO_MODE=true` 为每个 actor 签发
-独立 Session。六人分别持有 Credit、真实 PostgreSQL `Evidence Passport`、不可变 Snapshot、
-Candidate-only discovery Projection 和 Resume Snapshot。Demo 预载明确标注的 synthetic Signal；
-Candidate 修改并发布后的生成只走 Worker LIVE `gpt-5.6-luna`，没有 Key 或调用失败时显式失败，
-不切换固定 Fixture。Employer、Eligibility、Queue 与 Attention 代码不读取这些表。
+Demo 现在提供七名不同履历的合成 Candidate；`Start as` 只在 `DEMO_MODE=true` 为每个 actor 签发
+独立 Session。七人分别持有 Credit、真实 PostgreSQL `Evidence Passport`、不可变 Snapshot、
+Candidate-only discovery/Eligibility Projection 和 Resume Snapshot。Demo 的 Backend Eligibility
+Match 包含一份明确披露的 `RECORDED_LIVE` 输出；运行时 Publish/Refresh 只走 Worker LIVE，失败不
+切换录制输出。Employer、Queue 与 Attention 不读取 Passport 或 rationale；Eligibility 只消费
+专用、服务端验证并固定版本的 Candidate-only Match projection。
 
-合成运行数据还包含一个主工程岗位和二十个跨会计、BD、创意、销售、营销、产品、运营、People、
-Legal、Healthcare 与 Sustainability 的岗位。每个岗位都发布一个独立 Critical Challenge；整个
-Corpus 覆盖 TEXT、AUDIO、IMAGE、FILE Part。它验证机制可跨专业复用，不代表平台已验证这些岗位的
-真实招聘效度。
+合成运行数据还包含一个主工程岗位、二十个跨会计、BD、创意、销售、营销、产品、运营、People、
+Legal、Healthcare 与 Sustainability 的岗位，以及六个用于比较六名工程向 Candidate Eligibility
+Feed 的技术 Match Lab 岗位。每个岗位都发布一个独立 Critical Challenge；整个 Corpus 覆盖
+TEXT、AUDIO、IMAGE、FILE Part。它验证机制可跨专业复用，不代表平台已验证这些岗位的真实招聘效度。
 
 回答后的 `ADVANCE_ELIGIBLE Human Review → pinned Resume Reveal → recruiter pagination` 已接到
 真实 PostgreSQL 事务与新浏览器页；`Advancement Cohort Allocation → Deep Proof → Challenge`

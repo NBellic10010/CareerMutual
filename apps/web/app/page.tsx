@@ -28,14 +28,15 @@ export default function HomePage() {
     <main className="home-shell">
       <section className="hero">
         <div className="hero-copy">
-          <p className="eyebrow">Label-blind, attention-backed work proofs</p>
+          <p className="eyebrow">Mutual-intent hiring · label-blind work proofs</p>
           <h1>
-            Let the work earn
-            <span>the conversation.</span>
+            Interest is mutual.
+            <span>Attention is backed.</span>
           </h1>
           <p className="hero-description">
-            OnlyBoth delays pedigree, locks named human review before candidate effort, and tests
-            the job&apos;s real uncertainty instead of ranking people by polish.
+            Candidates signal where they want to go. Recruiters commit named review attention. Only
+            then does a bounded, anonymous answer earn the conversation—before pedigree can distort
+            the judgment.
           </p>
           <div className="hero-actions">
             <Link className="primary-link" href="/login">
@@ -49,15 +50,28 @@ export default function HomePage() {
             </Link>
           </div>
         </div>
-        <aside className="hero-manifesto">
-          <span>Runnable product slice</span>
-          <strong>3 Candidate Credits</strong>
-          <strong>1 funded Slot before work</strong>
-          <div className="manifesto-divider" />
-          <span>Blind answer obligation</span>
-          <strong>6:00 server-timed answer</strong>
-          <strong className="highlight">Next answer stays locked</strong>
-          <blockquote>Every opened answer creates a review debt.</blockquote>
+        <aside className="hero-manifesto mutual-intent-manifesto" aria-label="Mutual intent model">
+          <span>How a real application begins</span>
+          <div className="manifesto-signal manifesto-signal-candidate">
+            <i aria-hidden="true" />
+            <div>
+              <small>Candidate</small>
+              <strong>Signals genuine interest</strong>
+            </div>
+          </div>
+          <div className="manifesto-lock" aria-hidden="true">
+            <span>Backed Slot</span>
+          </div>
+          <div className="manifesto-signal manifesto-signal-employer">
+            <i aria-hidden="true" />
+            <div>
+              <small>Recruiter</small>
+              <strong>Commits named attention</strong>
+            </div>
+          </div>
+          <blockquote>
+            Only after both signals meet does the six-minute blind answer open.
+          </blockquote>
         </aside>
       </section>
 

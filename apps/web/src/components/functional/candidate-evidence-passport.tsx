@@ -4,6 +4,7 @@ import type {
   CandidateEducationRecord,
   CandidateEvidenceItem,
   CandidateEvidencePassportProjection,
+  CandidateEligibilityProjection,
 } from "@onlyboth/contracts";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
@@ -70,8 +71,10 @@ function newEducation(): CandidateEducationRecord {
 export function CandidateEvidencePassport({
   projection,
   csrfToken,
+  eligibility,
 }: {
   readonly projection: CandidateEvidencePassportProjection;
+  readonly eligibility: CandidateEligibilityProjection;
   readonly csrfToken: string;
 }) {
   const router = useRouter();
@@ -173,15 +176,17 @@ export function CandidateEvidencePassport({
     setError(null);
     try {
       await send(
-        "/api/v1/candidate/evidence-passport/discovery/refresh",
+        "/api/v1/candidate/evidence-passport/eligibility/refresh",
         "POST",
         {
-          schema_version: "refresh-candidate-discovery-command@1",
-          expected_projection_version: projection.projection_version,
+          schema_version: "refresh-candidate-eligibility-command@1",
+          expected_projection_version: eligibility.projection_version,
         },
         "passport-refresh",
       );
-      setAnnouncement("Discovery refresh requested. The Worker must complete it through LIVE AI.");
+      setAnnouncement(
+        "Eligibility refresh requested. The Worker must complete it through LIVE AI.",
+      );
       router.refresh();
     } catch (cause: unknown) {
       setError(cause instanceof Error ? cause.message : "DISCOVERY_REFRESH_FAILED");
@@ -203,11 +208,12 @@ export function CandidateEvidencePassport({
       </a>
       <section className="passport-hero">
         <div>
-          <p className="eyebrow">Candidate 42 / private discovery workspace</p>
+          <p className="eyebrow">Private Candidate discovery workspace</p>
           <h1>Evidence, without turning your résumé into a gate.</h1>
           <p>
-            Publish a Candidate-only Snapshot so GPT can connect bounded source material to public
-            job capabilities. You still see every open role and decide where to register Interest.
+            Publish a Candidate-only Snapshot so GPT can connect bounded source material to sealed
+            Job background tags. Positive connections unlock evidence-gated roles; OPEN_TO_ALL roles
+            never require a Passport.
           </p>
         </div>
         <aside className="passport-privacy-seal" aria-label="Evidence Passport privacy boundary">
@@ -232,15 +238,15 @@ export function CandidateEvidencePassport({
               : `v${projection.last_published_snapshot.snapshot_version}`}
           </small>
         </div>
-        <div data-active={projection.discovery.status === "READY"}>
+        <div data-active={eligibility.status === "READY"}>
           <span>03</span>
-          <strong>Discovery signals</strong>
-          <small>{projection.discovery.status.replaceAll("_", " ")}</small>
+          <strong>Eligibility matches</strong>
+          <small>{eligibility.status.replaceAll("_", " ")}</small>
         </div>
         <div data-active={projection.discovery.last_ready_signal_set_ref !== null}>
           <span>04</span>
           <strong>Candidate feed</strong>
-          <small>Guidance only</small>
+          <small>Access, never rank</small>
         </div>
       </section>
 
@@ -471,10 +477,15 @@ export function CandidateEvidencePassport({
           <p className="section-kicker">Snapshot control</p>
           <h2>Publish the sources, not a self-score.</h2>
           <p>
-            The Snapshot is immutable. GPT may produce evidence-linked discovery hypotheses and
-            unknowns; it cannot call this evidence verified or affect Employer review order.
+            The Snapshot is immutable. GPT may unlock evidence-gated roles through positive,
+            source-linked hypotheses; it cannot rank the public queue or send these reasons to the
+            Recruiter.
           </p>
           <dl className="passport-facts">
+            <div>
+              <dt>Eligibility</dt>
+              <dd>{eligibility.status.replaceAll("_", " ")}</dd>
+            </div>
             <div>
               <dt>Draft</dt>
               <dd>{edited ? "Local edits pending" : "Saved"}</dd>
@@ -511,7 +522,7 @@ export function CandidateEvidencePassport({
               type="button"
               onClick={() => void handlePublish()}
             >
-              {busy === "publish" ? "Publishing…" : "Publish & generate discovery signals"}
+              {busy === "publish" ? "Publishing…" : "Publish & generate job matches"}
             </button>
             <button
               className="secondary-button"
@@ -519,7 +530,7 @@ export function CandidateEvidencePassport({
               type="button"
               onClick={() => void handleRefresh()}
             >
-              {busy === "refresh" ? "Requesting…" : "Refresh against current jobs"}
+              {busy === "refresh" ? "Requesting…" : "Refresh missing job matches"}
             </button>
           </div>
           {error === null ? null : (

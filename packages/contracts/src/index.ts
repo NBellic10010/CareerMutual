@@ -2,6 +2,8 @@ export * from "./common";
 export * from "./blind-answer";
 export * from "./challenge-review";
 export * from "./candidate-discovery";
+export * from "./eligibility-policy";
+export * from "./candidate-eligibility";
 export * from "./golden-replay";
 export * from "./functional-product";
 export * from "./employer-review-analyst";

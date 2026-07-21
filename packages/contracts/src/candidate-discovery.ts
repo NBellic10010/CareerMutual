@@ -408,6 +408,7 @@ export const CandidateOpportunityFeedV2Schema = z
   .strict();
 
 export type CandidateEvidenceItem = z.infer<typeof CandidateEvidenceItemSchema>;
+export type CandidateEvidenceKind = z.infer<typeof CandidateEvidenceKindSchema>;
 export type CandidateEducationRecord = z.infer<typeof CandidateEducationRecordSchema>;
 export type SaveCandidateEvidencePassportDraftCommand = z.infer<
   typeof SaveCandidateEvidencePassportDraftCommandSchema

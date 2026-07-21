@@ -103,6 +103,20 @@ async function seedFixture(suffix: string): Promise<Fixture> {
     ],
   );
   await pool.query(
+    `INSERT INTO job_eligibility_match_policies (
+       policy_ref, opportunity_ref, contract_version_ref,
+       policy_version, policy_hash, access_mode, taxonomy_version,
+       accepted_tags_json, sealed_at
+     ) VALUES ($1, $2, $3, 'eligibility-match-policy@1', $4,
+               'OPEN_TO_ALL', NULL, '[]'::jsonb, clock_timestamp())`,
+    [
+      `eligibility-policy:${fixture.opportunityRef}`,
+      fixture.opportunityRef,
+      fixture.contractRef,
+      hash(`eligibility-policy:${fixture.opportunityRef}`),
+    ],
+  );
+  await pool.query(
     `INSERT INTO attention_commitments (
        commitment_ref, opportunity_ref, reviewer_ref, active_wip, direct_slots,
        explore_slots, credit_per_window, accept_sla_hours, checkpoint_sla_seconds,
@@ -156,7 +170,10 @@ async function submit(
     idempotencyKey: key,
     correlationId: key,
     command: {
-      schema_version: "candidate-interest-command@1",
+      schema_version: "candidate-interest-command@2",
+      background_access_basis: "OPEN_TO_ALL",
+      eligibility_match_ref: null,
+      eligibility_match_version: null,
       hard_facts: [
         {
           fact_ref: `fact:${candidateRef}:work-authorization`,
@@ -270,7 +287,7 @@ describe.sequential("Candidate Interest and Answer Invitation PostgreSQL decisio
     }>(
       `SELECT
         (SELECT count(*)::text FROM candidate_interests
-          WHERE interest_schema_version = 'candidate-interest@1') AS interests,
+          WHERE interest_schema_version = 'candidate-interest@2') AS interests,
         (SELECT count(*)::text FROM eligibility_edges WHERE interest_ref IS NOT NULL) AS edges,
         (SELECT count(*)::text FROM domain_events
           WHERE aggregate_type = 'CandidateInterest') AS events,

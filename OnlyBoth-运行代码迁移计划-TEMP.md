@@ -894,7 +894,8 @@ No target code treats initial Slot WIP as total Candidate cap
 | Gate | Required result |
 |---|---|
 | Employer pre-answer Candidate cards | `0` |
-| Pre-answer Candidate matching AI requests | `0` |
+| Pre-answer Employer-side Candidate selection AI requests | `0` |
+| Candidate-side Eligibility AI requests | audited, Candidate-only, and unable to rank or reorder Queue |
 | Candidate Sidecar traces missing from submitted Artifact manifest | `0` |
 | Reusable Answer Review Slots | `8` |
 | Slot WIP treated as total applicant cap | `0` |

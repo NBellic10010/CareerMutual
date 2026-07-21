@@ -1,13 +1,64 @@
 # OnlyBoth
 
-OnlyBoth is an attention-backed, blind-answer-first hiring product. A candidate receives a
-named review commitment before spending time on an application; an employer must record an
-evidence-linked review before the same attention slot can serve the next person. Pedigree stays
-sealed until anonymous work earns backed, post-answer attention.
+OnlyBoth is a mutual-intent, blind-answer-first hiring product: Candidates signal where they want
+to go, while Recruiters commit named review attention before asking them to work. An employer must
+record an evidence-linked review before the same attention slot can serve the next person. Pedigree
+stays sealed until anonymous work earns backed, post-answer attention.
 
 The normative product doctrine is `OnlyBoth-产品精神.md`. The authoritative product and
 engineering sources are `OnlyBoth-产品方案.md`, `OnlyBoth-工程设计.md`, and
 `OnlyBoth-AI工程设计.md`.
+
+## How Codex and GPT-5.6 are used
+
+Codex was the development collaborator for this Build Week project. It helped turn the product
+doctrine into the monorepo architecture, PostgreSQL migrations, role-specific interfaces, synthetic
+JobPosts and Candidate fixtures, demo reset and evaluation scripts, automated tests, technical
+diagrams, and the English project documentation. Codex also supported iterative debugging and UX
+refinement while the team reviewed the resulting behavior. It is not a runtime hiring agent: the
+deployed application does not ask Codex to allocate attention, review an answer, reveal a resume, or
+make a hiring decision.
+
+GPT-5.6 is used inside narrow, versioned runtime operations rather than as a general autonomous
+recruiter:
+
+| Runtime operation             | Model policy                               | Bounded role                                                                                                                                                                           |
+| ----------------------------- | ------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Candidate job discovery       | `gpt-5.6-luna`, low reasoning              | Produces Candidate-only, evidence-linked discovery explanations; it has no Queue or Employer authority.                                                                                |
+| Candidate Eligibility Match   | `gpt-5.6-sol`, medium reasoning            | Connects Passport Evidence refs to Recruiter-sealed background tags so an evidence-gated role can become visible to that Candidate. It cannot score, rank, or order Candidates.        |
+| Disclosed Candidate assistant | `gpt-5.6-terra`, low reasoning             | Helps draft an answer inside the permitted Sandbox. It cannot submit; its complete trace is sealed with the Answer and disclosed to the Reviewer.                                      |
+| Employer Evidence Analyst     | `gpt-5.6-sol`, medium reasoning by default | Structures source-linked findings from one already-submitted anonymous Answer. It cannot prefill the Human Review, recommend advancement, settle a Slot, or read the Candidate resume. |
+
+Every production GPT-5.6 call runs asynchronously in the Worker through the OpenAI Responses API
+with strict Structured Outputs, `store:false`, no tools, and deterministic server-side reference and
+policy validation. Model output is a typed proposal, not a business-state transition. Sessions,
+Queue order, hard legal and logistical predicates, Attention and Credit ledgers, immutable Answer
+submission, Human Review, Slot settlement, and Resume Reveal remain enforced by application
+commands and PostgreSQL transactions.
+
+### Role in making and running the demo
+
+Codex helped produce the runnable demo itself: the dual-role flow, synthetic 27-JobPost corpus,
+seven synthetic Candidate identities, multimodal Critical Challenges, UI copy and artwork
+integration, seed/reset tooling, browser journeys, evaluation harnesses, and retained test reports.
+The main demo is the real local product path through `/candidate` and `/employer`, not an
+AI-generated video or a client-side state simulation.
+
+The demo keeps AI provenance explicit:
+
+- `LIVE` means the Worker called the configured GPT-5.6 model during that run.
+- `RECORDED_LIVE` means a prior real Responses API output was schema-validated and pinned to the
+  exact prompt, model, input, and contract hashes for a disclosed offline demonstration.
+- `SYNTHETIC_PRELOADED` means a clearly labeled synthetic fixture; it is never presented as a live
+  model result.
+- Runtime LIVE failure is visible and never silently replaced with a recorded or synthetic success.
+
+The primary Backend Eligibility example includes a disclosed `RECORDED_LIVE` GPT-5.6 output. Other
+preloaded matching outcomes remain labeled synthetic, while the Match Lab and optional Employer
+Analyst paths can be run LIVE for evaluation. Human actions in the functional demo—Candidate
+consent and submission, Sarah's evidence-linked review, Slot settlement, and authorized Resume
+Reveal—are executed through the same commands and persistence boundaries used by the application;
+they are not prewritten GPT decisions.
 
 ## Runnable product slice
 
@@ -16,7 +67,8 @@ The main Candidate and Employer surfaces now execute this persistent causal chai
 ```text
 temporary persistent actor-bound session selected from seven synthetic Candidates or Sarah
 → optional Candidate-only Evidence Passport Snapshot
-→ a default evidence-linked Matched feed plus Explore all jobs, where every open role remains accessible
+→ GPT-backed Candidate-only Eligibility Match against Recruiter-sealed background tags
+→ a Feed containing positive Evidence matches, OPEN_TO_ALL roles, and pinned active journeys
 → PostgreSQL-backed JobPost with an ordered multimodal Critical Challenge
 → public Candidate interest
 → funded Attention Slot and backed invitation
@@ -37,16 +89,20 @@ This slice enforces the following boundaries:
 
 - Candidate Application Credit is a rate limit, never a bid or ranking signal. Registering
   Interest is free. Credit is consumed only after funded reviewer attention is reserved.
-- Evidence Passport is optional Candidate-only discovery input, but its highest-education field is
+- Evidence Passport is optional Candidate-only Eligibility input, but its highest-education field is
   required and supports an explicit no-formal-degree pathway. Discovery puts education first for
   candidates within two years of graduation and work/credentials first afterward; this is
-  deterministic precedence, not a score. Its source-linked GPT reasons never
-  enter Employer views, Eligibility, queue order, Invitations, Attention, or review. The seed is
-  explicitly synthetic; edits request LIVE generation and never fall back to a fixed success.
+  deterministic precedence, not a score. `deriveCandidateEligibilityMatches` may unlock a role
+  through any validated positive education, work, credential, or work-sample connection. It never
+  enters Employer views or changes queue order, Invitations, Attention, or review. Candidates with
+  no Passport see only `OPEN_TO_ALL`; model failure is pending/failed, not rejection. The primary
+  synthetic Backend match is a disclosed, validated `RECORDED_LIVE` Responses API output; edits
+  request LIVE generation and never fall back to it.
 - A Critical Challenge is one sealed ordered manifest, not a text-only interview question. Its
   `TEXT`, `AUDIO`, `IMAGE`, and `FILE` parts remain identical in Candidate detail, Answer Session,
-  and Recruiter review. The local seed includes one primary engineering role plus twenty
-  cross-domain synthetic JobPosts.
+  and Recruiter review. The local seed includes one primary engineering role, twenty cross-domain
+  synthetic JobPosts, and six technology Match Lab JobPosts used to compare six Candidate-only
+  Eligibility feeds.
 - The Employer API returns only the earliest outstanding anonymous answer. The next answer is
   unavailable to both the API and the DOM until the current Human Review transaction commits.
 - An `ADVANCE_ELIGIBLE` Review pins the pre-consented Resume version into an immutable,
@@ -54,7 +110,7 @@ This slice enforces the following boundaries:
   other Review outcomes disclose nothing.
 - The sticky top breadcrumb and navigation resolve from the active signed role session: Candidate
   and Recruiter links are never mixed in one workspace header. The demo operator can use one
-  `Start as` dropdown to issue distinct year-long signed Sessions for six Candidates or Sarah;
+  `Start as` dropdown to issue distinct year-long signed Sessions for seven Candidates or Sarah;
   every Candidate has an independent Credit account, Passport, discovery projection, and résumé.
 - Rich text, original audio, derived transcripts, and the complete platform-assistant trace are
   private objects. PostgreSQL stores immutable refs, ownership, MIME, size, SHA-256, and seal
@@ -94,9 +150,9 @@ not the target product mechanism.
 
 ## Product routes
 
-- `/login` — demo-only `Start as` actor selector for six Candidates and Sarah, plus explicit
+- `/login` — demo-only `Start as` actor selector for seven Candidates and Sarah, plus explicit
   sign-out. The selector is operator tooling and never enters the Recruiter projection.
-- `/candidate` — PostgreSQL-backed matched opportunity feed and Application Credit balance.
+- `/candidate` — PostgreSQL-backed Eligibility-authorized opportunity Feed and Application Credit balance.
 - `/candidate/evidence-passport` — private synthetic Evidence Ledger, immutable Snapshot publish,
   discovery status, and LIVE refresh.
 - `/candidate/jobs/:opportunityRef` — sealed JobPost, backed invitation, versioned consent, Credit
@@ -184,6 +240,29 @@ transcription, Employer Evidence Analyst requests, Focus Policy and deadline
 auto-submission/empty settlement, Employer review breaches, and orphan-object cleanup. For a
 single diagnostic pass, run `pnpm worker:once`.
 
+## Deploy on Railway
+
+Current synthetic Build Week deployment: [CareerMutual on Railway](https://web-production-c1a5.up.railway.app).
+It is a `DEMO_MODE=true` environment with allowlisted synthetic identities and data, not a
+production hiring system.
+
+The checked `railway.json` builds the complete shared pnpm workspace once for either runtime.
+Create two code services from this repository and set `SERVICE_ROLE=web` on the public Web service
+and `SERVICE_ROLE=worker` on the private Worker service. The Web entrypoint runs the idempotent SQL
+migrations before `next start`; the Worker entrypoint starts only the continuous background loop.
+
+Both services require the same `DATABASE_URL`, runtime-mode settings, session secret, and private
+Object Store credentials. For a Railway Bucket, map its `ENDPOINT`, `REGION`, `BUCKET`,
+`ACCESS_KEY_ID`, and `SECRET_ACCESS_KEY` credentials to the corresponding `OBJECT_STORE_*`
+variables, set `OBJECT_STORE_FORCE_PATH_STYLE=false`, and set `OBJECT_STORE_ALLOWED_ORIGINS` to the
+public Web origin. Local MinIO continues to use path style by default.
+
+For the synthetic Build Week deployment, set `DEMO_MODE=true`, keep
+`RUNTIME_MODE=GOLDEN_REPLAY`, and run `pnpm demo:reset:functional` exactly once after the first
+migration. The reset is destructive and must never be enabled for real hiring data. `OPENAI_API_KEY`
+is optional and belongs only on the Worker; without it the keyless product and recorded discovery
+remain available while LIVE assistant, transcription, and analysis operations fail visibly closed.
+
 Employer analysis is doubly gated. The sealed JobPost policy must opt in, and
 `EMPLOYER_REVIEW_AI_ENABLED=true` must explicitly open the platform kill switch. The default is
 closed. `EMPLOYER_REVIEW_AI_MODE=LIVE` uses the Worker-only API key and never falls back; the
@@ -227,10 +306,12 @@ process is launched without the OpenAI key.
 
 Without the required secret, LIVE verification is reported as `BLOCKED`, never passed.
 
-Candidate discovery uses `gpt-5.6-luna` with low reasoning. Employer Evidence Analyst uses
-`gpt-5.6-sol` with medium reasoning by default; controlled acceptance may explicitly choose
-`gpt-5.6-terra` or `gpt-5.6-luna`. Both use strict Structured Outputs, `store:false`, and no tools.
-The browser never receives the key. Synthetic fixtures are not a substitute for LIVE verification.
+Candidate discovery uses `gpt-5.6-luna` with low reasoning. Candidate Eligibility Match uses
+`gpt-5.6-sol` with medium reasoning. Employer Evidence Analyst also uses `gpt-5.6-sol` with medium
+reasoning by default; controlled acceptance may explicitly choose `gpt-5.6-terra` or
+`gpt-5.6-luna`. These Responses operations use strict Structured Outputs, `store:false`, and no
+tools. The browser never receives the key. Runtime LIVE failure never switches to a recorded output
+or synthetic fixture.
 
 Every development task must add or update automated tests, retain actual output under
 `test-reports/`, and update `HANDOFF.md`, as required by `AGENTS.md`.

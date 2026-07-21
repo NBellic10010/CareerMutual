@@ -1,6 +1,8 @@
 import { createHash } from "node:crypto";
 
 import {
+  CandidateEligibilityService,
+  CandidateEligibilityWorker,
   CandidateDiscoveryWorker,
   EmployerReviewAnalystWorker,
   CandidateEvidencePassportService,
@@ -11,11 +13,13 @@ import {
   type BlindReviewApplicationIdFactory,
   type CandidateInterestIdFactory,
   type CandidateDiscoveryIdFactory,
+  type CandidateEligibilityIdFactory,
   type FunctionalProductApplicationError,
   type FunctionalProductIdFactory,
 } from "../../packages/application/src/index";
 import {
   PostgresCandidateDiscoveryStore,
+  PostgresCandidateEligibilityStore,
   PostgresCandidateInterestStore,
   PostgresFunctionalProductStore,
   PostgresEmployerReviewAnalystStore,
@@ -25,12 +29,17 @@ import {
 } from "../../packages/db/src/index";
 import { MemoryObjectStore } from "../../packages/storage/src/index";
 import {
+  CandidateEligibilityMatchValidator,
   CandidateJobDiscoveryValidator,
   HiringIntelligenceError,
   PROMPT_REGISTRY,
   SyntheticEmployerReviewAnalystAdapter,
   validateAnswerEvidenceEdge,
 } from "../../packages/ai/src/index";
+import {
+  ELIGIBILITY_BACKGROUND_TAG_CATALOG,
+  type EligibilityMatchPolicy,
+} from "../../packages/contracts/src/index";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 const databaseUrl = process.env.TEST_DATABASE_URL;
@@ -58,8 +67,13 @@ const queueIds = {
 const discoveryIds = {
   nextId: (kind) => `candidate-discovery-test:${kind}:${++sequence}`,
 } satisfies CandidateDiscoveryIdFactory;
+const eligibilityIds = {
+  nextId: (kind) => `candidate-eligibility-test:${kind}:${++sequence}`,
+} satisfies CandidateEligibilityIdFactory;
 const service = new FunctionalProductService(store, objectStore, functionalIds);
 const discoveryStore = new PostgresCandidateDiscoveryStore(pool, store);
+const eligibilityStore = new PostgresCandidateEligibilityStore(pool, store);
+const eligibilityService = new CandidateEligibilityService(eligibilityStore, eligibilityIds);
 const passportService = new CandidateEvidencePassportService(discoveryStore, discoveryIds);
 const digest = (value: string) =>
   `sha256:${createHash("sha256").update(value, "utf8").digest("hex")}`;
@@ -180,6 +194,11 @@ async function seedAccounts(): Promise<void> {
 
 async function createPublishedJob(
   employerAiReviewPolicy: "OFF" | "ANSWER_ONLY" | "ANSWER_PLUS_PROCESS" = "OFF",
+  eligibilityMatchPolicy: EligibilityMatchPolicy = {
+    schema_version: "eligibility-match-policy@1",
+    access_mode: "OPEN_TO_ALL",
+    open_reasons: ["NO_BACKGROUND_REQUIRED"],
+  },
 ): Promise<string> {
   const draft = await service.createJobPostDraft(
     { ...employer, idempotencyKey: "functional-test:create-draft" },
@@ -196,6 +215,7 @@ async function createPublishedJob(
         seniority_band: "SENIOR",
         compensation_range: "$185k–$225k + equity",
         location_and_work_mode: "Remote · Americas",
+        eligibility_match_policy: eligibilityMatchPolicy,
         public_hard_requirements: ["English working proficiency"],
         hard_predicates: [
           {
@@ -269,7 +289,19 @@ async function createPublishedJob(
   return receipt.opportunity_ref;
 }
 
-async function registerInterest(opportunityRef: string, candidateRef: string): Promise<void> {
+async function registerInterest(
+  opportunityRef: string,
+  candidateRef: string,
+  access: {
+    readonly backgroundAccessBasis: "OPEN_TO_ALL" | "AI_POSITIVE_EVIDENCE";
+    readonly matchRef: string | null;
+    readonly matchVersion: number | null;
+  } = {
+    backgroundAccessBasis: "OPEN_TO_ALL",
+    matchRef: null,
+    matchVersion: null,
+  },
+): Promise<void> {
   const handler = new SubmitCandidateInterestHandler(
     new PostgresCandidateInterestStore(pool),
     interestIds,
@@ -281,7 +313,10 @@ async function registerInterest(opportunityRef: string, candidateRef: string): P
     idempotencyKey: `functional-test:interest:${candidateRef}`,
     correlationId: `functional-test:interest:${candidateRef}`,
     command: {
-      schema_version: "candidate-interest-command@1",
+      schema_version: "candidate-interest-command@2",
+      background_access_basis: access.backgroundAccessBasis,
+      eligibility_match_ref: access.matchRef,
+      eligibility_match_version: access.matchVersion,
       hard_facts: [
         {
           fact_ref: `fact-language-${candidateRef}`,
@@ -1365,6 +1400,183 @@ describe.sequential("Functional product PostgreSQL vertical", () => {
     const employerDashboard = await store.getEmployerDashboard("reviewer-sarah-chen");
     expect(JSON.stringify(employerDashboard)).not.toMatch(
       /postgres-retry-sample|passport-snapshot|candidate-discovery/iu,
+    );
+  });
+
+  it("gates Job visibility on validated Candidate-only AI evidence while OPEN jobs stay independent", async () => {
+    const computerScience = ELIGIBILITY_BACKGROUND_TAG_CATALOG.find(
+      (tag) => tag.public_name === "Computer Science",
+    )!;
+    const backendEngineering = ELIGIBILITY_BACKGROUND_TAG_CATALOG.find(
+      (tag) => tag.public_name === "Backend Engineering",
+    )!;
+    const opportunityRef = await createPublishedJob("OFF", {
+      schema_version: "eligibility-match-policy@1",
+      access_mode: "EVIDENCE_MATCH_REQUIRED",
+      taxonomy_version: "eligibility-background-tags@1",
+      accepted_tags: [computerScience, backendEngineering],
+    });
+    const context = {
+      actor: { role: "CANDIDATE" as const, actorId: "candidate-42" },
+      correlationId: "eligibility-postgres:candidate-42",
+      idempotencyKey: "eligibility-postgres:save",
+    };
+    const saved = await passportService.saveDraft(context, {
+      schema_version: "save-candidate-evidence-passport-draft-command@2",
+      expected_draft_version: 0,
+      education: {
+        education_ref: "education:eligibility-candidate-42",
+        level: "BACHELOR",
+        status: "GRADUATED",
+        institution_label: "Synthetic Regional University",
+        field_of_study: "Computer science",
+        graduation_date: "2025-05-15",
+        source_sha256: digest("eligibility-postgres-education"),
+        verification_state: "SYNTHETIC_SOURCE_ATTACHED",
+        visibility: "CANDIDATE_ONLY",
+      },
+      evidence_items: [
+        {
+          evidence_ref: "evidence:eligibility-backend-sample",
+          kind: "WORK_SAMPLE",
+          display_title: "Synthetic bounded backend work sample",
+          bounded_summary:
+            "A synthetic work sample describing retry idempotency and bounded failure analysis.",
+          contribution_summary:
+            "The Candidate states that they authored the bounded analysis and failure checklist.",
+          occurred_from: "2025-01-01",
+          occurred_to: "2025-01-02",
+          synthetic_locator_label: "synthetic://work-sample/eligibility-backend",
+          source_sha256: digest("eligibility-postgres-work-sample"),
+          verification_state: "SYNTHETIC_SOURCE_ATTACHED",
+          visibility: "CANDIDATE_ONLY",
+        },
+      ],
+    });
+    const published = await passportService.publish(
+      { ...context, idempotencyKey: "eligibility-postgres:publish" },
+      {
+        schema_version: "publish-candidate-evidence-passport-command@1",
+        expected_draft_version: saved.draft_version,
+        discovery_consent_version: "candidate-discovery-consent@1",
+      },
+    );
+    expect(published.snapshot_ref).not.toBeNull();
+    const preMatchFeed = await eligibilityStore.getCandidateOpportunityFeed("candidate-42");
+    expect(preMatchFeed.opportunities).toHaveLength(0);
+    expect(preMatchFeed.eligibility_status).toBe("MATCHING");
+    expect(
+      (await eligibilityStore.getCandidateOpportunityFeed("candidate-17")).opportunities,
+    ).toHaveLength(0);
+
+    const eligibilityWorker = new CandidateEligibilityWorker(
+      eligibilityStore,
+      {
+        async deriveMatches(input) {
+          const role = input.opportunities[0];
+          if (role === undefined) throw new Error("Missing gated role.");
+          return {
+            output: {
+              schema_version: "candidate-eligibility-match-output@1",
+              matches: [
+                {
+                  opportunity_ref: role.opportunity_ref,
+                  state: "POSITIVE_EVIDENCE",
+                  connections: [
+                    {
+                      tag_ref: computerScience.tag_ref,
+                      evidence_refs: [input.education.education_ref],
+                      connection_type: "EDUCATION",
+                      bounded_reason:
+                        "The synthetic education field directly names the sealed computer-science background area.",
+                      still_unknown: [
+                        "The attached source does not establish performance in this role.",
+                      ],
+                    },
+                  ],
+                },
+              ],
+            },
+            providerResponseId: "response:postgres-eligibility",
+            resolvedModel: "gpt-5.6-sol",
+          };
+        },
+      },
+      new CandidateEligibilityMatchValidator(),
+      { hash: (value) => digest(JSON.stringify(value)) },
+      eligibilityIds,
+      {
+        promptId: "onlyboth.derive-candidate-eligibility-matches",
+        promptVersion: "1.0.0",
+        promptHash: digest("candidate-eligibility-prompt-v1"),
+        inputSchemaVersion: "candidate-eligibility-match-input@1",
+        outputSchemaVersion: "candidate-eligibility-match-output@1",
+      },
+      3,
+      () => new Date(),
+      () => "candidate-eligibility-postgres-client-request",
+    );
+    await expect(eligibilityWorker.runOnce("candidate-eligibility-postgres-worker")).resolves.toBe(
+      "PROCESSED",
+    );
+    const feed = await eligibilityStore.getCandidateOpportunityFeed("candidate-42");
+    expect(feed.eligibility_status).toBe("READY");
+    expect(feed.opportunities).toHaveLength(1);
+    expect(feed.opportunities[0]).toMatchObject({
+      opportunity_ref: opportunityRef,
+      eligibility_access: {
+        access_basis: "AI_POSITIVE_EVIDENCE",
+        evidence_refs: ["education:eligibility-candidate-42"],
+        tag_refs: [computerScience.tag_ref],
+        recorded_live: false,
+      },
+    });
+    const access = feed.opportunities[0]!.eligibility_access;
+    await registerInterest(opportunityRef, "candidate-42", {
+      backgroundAccessBasis: "AI_POSITIVE_EVIDENCE",
+      matchRef: access.match_ref,
+      matchVersion: access.match_version,
+    });
+    await expect(registerInterest(opportunityRef, "candidate-17")).rejects.toMatchObject({
+      code: "OPPORTUNITY_NOT_FOUND",
+      httpStatus: 404,
+    });
+    expect(await eligibilityStore.getCandidateJobDetail("candidate-17", opportunityRef)).toBeNull();
+
+    const projection = await eligibilityService.getProjection(context.actor);
+    const refreshContext = {
+      ...context,
+      idempotencyKey: "eligibility-postgres:refresh-ready",
+    };
+    const refreshed = await eligibilityService.refresh(refreshContext, {
+      schema_version: "refresh-candidate-eligibility-command@1",
+      expected_projection_version: projection.projection_version,
+    });
+    await expect(
+      eligibilityService.refresh(refreshContext, {
+        schema_version: "refresh-candidate-eligibility-command@1",
+        expected_projection_version: projection.projection_version,
+      }),
+    ).resolves.toEqual(refreshed);
+    const matchRow = await pool.query<{ match_ref: string }>(
+      `SELECT match_ref FROM candidate_job_eligibility_matches
+        WHERE candidate_ref = 'candidate-42' AND opportunity_ref = $1`,
+      [opportunityRef],
+    );
+    await expect(
+      pool.query(
+        `UPDATE candidate_job_eligibility_matches SET output_hash = output_hash
+          WHERE match_ref = $1`,
+        [matchRow.rows[0]?.match_ref],
+      ),
+    ).rejects.toThrow(/immutable/u);
+    const catalog = await pool.query<{ tag_count: string }>(
+      `SELECT COUNT(*)::text AS tag_count FROM eligibility_background_tags
+        WHERE taxonomy_version = 'eligibility-background-tags@1'`,
+    );
+    expect(catalog.rows[0]?.tag_count).toBe("100");
+    expect(JSON.stringify(await store.getEmployerDashboard("reviewer-sarah-chen"))).not.toMatch(
+      /eligibility-backend-sample|passport-snapshot|computer-science background/iu,
     );
   });
 });

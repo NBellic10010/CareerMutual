@@ -10,6 +10,7 @@ import {
   type FunctionalProductIdFactory,
 } from "@onlyboth/application";
 import {
+  PostgresCandidateEligibilityStore,
   PostgresCandidateInterestStore,
   PostgresFunctionalProductStore,
   PostgresInterestQueueStore,
@@ -18,17 +19,23 @@ import {
 import {
   CandidateEvidenceItemSchema,
   CandidateEvidencePassportProjectionSchema,
+  CandidateEligibilityJobMatchSchema,
+  CandidateEligibilityProjectionSchema,
   CandidateEducationRecordSchema,
   CandidateJobDiscoverySignalSchema,
   CandidateResumeSnapshotSchema,
+  ELIGIBILITY_BACKGROUND_TAG_CATALOG,
 } from "@onlyboth/contracts";
 import { SYNTHETIC_CANDIDATES } from "@onlyboth/demo-fixtures";
 import { MemoryObjectStore } from "@onlyboth/storage";
 
 import {
   ADDITIONAL_SYNTHETIC_JOB_POSTS,
+  MATCHING_LAB_SYNTHETIC_JOB_POSTS,
+  SYNTHETIC_ELIGIBILITY_DEMO_TARGETS,
   resolveFunctionalDemoEmployerReviewPolicy,
 } from "./functional-demo-job-fixtures";
+import { CANDIDATE_ELIGIBILITY_RECORDED_LIVE } from "./fixtures/candidate-eligibility-recorded-live";
 
 const databaseUrl =
   process.env.DATABASE_URL ??
@@ -176,6 +183,20 @@ try {
           },
         ],
         capability_areas: ["Distributed systems", "Payment idempotency", "Operational reasoning"],
+        eligibility_match_policy: {
+          schema_version: "eligibility-match-policy@1",
+          access_mode: "EVIDENCE_MATCH_REQUIRED",
+          taxonomy_version: "eligibility-background-tags@1",
+          accepted_tags: ELIGIBILITY_BACKGROUND_TAG_CATALOG.filter((tag) =>
+            [
+              "Computer Science",
+              "Mathematics",
+              "Information Systems",
+              "Data Engineering",
+              "Backend Engineering",
+            ].includes(tag.public_name),
+          ),
+        },
         critical_question:
           "A payment retry worker can lose Redis during a failover after a provider charge succeeds but before local acknowledgement. Explain the smallest safe recovery design, the invariants you would preserve, and the tests that would falsify your approach.",
         critical_challenge: {
@@ -243,7 +264,11 @@ try {
   );
 
   let walletVersion = published.new_wallet_version;
-  for (const [index, jobPost] of ADDITIONAL_SYNTHETIC_JOB_POSTS.entries()) {
+  const syntheticJobPosts = [
+    ...ADDITIONAL_SYNTHETIC_JOB_POSTS,
+    ...MATCHING_LAB_SYNTHETIC_JOB_POSTS,
+  ];
+  for (const [index, jobPost] of syntheticJobPosts.entries()) {
     const configuredJobPost = {
       ...jobPost,
       employer_ai_review_policy: employerReviewPolicy.policy,
@@ -796,6 +821,162 @@ try {
     }
   }
 
+  const gatedJobs = await pool.query<{
+    opportunity_ref: string;
+    opportunity_version: number;
+    title: string;
+    contract_version_ref: string;
+    contract_hash: string;
+    policy_ref: string;
+    accepted_tags_json: readonly { readonly tag_ref: string; readonly public_name: string }[];
+  }>(
+    `SELECT opportunity.id AS opportunity_ref, opportunity.version AS opportunity_version,
+            opportunity.title, contract.contract_version_ref, contract.contract_hash,
+            policy.policy_ref, policy.accepted_tags_json
+       FROM opportunities AS opportunity
+       JOIN sealed_capability_contracts AS contract
+         ON contract.contract_version_ref = opportunity.current_contract_version_ref
+       JOIN job_eligibility_match_policies AS policy
+         ON policy.opportunity_ref = opportunity.id
+      WHERE opportunity.status = 'OPEN'
+        AND policy.access_mode = 'EVIDENCE_MATCH_REQUIRED'
+      ORDER BY opportunity.created_at DESC, opportunity.id`,
+  );
+  const recordedPins = CANDIDATE_ELIGIBILITY_RECORDED_LIVE.pins;
+  const recordedJob = gatedJobs.rows.find(
+    (job) => job.opportunity_ref === recordedPins.opportunity_ref,
+  );
+  const recordedSnapshot = await pool.query<{ snapshot_hash: string }>(
+    `SELECT snapshot_hash FROM candidate_evidence_passport_snapshots
+      WHERE snapshot_ref = $1 AND candidate_ref = $2`,
+    [recordedPins.passport_snapshot_ref, recordedPins.candidate_ref],
+  );
+  if (
+    recordedJob === undefined ||
+    recordedJob.opportunity_version !== recordedPins.opportunity_version ||
+    recordedJob.contract_hash !== recordedPins.contract_hash ||
+    recordedSnapshot.rows[0]?.snapshot_hash !== recordedPins.passport_snapshot_hash
+  ) {
+    throw new Error(
+      "RECORDED_LIVE Eligibility fixture pins are stale; re-run the explicit recording script.",
+    );
+  }
+  const recordedMatch = CandidateEligibilityJobMatchSchema.parse(
+    CANDIDATE_ELIGIBILITY_RECORDED_LIVE.output.matches[0],
+  );
+  for (const candidate of SYNTHETIC_CANDIDATES) {
+    const candidateRef = candidate.actor.actor_ref;
+    const snapshotRefForMatch = `passport-snapshot:${candidateRef}:preloaded-v1`;
+    const matchSetRef = `eligibility-demo-preloaded:${candidateRef}:v1`;
+    const targets = SYNTHETIC_ELIGIBILITY_DEMO_TARGETS[candidateRef] ?? [];
+    const containsRecordedLive = candidateRef === recordedPins.candidate_ref;
+    await pool.query(
+      `INSERT INTO candidate_eligibility_match_sets (
+         match_set_ref, candidate_ref, passport_snapshot_ref, job_set_hash,
+         status, recorded_live, reason_code, created_at, completed_at
+       ) VALUES ($1, $2, $3, $4, 'READY', $5, $6, $7, $7)`,
+      [
+        matchSetRef,
+        candidateRef,
+        snapshotRefForMatch,
+        canonicalSha256(
+          gatedJobs.rows.map((job) => ({
+            opportunity_ref: job.opportunity_ref,
+            contract_hash: job.contract_hash,
+          })),
+        ),
+        containsRecordedLive,
+        containsRecordedLive ? "RECORDED_LIVE_WITH_SYNTHETIC_NEGATIVES" : "SYNTHETIC_PRELOADED",
+        seededAt,
+      ],
+    );
+    for (const gatedJob of gatedJobs.rows) {
+      const isRecordedLive =
+        containsRecordedLive && gatedJob.opportunity_ref === recordedPins.opportunity_ref;
+      const positiveTarget = targets.find((target) => target.title === gatedJob.title);
+      const positive = positiveTarget !== undefined;
+      const acceptedTag = positive
+        ? gatedJob.accepted_tags_json.find((tag) => tag.public_name === positiveTarget.tag)
+        : null;
+      if (positive && acceptedTag === undefined) {
+        throw new Error(
+          `Demo Eligibility tag '${positiveTarget.tag}' is not sealed for '${positiveTarget.title}'.`,
+        );
+      }
+      const match = isRecordedLive
+        ? recordedMatch
+        : CandidateEligibilityJobMatchSchema.parse({
+            opportunity_ref: gatedJob.opportunity_ref,
+            state: positive ? "POSITIVE_EVIDENCE" : "NO_POSITIVE_EVIDENCE",
+            connections: positive
+              ? [
+                  {
+                    tag_ref: acceptedTag!.tag_ref,
+                    evidence_refs: [
+                      positiveTarget!.source === "EDUCATION"
+                        ? `education:${candidateRef}:highest-v1`
+                        : `evidence:${candidateRef}:${candidate.evidence_theme}`,
+                    ],
+                    connection_type: positiveTarget!.source,
+                    bounded_reason:
+                      positiveTarget!.source === "EDUCATION"
+                        ? `The synthetic education field has a direct bounded connection to the Recruiter-sealed ${acceptedTag!.public_name} tag.`
+                        : `The Candidate-only synthetic work sample has a bounded source-linked connection to the Recruiter-sealed ${acceptedTag!.public_name} tag.`,
+                    still_unknown: [
+                      "The attached source shape does not verify identity, ownership, or role performance.",
+                    ],
+                  },
+                ]
+              : [],
+          });
+      await pool.query(
+        `INSERT INTO candidate_job_eligibility_matches (
+           match_ref, match_set_ref, candidate_ref, passport_snapshot_ref,
+           opportunity_ref, opportunity_version, contract_version_ref, contract_hash,
+           policy_ref, state, match_json, output_hash, recorded_live, created_at
+         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11::jsonb, $12, $13, $14)`,
+        [
+          `eligibility-match:${candidateRef}:${gatedJob.opportunity_ref}:preloaded-v1`,
+          matchSetRef,
+          candidateRef,
+          snapshotRefForMatch,
+          gatedJob.opportunity_ref,
+          gatedJob.opportunity_version,
+          gatedJob.contract_version_ref,
+          gatedJob.contract_hash,
+          gatedJob.policy_ref,
+          match.state,
+          JSON.stringify(match),
+          canonicalSha256(match),
+          isRecordedLive,
+          seededAt,
+        ],
+      );
+    }
+    const eligibilityProjection = CandidateEligibilityProjectionSchema.parse({
+      schema_version: "candidate-eligibility-projection@1",
+      candidate_ref: candidateRef,
+      status: "READY",
+      passport_snapshot_ref: snapshotRefForMatch,
+      projection_version: 1,
+      reason_code: containsRecordedLive ? "RECORDED_LIVE" : "SYNTHETIC_PRELOADED",
+      updated_at: seededAt,
+    });
+    await pool.query(
+      `INSERT INTO candidate_eligibility_projections (
+         candidate_ref, projection_version, passport_snapshot_ref, status,
+         reason_code, projection_json, updated_at
+       ) VALUES ($1, 1, $2, 'READY', $3, $4::jsonb, $5)`,
+      [
+        candidateRef,
+        snapshotRefForMatch,
+        eligibilityProjection.reason_code,
+        JSON.stringify(eligibilityProjection),
+        seededAt,
+      ],
+    );
+  }
+
   const interest = new SubmitCandidateInterestHandler(
     new PostgresCandidateInterestStore(pool),
     interestIds,
@@ -807,7 +988,7 @@ try {
     idempotencyKey: "functional-demo:candidate-42:interest",
     correlationId: "functional-demo:candidate-42:interest",
     command: {
-      schema_version: "candidate-interest-command@1",
+      schema_version: "candidate-interest-command@2",
       hard_facts: [
         { fact_ref: "candidate42-work-auth", fact_type: "work_authorization", value: true },
         { fact_ref: "candidate42-language", fact_type: "required_language", value: "English" },
@@ -815,6 +996,9 @@ try {
       ],
       consent_version: "candidate-application-terms@1",
       expected_opportunity_version: 1,
+      background_access_basis: "AI_POSITIVE_EVIDENCE",
+      eligibility_match_ref: `eligibility-match:candidate-42:${published.opportunity_ref}:preloaded-v1`,
+      eligibility_match_version: 1,
     },
   });
   const queueStore = new PostgresInterestQueueStore(pool);
@@ -822,13 +1006,21 @@ try {
     queueStore,
     new OfferNextQueuedInterestHandler(queueStore, queueIds, sha256),
   );
-  for (let attempt = 0; attempt < 10; attempt += 1) {
-    if ((await queueWorker.runOnce("functional-demo-reset")) === "IDLE") break;
-  }
-  const feed = await store.getCandidateOpportunityFeed("candidate-42");
-  const job = feed.opportunities.find(
+  const candidateFeedStore = new PostgresCandidateEligibilityStore(pool, store);
+  let feed = await candidateFeedStore.getCandidateOpportunityFeed("candidate-42");
+  let job = feed.opportunities.find(
     ({ opportunity_ref }) => opportunity_ref === published.opportunity_ref,
   );
+  for (let attempt = 0; attempt < 40 && job?.interest_state !== "BACKED_OFFERED"; attempt += 1) {
+    await queueWorker.runOnce("functional-demo-reset");
+    feed = await candidateFeedStore.getCandidateOpportunityFeed("candidate-42");
+    job = feed.opportunities.find(
+      ({ opportunity_ref }) => opportunity_ref === published.opportunity_ref,
+    );
+    if (job?.interest_state !== "BACKED_OFFERED") {
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    }
+  }
   if (job?.interest_state !== "BACKED_OFFERED") {
     throw new Error("Functional demo did not produce a backed Candidate 42 Offer.");
   }
@@ -838,7 +1030,8 @@ try {
       opportunity_ref: published.opportunity_ref,
       invitation_ref: job.backed_offer?.invitation_ref,
       candidate_credit: feed.credit.available_credits,
-      job_post_count: feed.opportunities.length,
+      candidate_feed_count: feed.opportunities.length,
+      published_job_post_count: 1 + syntheticJobPosts.length,
       employer_ai_review_policy: employerReviewPolicy.policy,
       synthetic_candidate_count: SYNTHETIC_CANDIDATES.length,
     }),

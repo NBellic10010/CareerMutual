@@ -24,7 +24,8 @@ OnlyBoth is a label-blind proof and Attention Escrow mechanism for hiring. It ad
 
 The runnable spine uses Senior Backend Engineer hiring as its primary acceptance scenario. The
 synthetic catalog also includes twenty cross-domain roles to verify that the mechanism is not a
-code-test-specific trick.
+code-test-specific trick, plus six technology Match Lab roles that exercise distinct Candidate-only
+Eligibility feeds for the six engineering-oriented synthetic Candidates.
 
 The product sequence is fixed:
 
@@ -51,13 +52,14 @@ complete trace is frozen with the Answer, it cannot submit, and it never receive
 the browser. External Candidate AI remains outside the controlled workspace. Neither AI surface may
 create a pre-answer candidate-selection edge from a profile or self-asserted claim.
 
-A Candidate may optionally publish a private Evidence Passport for Candidate-side job discovery.
-`deriveCandidateJobSignals` may connect sanitized synthetic source refs to public Job Contract
-capabilities, but its output is guidance for that Candidate only. It MUST NOT enter Employer
-projections, Eligibility, Interest Queue order, Answer Invitations, Attention allocation, or human
-review. The Candidate Feed defaults to an evidence-linked `Matched for you` layer, while every open
-JobPost remains accessible through the secondary `Explore all jobs` layer; the Candidate remains the
-only actor who can register Interest. The Passport MUST contain an explicit highest-education record, including the valid
+A Candidate may optionally publish a private Evidence Passport for Candidate-side JobPost access.
+`deriveCandidateEligibilityMatches` may unlock an evidence-gated JobPost only when a validated
+positive connection binds an input Evidence ref to one Recruiter-sealed background tag. It is an
+OR-shaped access hypothesis, not a score, rank, verification claim, Employer candidate list, or
+Attention decision. A Candidate without a published Passport sees only `OPEN_TO_ALL` roles. GPT
+failure remains `MATCHING | PARTIAL | FAILED | STALE`, never an ineligibility conclusion, and
+`OPEN_TO_ALL` roles remain accessible. The older `deriveCandidateJobSignals` data is retained for
+compatibility but has no Feed-visibility authority. The Passport MUST contain an explicit highest-education record, including the valid
 `NO_FORMAL_DEGREE` pathway. Discovery uses deterministic precedence rather than a score: education
 precedes work/credential evidence through the inclusive two-year graduation boundary; after that,
 work/credentials precede education. Institution identity is excluded from the AI input, and absence
@@ -111,6 +113,9 @@ The server MUST enforce all of the following:
 
 - A formal answer cannot start without a named reviewer, an available Answer Review Slot, a review SLA, and `CreditHold=HELD`.
 - Employer selection before an answer MUST NOT use candidate claims, profile text, résumé labels, source packaging, or GPT rationale.
+- Candidate-side background access may use only a validated positive Passport-Evidence-to-Job-tag
+  connection or an immutable `OPEN_TO_ALL` policy. It cannot produce Employer-visible candidate
+  cards, ranking, Queue order, or a negative ability conclusion.
 - Answer Review Slots are reusable concurrent obligations, not a total applicant cap.
 - Answer Invitations are scheduled by deterministic hard Eligibility and a versioned public non-profile queue policy; the Employer does not pick or reorder candidates before they answer.
 - Every submitted formal Application must receive one named human Review Receipt or enter visible Employer Breach.
@@ -229,7 +234,9 @@ Sealed objects are immutable. A rule change creates a new version and never rewr
 ## 7. Label Veil, authorization, and data boundaries
 
 - Physically separate `candidate_private_labels`, `candidate_claims`, and recorded answer evidence.
-- Before Candidate answers exist, Sarah receives no Candidate Profile or Claim DTO; deterministic Eligibility exposes only an opaque eligible/ineligible status to the allocation service.
+- Before Candidate answers exist, Sarah receives no Candidate Profile, Passport, Match, connection,
+  or Claim DTO. `EligibilityEdge@2` exposes only an opaque access basis plus deterministic hard-fact
+  result to the allocation service.
 - After answers exist, Sarah and GPT may read only role-specific anonymous Answer Evidence DTOs.
 - Name, photo, school, previous employer, referral source, and counterfactual rank MUST NOT appear in first-round Employer payloads, GPT inputs, ordinary logs, or error messages.
 - Candidate, Employer, and Synthetic Judge use separate server-side projections and endpoints.
@@ -260,7 +267,9 @@ reviewed anonymous answer evidence in a completed Advancement Cohort
 → Challenge + outcome + settlement
 ```
 
-- Eligibility is a deterministic hard-constraint check and does not grant the Employer access to a Candidate profile.
+- Eligibility has two separated layers: GPT may establish Candidate-only background access through
+  one validated positive Evidence-to-tag connection; deterministic code alone evaluates legal,
+  language, timezone, and other typed hard predicates. Neither layer grants the Employer profile access.
 - The Employer activates bounded reusable Blind Answer Review WIP before any formal Application is accepted.
 - Lightweight Interest is a queue registration, not an Application or a claim of individual human review.
 - Candidate Application Credit is a non-transferable rate limit, never a bid, ranking signal, or
@@ -270,11 +279,12 @@ reviewed anonymous answer evidence in a completed Advancement Cohort
   capability inference. Candidate abandonment after the Answer starts and an empty deadline expiry
   do not return it.
 - Candidate claims may support candidate-side routing or later audit, but they are not an Employer selection input and are not verified ability evidence.
-- Candidate-side discovery may link sanitized Passport source refs to public capability refs as a
-  bounded hypothesis. The UI may use those connections for the default `Matched for you` layer, but
-  `Explore all jobs` must keep every open JobPost accessible. Discovery cannot set Eligibility,
-  reorder Interests, allocate Slots, or describe `SYNTHETIC_SOURCE_ATTACHED` as independently
-  verified.
+- Candidate-side Eligibility matching may link sanitized Passport source refs to Recruiter-sealed
+  education/work-domain tags as a bounded access hypothesis. The Feed returns only a current
+  positive Evidence match, `OPEN_TO_ALL`, or an already pinned active Journey. An unmatched role's
+  Feed, detail, and Interest surfaces must all return the same not-found boundary. Matching cannot
+  reorder Interests, allocate Slots, create Employer candidate lists, or describe
+  `SYNTHETIC_SOURCE_ATTACHED` as independently verified.
 - Demo actor switching MUST issue a signed allowlisted actor Session; changing a client-side label
   is not authentication. Each synthetic Candidate must retain an independent Credit account,
   Passport, discovery projection, and Resume Snapshot. The operator-only identity chooser must not
@@ -321,11 +331,12 @@ Candidate Reach is optional and is not required for the main demo. If implemente
 
 ## 9. GPT boundary
 
-The target application exposes seven narrow AI operations:
+The target application exposes eight narrow AI operations:
 
 ```text
 compileContract
 deriveCandidateJobSignals
+deriveCandidateEligibilityMatches
 buildAnswerEvidenceEdge
 recommendChallenges
 compressEvidence
@@ -337,6 +348,12 @@ transcribeVoiceMemo
 input excludes identity labels, former-employer names, raw locator tokens, contact details, and the
 Private Label Vault; its output contains only input-bound opportunity/capability/evidence refs,
 bounded reasons, and `still_unknown`.
+
+`deriveCandidateEligibilityMatches` is the only AI operation with Candidate Feed access authority.
+It receives no identity, school name, former-employer name, contact detail, Resume, Private Label,
+or raw locator. Every positive result must bind input Opportunity, tag, Evidence, and source refs;
+education can connect only to education tags and all other evidence only to work-domain tags. It
+cannot rank, score, hide `OPEN_TO_ALL`, alter Queue order, or create an Employer-visible match list.
 
 The currently implemented `buildMatchEdge` operation is a deprecated compatibility surface until
 the blind-answer migration is complete; it must not be treated as authority for target product behavior.

@@ -14,5 +14,11 @@ describe("synthetic actor chooser", () => {
     expect(markup).toContain("Recruiter · Sarah Chen");
     expect(markup).toContain("Start as Jordan Lee");
     expect(markup).toContain("identity choices never enter the Recruiter");
+    expect(markup).toContain("CareerMutual");
+    expect(markup).toContain("Hired");
+    expect(markup).toContain("Let performance talk first!");
+    expect(markup).toContain('data-login-role="candidate"');
+    expect(markup).toContain('data-login-role="recruiter"');
+    expect(markup).not.toContain("Enter the blind review loop.");
   });
 });

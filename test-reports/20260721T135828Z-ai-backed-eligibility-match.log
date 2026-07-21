@@ -1,0 +1,98 @@
+OnlyBoth test report
+Change: AI-backed Candidate Eligibility Match vertical
+Timestamp (UTC): 2026-07-21T13:58:28Z
+Branch: feat/ui-ux-optimization
+Baseline commit: 2f0ae15 feat: add two-layer candidate opportunity feed
+Runtime: PostgreSQL 16, local MinIO, Next.js production server, Worker-only OpenAI Responses API
+
+Scope
+- Added eligibility-match-policy@1 with OPEN_TO_ALL and EVIDENCE_MATCH_REQUIRED modes.
+- Added an exact 100-tag catalog: 50 education fields and 50 work domains.
+- Added strict Candidate Eligibility AI contracts, Prompt, semantic validator, Sol Responses adapter,
+  Worker workflow, immutable PostgreSQL persistence, Candidate-only projection, and Interest pins.
+- Cut Candidate Feed, Detail, and Interest access over to OPEN_TO_ALL, a validated positive current
+  Evidence-to-tag match, or an already-active Journey pin.
+- Added Recruiter policy/tag composition, Candidate Passport match status/refresh, evidence-linked
+  Job cards, and a disclosed RECORDED_LIVE Demo output.
+- Preserved deterministic legal/language/time-zone checks and public non-profile Queue order.
+
+Verification
+1. pnpm check
+   Exit code: 0
+   PASS: Prettier and ESLint with zero warnings.
+   PASS: all workspace and test TypeScript checks.
+   PASS: Unit — 46 files, 249 tests.
+   PASS: Integration — 12 files passed, 1 conditionally skipped; 42 tests passed, 2 skipped.
+   PASS: Security — 6 files, 25 tests.
+   PASS: Replay — 2 files, 7 tests.
+   PASS: documentation contracts — 49 + 40 + 87 assertions.
+
+2. pnpm test:evals
+   Exit code: 0
+   PASS: 5 files, 46 deterministic contract evals, including 108 Eligibility decisions.
+
+3. source .env.local && pnpm test:postgres
+   Exit code: 0
+   PASS: 6 files, 46 PostgreSQL tests.
+   Covered fresh migration, complete rollback/reapply, policy/match immutability, fan-out,
+   optimistic concurrency, hidden unmatched Detail/Interest, OPEN_TO_ALL, and Interest pins.
+
+4. source .env.local && PLAYWRIGHT_PORT=3100 pnpm test:e2e
+   Exit code: 0
+   PASS: 4 Playwright tests in 11.5 seconds after the final production rebuild.
+   Covered Candidate 42 Backend+OPEN Feed, Candidate 27 Illustration+OPEN Feed, unmatched Detail
+   404, RECORDED_LIVE disclosure, Recruiter policy composer, Candidate Passport, backed application,
+   MinIO voice upload, immutable Submit, sequential Human Review, 390px layout, and Focus sealing.
+
+5. pnpm build
+   Exit code: 0
+   PASS: Next.js production compile, TypeScript, page-data collection, static generation, and route
+   finalization, including the new tag and Eligibility refresh APIs.
+
+6. source .env.local && pnpm demo:reset:functional
+   Exit code: 0
+   PASS: FUNCTIONAL_DEMO_READY with 21 JobPosts and 7 synthetic Candidates.
+
+7. source .env.local && pnpm demo:offline
+   Exit code: 0
+   PASS: GOLDEN_REPLAY retained zero external Web dependencies for the historical Challenge replay.
+
+8. source .env.local && pnpm exec vitest run
+   tests/evals/candidate-eligibility.live.eval.test.ts
+   --config vitest.live-evals.config.ts --reporter=verbose
+   Exit code: 0
+   PASS: requested and resolved model gpt-5.6-sol.
+   PASS: 108/108 strict Schema/ref/privacy hard gates.
+   Round 1: positive recall 12/12; near-negative false positives 0; injection false positives 0.
+   Round 2: positive recall 12/12; near-negative false positives 0; injection false positives 0.
+   Round 3: positive recall 12/12; near-negative false positives 0; injection false positives 0.
+   Duration: 120.46 seconds.
+
+9. git diff --check
+   Exit code: 0
+   PASS: no whitespace errors.
+
+Issues found and resolved during acceptance
+- A global unique policy_hash incorrectly prevented two Jobs from sharing one policy. Migration
+  0014 replaces it with the intended per-Job hash scope.
+- The strict AI DTO initially received internal policy/contract fields. The assembler now strips
+  them before strict parsing.
+- The retained Queue Worker accepted only Interest V1. It now accepts pinned V2 Interests without
+  weakening historical compatibility.
+- Demo reset could observe an IDLE worker while another lease was active. It now polls boundedly for
+  the resulting projection.
+- Old migration and documentation tests stopped at migration 0012 and encoded complete-market Feed
+  access. Their assertions now test 0013/0014 and the new fail-closed access semantics.
+- Port 3000 was occupied by the visible development app. Playwright now supports an isolated port;
+  local MinIO permits the explicit 3100 test origin.
+
+Skipped and blocked
+- Two existing conditional integration assertions were skipped by their own environment guards.
+- No required Eligibility verification was blocked.
+
+Known boundary
+- SYNTHETIC_SOURCE_ATTACHED is not ownership, employment, credential, or capability verification.
+- RECORDED_LIVE is Demo-only and pin-validated. Runtime LIVE failures never read it or another fixed
+  fixture.
+- GPT controls Candidate-side access only; it cannot rank the Queue, expose a Candidate list to the
+  Recruiter, allocate Attention, or perform Human Review.

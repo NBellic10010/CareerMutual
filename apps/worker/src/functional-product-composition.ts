@@ -1,7 +1,9 @@
 import { createHash, randomUUID } from "node:crypto";
 
 import {
+  CandidateEligibilityMatchValidator,
   CandidateJobDiscoveryValidator,
+  LiveCandidateEligibilityMatchAdapter,
   LiveCandidateAnswerAssistantAdapter,
   LiveCandidateJobDiscoveryAdapter,
   LiveEmployerReviewAnalystAdapter,
@@ -13,22 +15,26 @@ import {
 } from "@onlyboth/ai";
 import type {
   CandidateAnswerAssistantPort,
+  CandidateEligibilityIdFactory,
+  CandidateEligibilityWorker,
   CandidateDiscoveryIdFactory,
   CandidateDiscoveryWorker,
   FunctionalProductIdFactory,
   VoiceTranscriptionPort,
 } from "@onlyboth/application";
 import {
+  CandidateEligibilityWorker as CandidateEligibilityWorkerRuntime,
   CandidateDiscoveryWorker as CandidateDiscoveryWorkerRuntime,
   EmployerReviewAnalystWorker,
 } from "@onlyboth/application";
 import {
+  PostgresCandidateEligibilityStore,
   PostgresCandidateDiscoveryStore,
   PostgresEmployerReviewAnalystStore,
   PostgresFunctionalProductStore,
   createPostgresPool,
 } from "@onlyboth/db";
-import { S3ObjectStore } from "@onlyboth/storage";
+import { resolveS3ForcePathStyle, S3ObjectStore } from "@onlyboth/storage";
 
 import { loadEmployerReviewAnalystRuntimePolicy } from "./employer-review-analyst-policy.js";
 
@@ -37,6 +43,10 @@ const ids: FunctionalProductIdFactory = {
 };
 
 const discoveryIds: CandidateDiscoveryIdFactory = {
+  nextId: (kind) => `${kind}:${randomUUID()}`,
+};
+
+const eligibilityIds: CandidateEligibilityIdFactory = {
   nextId: (kind) => `${kind}:${randomUUID()}`,
 };
 
@@ -52,7 +62,7 @@ function objectStore(environment: Readonly<Record<string, string | undefined>>) 
     accessKeyId: environment.OBJECT_STORE_ACCESS_KEY_ID ?? "onlyboth-local",
     secretAccessKey:
       environment.OBJECT_STORE_SECRET_ACCESS_KEY ?? "onlyboth-local-development-secret",
-    forcePathStyle: true,
+    forcePathStyle: resolveS3ForcePathStyle(environment.OBJECT_STORE_FORCE_PATH_STYLE),
   });
 }
 
@@ -63,6 +73,8 @@ export type FunctionalWorkerOutcome =
   | "VOICE_TRANSCRIPTION_FAILED"
   | "DISCOVERY_PROCESSED"
   | "DISCOVERY_RETRY_SCHEDULED"
+  | "ELIGIBILITY_PROCESSED"
+  | "ELIGIBILITY_RETRY_SCHEDULED"
   | "EMPLOYER_ANALYSIS_PROCESSED"
   | "EMPLOYER_ANALYSIS_RETRY_SCHEDULED"
   | "FOCUS_POLICY_PROGRESS"
@@ -78,6 +90,7 @@ export class FunctionalProductWorker {
     private readonly assistant: CandidateAnswerAssistantPort | null,
     private readonly transcription: VoiceTranscriptionPort | null,
     private readonly discovery: CandidateDiscoveryWorker,
+    private readonly eligibility: CandidateEligibilityWorker,
     private readonly employerAnalysis: EmployerReviewAnalystWorker,
   ) {}
 
@@ -190,6 +203,10 @@ export class FunctionalProductWorker {
       }
     }
 
+    const eligibilityOutcome = await this.eligibility.runOnce(`${workerId}:candidate-eligibility`);
+    if (eligibilityOutcome === "PROCESSED") return "ELIGIBILITY_PROCESSED";
+    if (eligibilityOutcome === "RETRY_SCHEDULED") return "ELIGIBILITY_RETRY_SCHEDULED";
+
     const discoveryOutcome = await this.discovery.runOnce(`${workerId}:candidate-discovery`);
     if (discoveryOutcome === "PROCESSED") return "DISCOVERY_PROCESSED";
     if (discoveryOutcome === "RETRY_SCHEDULED") return "DISCOVERY_RETRY_SCHEDULED";
@@ -226,6 +243,7 @@ export function createFunctionalProductWorkerComposition(
   const transcription = apiKey === undefined ? null : new LiveVoiceTranscriptionAdapter({ apiKey });
   const store = new PostgresFunctionalProductStore(pool, objects);
   const discoveryStore = new PostgresCandidateDiscoveryStore(pool, store);
+  const eligibilityStore = new PostgresCandidateEligibilityStore(pool, store);
   const discovery = new CandidateDiscoveryWorkerRuntime(
     discoveryStore,
     apiKey === undefined ? null : new LiveCandidateJobDiscoveryAdapter({ apiKey }),
@@ -238,6 +256,23 @@ export function createFunctionalProductWorkerComposition(
       promptHash: PROMPT_REGISTRY.deriveCandidateJobSignals.promptHash,
       inputSchemaVersion: "candidate-job-discovery-input@2",
       outputSchemaVersion: "candidate-job-discovery-output@1",
+    },
+    3,
+    () => new Date(),
+    randomUUID,
+  );
+  const eligibility = new CandidateEligibilityWorkerRuntime(
+    eligibilityStore,
+    apiKey === undefined ? null : new LiveCandidateEligibilityMatchAdapter({ apiKey }),
+    new CandidateEligibilityMatchValidator(),
+    { hash: hashCanonicalJson },
+    eligibilityIds,
+    {
+      promptId: "onlyboth.derive-candidate-eligibility-matches",
+      promptVersion: PROMPT_REGISTRY.deriveCandidateEligibilityMatches.promptVersion,
+      promptHash: PROMPT_REGISTRY.deriveCandidateEligibilityMatches.promptHash,
+      inputSchemaVersion: "candidate-eligibility-match-input@1",
+      outputSchemaVersion: "candidate-eligibility-match-output@1",
     },
     3,
     () => new Date(),
@@ -281,6 +316,7 @@ export function createFunctionalProductWorkerComposition(
       assistant,
       transcription,
       discovery,
+      eligibility,
       employerAnalysis,
     ),
   };

@@ -1,0 +1,80 @@
+UTC timestamp: 2026-07-21T17:51:41Z
+Change scope: Replace front-facing Login portraits with a Candidate-performance-to-Recruiter-judgment comic scene.
+Git branch: feat/ui-ux-optimization
+Git commit: 2f0ae15
+Environment: local macOS workspace; Node.js v22.22.0; pnpm 11.9.0; PostgreSQL and MinIO-backed synthetic Playwright environment
+Runtime mode: GOLDEN_REPLAY for browser acceptance; built-in image generation for project assets
+
+Image generation mode and references:
+- Built-in image generation tool; no project API key used.
+- Candidate style reference: apps/web/public/brand/candidate-intent-hero.webp
+- Recruiter style reference: apps/web/public/brand/employer-attention-hero.webp
+
+Final prompt set:
+- Candidate: generate a new square editorial graphic-novel illustration, using the reference only
+  for ink/halftone/paper-grain style. Show exactly one young adult woman with long dark hair and a
+  coral-red casual top in strict right-facing side profile, actively writing abstract boxes,
+  arrows, equations, and diagrams on a whiteboard with a black marker. She should read as a focused
+  student demonstrating competence, not posing for a profile. No readable text, résumé, diploma,
+  employer, logo, or UI.
+- Recruiter: generate a new square editorial graphic-novel illustration, using the reference only
+  for ink/halftone/paper-grain style. Show exactly one adult professional man in a crisp white shirt
+  in strict left-facing side profile, with one hand supporting his chin while attentively evaluating
+  the Candidate's unseen work. He should read as fair, receptive, and intellectually engaged. No
+  résumé, Candidate Card, ranking UI, laptop, logo, or readable text.
+
+Final project assets:
+- apps/web/public/brand/login-candidate-performance-v2.webp — 900x900, 157KB
+- apps/web/public/brand/login-recruiter-review-v2.webp — 900x900, 132KB
+
+Post-processing:
+The two generated PNGs were resized to 900x900 and encoded as quality-84 WebP with the bundled
+workspace Pillow runtime. Both final files were inspected at original detail. The prior
+front-facing login-candidate-portrait.webp and login-recruiter-portrait.webp assets were removed
+after the component switched to versioned v2 URLs.
+
+Focused verification command:
+pnpm exec vitest run --config vitest.unit.config.ts apps/web/src/components/functional/login-role-portraits.test.tsx apps/web/src/components/functional/login-chooser.test.tsx
+
+Exit code: 0
+Relevant output:
+Test Files  2 passed (2)
+Tests       3 passed (3)
+
+Formatting and whitespace commands:
+pnpm exec prettier --check <changed UI and test files>
+git diff --check
+
+Exit code: 0
+Relevant output:
+All matched files use Prettier code style.
+No whitespace errors.
+
+Aggregate verification command:
+pnpm check && pnpm build
+
+Exit code: 0
+Relevant output:
+All aggregate formatting, lint, typecheck, Unit, Integration, Security, Replay, and documentation
+checks passed. The Next.js production build completed successfully.
+
+Browser acceptance command:
+PLAYWRIGHT_PORT=3100 pnpm test:e2e
+
+Exit code: 0
+Relevant output:
+Running 6 tests using 1 worker
+CareerMutual branding and performance-first login remain intact on mobile: passed
+Candidate Eligibility Feed: passed
+Six-Candidate Match Lab feeds: passed
+Persistent backed application and sequential review: passed
+Evidence Passport 390px viewport: passed
+Full-screen Sandbox Focus policy: passed
+6 passed (14.0s)
+
+Summary:
+Passed: focused Unit 3/3, full aggregate check, production build, Playwright 6/6, asset inspection, and whitespace validation.
+Failed: 0.
+Skipped: 0 task-specific checks.
+Blocked: 0.
+Known pre-existing failures: none observed in the executed gates.

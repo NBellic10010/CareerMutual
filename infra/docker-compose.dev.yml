@@ -26,7 +26,7 @@ services:
     environment:
       MINIO_ROOT_USER: ${ONLYBOTH_MINIO_USER:-onlyboth-local}
       MINIO_ROOT_PASSWORD: ${ONLYBOTH_MINIO_PASSWORD:-onlyboth-local-development-secret}
-      MINIO_API_CORS_ALLOW_ORIGIN: "http://127.0.0.1:3000,http://localhost:3000"
+      MINIO_API_CORS_ALLOW_ORIGIN: "http://127.0.0.1:3000,http://localhost:3000,http://127.0.0.1:3100,http://localhost:3100"
     ports:
       - "127.0.0.1:${ONLYBOTH_MINIO_API_PORT:-9000}:9000"
       - "127.0.0.1:${ONLYBOTH_MINIO_CONSOLE_PORT:-9001}:9001"

@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { findSyntheticDemoActor } from "@onlyboth/demo-fixtures";
 
 import { SYNTHETIC_REPLAY_LABEL } from "../lib/demo-view-model";
+import { CareerMutualTrademark } from "./career-mutual-trademark";
 import { SessionLogoutButton } from "./functional/session-logout-button";
 import { resolveFunctionalActor } from "../server/functional-auth";
 
@@ -20,14 +21,24 @@ export function RoleBreadcrumb({
     (role === "CANDIDATE" ? "Candidate" : role === "EMPLOYER" ? "Recruiter" : "Public");
   const homeHref = role === "CANDIDATE" ? "/candidate" : role === "EMPLOYER" ? "/employer" : "/";
   return (
-    <Link className="brand" href={homeHref} aria-label={`OnlyBoth ${roleLabel} home`}>
+    <Link className="brand" href={homeHref} aria-label={`CareerMutual ${roleLabel} home`}>
       <span className="brand-mark" aria-hidden="true">
-        OB
+        <span className="brand-node brand-node-candidate" />
+        <span className="brand-bridge" />
+        <span className="brand-node brand-node-employer" />
+        <span className="brand-offer-check">✓</span>
       </span>
       <span className="role-breadcrumb">
-        <strong>OnlyBoth</strong>
-        <span aria-hidden="true">/</span>
-        <span>{roleLabel}</span>
+        <span className="brand-lockup">
+          <strong>
+            <CareerMutualTrademark />
+          </strong>
+          <small>Mutual-intent hiring</small>
+        </span>
+        <span className="breadcrumb-divider" aria-hidden="true">
+          /
+        </span>
+        <span className="breadcrumb-role">{roleLabel}</span>
       </span>
     </Link>
   );
@@ -75,8 +86,10 @@ export async function SiteHeader() {
   ]);
   const role: HeaderRole = candidate !== null ? "CANDIDATE" : employer !== null ? "EMPLOYER" : null;
   const actor = findSyntheticDemoActor(candidate?.actorId ?? employer?.actorId ?? "");
+  const roleTheme =
+    role === "CANDIDATE" ? "candidate" : role === "EMPLOYER" ? "employer" : "public";
   return (
-    <header className="site-header">
+    <header className={`site-header site-header-${roleTheme}`} data-role-theme={roleTheme}>
       <RoleBreadcrumb role={role} actorLabel={actor?.start_label} />
       <RoleNavigation role={role} />
     </header>

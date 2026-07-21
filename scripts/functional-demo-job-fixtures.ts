@@ -1,4 +1,5 @@
 import {
+  ELIGIBILITY_BACKGROUND_TAG_CATALOG,
   EmployerAiReviewPolicySchema,
   JobPostDraftInputSchema,
   type CriticalChallenge,
@@ -145,7 +146,43 @@ type JobFixtureInput = Readonly<{
   minutes?: number;
   aiPolicy?: "PROHIBITED" | "PLATFORM_ASSISTANT_ALLOWED";
   reviewCriteria?: JobPostDraftInput["review_criteria"];
+  openToAll?: boolean;
+  eligibilityTagNames?: readonly string[];
 }>;
+
+const TAGS_BY_CATEGORY: Readonly<Record<RoleCategory, readonly string[]>> = {
+  TECHNOLOGY: [
+    "Computer Science",
+    "Information Systems",
+    "Backend Engineering",
+    "Data Engineering",
+  ],
+  FINANCE: ["Accounting", "Finance", "Accounting Operations", "Financial Planning and Analysis"],
+  BUSINESS_DEVELOPMENT: [
+    "Business Administration",
+    "Business Development",
+    "Enterprise Partnerships",
+  ],
+  CREATIVE: [
+    "Illustration",
+    "Graphic Design",
+    "Brand Illustration",
+    "Illustration and Visual Development",
+  ],
+  SALES: [
+    "Sales Management",
+    "Enterprise Sales",
+    "Regional Sales Leadership",
+    "Revenue Operations",
+  ],
+  MARKETING: ["Marketing", "Growth Marketing", "Demand Generation", "Marketing Operations"],
+  PRODUCT: ["Product Design", "Product Management", "User Experience Research"],
+  OPERATIONS: ["Operations Management", "Operations Strategy", "Supply Chain Operations"],
+  PEOPLE: ["Human Resources Management", "People Operations", "Recruiting Operations"],
+  LEGAL: ["Law", "Legal Studies", "Legal Operations", "Data Privacy"],
+  HEALTHCARE: ["Public Health", "Healthcare Administration", "Healthcare Operations"],
+  SUSTAINABILITY: ["Environmental Science", "Sustainability", "Sustainability Programs"],
+};
 
 function job(input: JobFixtureInput): JobPostDraftInput {
   return JobPostDraftInputSchema.parse({
@@ -176,6 +213,22 @@ function job(input: JobFixtureInput): JobPostDraftInput {
       },
     ],
     capability_areas: input.capabilities,
+    eligibility_match_policy: input.openToAll
+      ? {
+          schema_version: "eligibility-match-policy@1",
+          access_mode: "OPEN_TO_ALL",
+          open_reasons: ["NO_BACKGROUND_REQUIRED"],
+        }
+      : {
+          schema_version: "eligibility-match-policy@1",
+          access_mode: "EVIDENCE_MATCH_REQUIRED",
+          taxonomy_version: "eligibility-background-tags@1",
+          accepted_tags: ELIGIBILITY_BACKGROUND_TAG_CATALOG.filter((tag) =>
+            (input.eligibilityTagNames ?? TAGS_BY_CATEGORY[input.category]).includes(
+              tag.public_name,
+            ),
+          ),
+        },
     critical_question: input.challenge.objective,
     critical_challenge: input.challenge,
     allowed_assumptions: [
@@ -515,6 +568,7 @@ export const ADDITIONAL_SYNTHETIC_JOB_POSTS: readonly JobPostDraftInput[] = [
   }),
   job({
     slug: "customer-success-lead",
+    openToAll: true,
     organization: "Relay Commerce",
     title: "Customer Success Lead",
     category: "OPERATIONS",
@@ -810,3 +864,288 @@ export const ADDITIONAL_SYNTHETIC_JOB_POSTS: readonly JobPostDraftInput[] = [
 if (ADDITIONAL_SYNTHETIC_JOB_POSTS.length !== 20) {
   throw new Error("The cross-domain Demo fixture must contain exactly 20 JobPosts.");
 }
+
+export const MATCHING_LAB_SYNTHETIC_JOB_POSTS: readonly JobPostDraftInput[] = [
+  job({
+    slug: "payment-workflow-backend-engineer",
+    organization: "QuantaPay Systems",
+    title: "Payment Workflow Backend Engineer",
+    category: "TECHNOLOGY",
+    summary:
+      "Build retry-safe payment workflows where provider acknowledgements, durable state, and reconciliation can disagree.",
+    compensation: "$155k–$195k + equity",
+    capabilities: ["Payments engineering", "Idempotent workflows", "Failure recovery"],
+    eligibilityTagNames: [
+      "Computer Science",
+      "Software Engineering",
+      "Backend Engineering",
+      "Payments Engineering",
+    ],
+    challenge: challenge(
+      "payment-workflow-backend-engineer",
+      "Recover an ambiguous provider charge",
+      "A provider times out after accepting a charge request while the local worker retries. Define the durable state transitions, reconciliation path, and tests that prevent a duplicate charge.",
+      [
+        textPart(
+          "payment-workflow-backend-engineer",
+          "Ambiguous charge boundary",
+          "Separate what the service knows from what it must discover before retrying.",
+          "The provider supports idempotency keys, PostgreSQL is available, and delivery is at least once. The provider status endpoint may lag by thirty seconds.",
+        ),
+      ],
+    ),
+    proofFormat:
+      "A state-transition sketch, retry and reconciliation rules, and three falsifying tests.",
+  }),
+  job({
+    slug: "payments-reliability-incident-lead",
+    organization: "LedgerRail",
+    title: "Payments Reliability Incident Lead",
+    category: "TECHNOLOGY",
+    summary:
+      "Lead payment incidents, preserve an auditable ledger, and turn ambiguous recovery actions into bounded operating controls.",
+    compensation: "$165k–$205k + equity",
+    capabilities: ["Reliability engineering", "Incident command", "Payment reconciliation"],
+    eligibilityTagNames: [
+      "Information Systems",
+      "Cloud Infrastructure",
+      "Payments Engineering",
+      "Reliability Engineering",
+    ],
+    challenge: challenge(
+      "payments-reliability-incident-lead",
+      "Choose the first safe incident action",
+      "Payment success events are delayed while duplicate retry volume rises. Write the first ten-minute incident plan, the invariant that forbids a risky shortcut, and the evidence required before recovery.",
+      [
+        textPart(
+          "payments-reliability-incident-lead",
+          "Incident snapshot",
+          "Prioritize containment and observability without declaring every delayed event a failure.",
+          "Provider success rate appears normal, consumer lag is growing, and the internal ledger is missing acknowledgements for six percent of recent requests.",
+        ),
+      ],
+    ),
+    proofFormat:
+      "A sequenced incident plan with decision gates, owner handoffs, and one unsafe action explicitly rejected.",
+  }),
+  job({
+    slug: "partner-event-integration-engineer",
+    organization: "RouteMesh Logistics",
+    title: "Partner Event Integration Engineer",
+    category: "TECHNOLOGY",
+    summary:
+      "Harden partner integrations against duplicate delivery, schema drift, and partial acknowledgement across operational systems.",
+    compensation: "$135k–$170k + equity",
+    capabilities: ["Systems integration", "Event delivery", "Reconciliation design"],
+    eligibilityTagNames: [
+      "Information Systems",
+      "Software Engineering",
+      "Backend Engineering",
+      "Information Technology Operations",
+    ],
+    challenge: challenge(
+      "partner-event-integration-engineer",
+      "Contain a duplicate partner-event storm",
+      "A partner begins replaying two hours of shipment events with a changed optional field. Propose the smallest safe ingestion change and the reconciliation evidence needed before normal processing resumes.",
+      [
+        textPart(
+          "partner-event-integration-engineer",
+          "Replay boundary",
+          "Keep schema compatibility, deduplication, and business reconciliation as separate concerns.",
+          "Event IDs are stable, delivery order is not guaranteed, and downstream shipment notifications must not be emitted twice.",
+        ),
+      ],
+    ),
+    proofFormat:
+      "An ingestion decision tree, deduplication key, replay plan, and bounded reconciliation query.",
+  }),
+  job({
+    slug: "cloud-recovery-platform-engineer",
+    organization: "Nimbus Forge",
+    title: "Cloud Recovery Platform Engineer",
+    category: "TECHNOLOGY",
+    summary:
+      "Build observable regional recovery automation for stateful services without turning a runbook into an unsafe one-click failover.",
+    compensation: "$160k–$200k + equity",
+    capabilities: ["Cloud recovery", "Workflow orchestration", "Operational observability"],
+    eligibilityTagNames: [
+      "Computer Engineering",
+      "Cloud Infrastructure",
+      "Reliability Engineering",
+      "Information Technology Operations",
+    ],
+    challenge: challenge(
+      "cloud-recovery-platform-engineer",
+      "Gate a stateful regional failover",
+      "A regional database is reachable but producing stale replicas while application error rates climb. Define the automated checks, human decision gate, and rollback receipt for a failover workflow.",
+      [
+        textPart(
+          "cloud-recovery-platform-engineer",
+          "Recovery constraints",
+          "Name the evidence that authorizes each irreversible step.",
+          "The secondary region is healthy, replication lag is ninety seconds, and the last failover rehearsal completed three weeks ago.",
+        ),
+      ],
+    ),
+    proofFormat:
+      "A checkpointed recovery workflow with preconditions, abort conditions, and operator-visible receipts.",
+  }),
+  job({
+    slug: "financial-data-reconciliation-engineer",
+    organization: "ClearLedger Analytics",
+    title: "Financial Data Reconciliation Engineer",
+    category: "TECHNOLOGY",
+    summary:
+      "Make incomplete and duplicated financial event streams measurable through reproducible reconciliation controls.",
+    compensation: "$140k–$180k + equity",
+    capabilities: ["Data engineering", "Ledger reconciliation", "Control design"],
+    eligibilityTagNames: [
+      "Economics",
+      "Data Science",
+      "Accounting Operations",
+      "Data Engineering",
+      "Data Science and Analytics",
+    ],
+    challenge: challenge(
+      "financial-data-reconciliation-engineer",
+      "Explain a ledger mismatch without hiding missing data",
+      "The warehouse reports fewer settled transactions than the provider ledger. Define a reconciliation query plan, classify the mismatch states, and state what cannot yet be concluded.",
+      [
+        textPart(
+          "financial-data-reconciliation-engineer",
+          "Reconciliation facts",
+          "Distinguish late, duplicated, missing, and semantically inconsistent records.",
+          "Provider exports arrive hourly, internal events are at least once, and one ingestion partition was unavailable for twenty minutes.",
+        ),
+      ],
+    ),
+    proofFormat:
+      "A source-of-truth table, mismatch taxonomy, query sequence, and two data-quality assertions.",
+  }),
+  job({
+    slug: "distributed-systems-verification-engineer",
+    organization: "Beacon Consensus Lab",
+    title: "Distributed Systems Verification Engineer",
+    category: "TECHNOLOGY",
+    summary:
+      "Turn distributed-systems failure assumptions into reproducible experiments and falsifiable correctness claims.",
+    compensation: "$145k–$185k + equity",
+    capabilities: ["Distributed systems", "Fault injection", "Verification strategy"],
+    eligibilityTagNames: [
+      "Computer Science",
+      "Mathematics",
+      "Software Engineering",
+      "Distributed Systems",
+      "Quality Assurance Engineering",
+    ],
+    challenge: challenge(
+      "distributed-systems-verification-engineer",
+      "Falsify a replicated-state safety claim",
+      "A replicated service claims that replayed messages cannot produce two committed values for one logical operation. Design the smallest experiment that could falsify that claim.",
+      [
+        textPart(
+          "distributed-systems-verification-engineer",
+          "Experiment boundary",
+          "Specify controllable faults, observable evidence, and a result that would refute the claim.",
+          "You can delay, duplicate, or reorder messages and crash one replica between persistence and acknowledgement.",
+        ),
+      ],
+    ),
+    proofFormat:
+      "A fault matrix, event trace, safety assertion, and a minimal counterexample condition.",
+  }),
+];
+
+if (MATCHING_LAB_SYNTHETIC_JOB_POSTS.length !== 6) {
+  throw new Error("The Candidate Eligibility Match Lab must contain exactly six JobPosts.");
+}
+
+export const SIX_CANDIDATE_MATCH_LAB_REFS = Object.freeze([
+  "candidate-42",
+  "candidate-17",
+  "candidate-03",
+  "candidate-08",
+  "candidate-11",
+  "candidate-19",
+] as const);
+
+export type SyntheticEligibilityDemoTarget = Readonly<{
+  title: string;
+  tag: string;
+  source: "EDUCATION" | "WORK_SAMPLE";
+}>;
+
+export const SYNTHETIC_ELIGIBILITY_DEMO_TARGETS: Readonly<
+  Record<string, readonly SyntheticEligibilityDemoTarget[]>
+> = Object.freeze({
+  "candidate-42": [
+    { title: "Senior Backend Reliability Engineer", tag: "Computer Science", source: "EDUCATION" },
+    {
+      title: "Payment Workflow Backend Engineer",
+      tag: "Payments Engineering",
+      source: "WORK_SAMPLE",
+    },
+    {
+      title: "Payments Reliability Incident Lead",
+      tag: "Payments Engineering",
+      source: "WORK_SAMPLE",
+    },
+  ],
+  "candidate-17": [
+    {
+      title: "Senior Backend Reliability Engineer",
+      tag: "Information Systems",
+      source: "EDUCATION",
+    },
+    {
+      title: "Payment Workflow Backend Engineer",
+      tag: "Payments Engineering",
+      source: "WORK_SAMPLE",
+    },
+    {
+      title: "Payments Reliability Incident Lead",
+      tag: "Reliability Engineering",
+      source: "WORK_SAMPLE",
+    },
+  ],
+  "candidate-03": [
+    {
+      title: "Payment Workflow Backend Engineer",
+      tag: "Backend Engineering",
+      source: "WORK_SAMPLE",
+    },
+    {
+      title: "Partner Event Integration Engineer",
+      tag: "Backend Engineering",
+      source: "WORK_SAMPLE",
+    },
+  ],
+  "candidate-08": [
+    {
+      title: "Payments Reliability Incident Lead",
+      tag: "Reliability Engineering",
+      source: "WORK_SAMPLE",
+    },
+    {
+      title: "Cloud Recovery Platform Engineer",
+      tag: "Cloud Infrastructure",
+      source: "WORK_SAMPLE",
+    },
+  ],
+  "candidate-11": [
+    {
+      title: "Financial Data Reconciliation Engineer",
+      tag: "Data Engineering",
+      source: "WORK_SAMPLE",
+    },
+  ],
+  "candidate-19": [
+    { title: "Senior Backend Reliability Engineer", tag: "Computer Science", source: "EDUCATION" },
+    {
+      title: "Distributed Systems Verification Engineer",
+      tag: "Distributed Systems",
+      source: "WORK_SAMPLE",
+    },
+  ],
+  "candidate-27": [{ title: "Senior Brand Illustrator", tag: "Illustration", source: "EDUCATION" }],
+});

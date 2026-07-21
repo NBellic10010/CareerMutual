@@ -1,0 +1,69 @@
+OnlyBoth test report
+Change: Mutual-intent hiring UI identity
+Timestamp (UTC): 2026-07-21T12:30:13Z
+Branch: feat/ui-ux-optimization
+Baseline commit: 2f0ae15 feat: add two-layer candidate opportunity feed
+
+Scope
+- Replaced the abstract OB tile with a Candidate-intent / Recruiter-attention signal mark.
+- Added the `Mutual-intent hiring` lockup and role-aware breadcrumb presentation.
+- Repositioned public, Candidate, and Employer hero copy around career intent and backed attention.
+- Added Candidate opportunity signal states derived from existing Interest/Answer state.
+- Added Employer capacity aggregation derived from existing JobPost Slot and review projections.
+- Added state-linked CSS motion with the existing global reduced-motion override.
+- Changed no backend contract, persistence, queue, matching authority, AI operation, or privacy rule.
+
+Changed behavior tests
+1. pnpm --filter @onlyboth/web typecheck
+   PASS: TypeScript completed without diagnostics.
+
+2. pnpm --filter @onlyboth/web test
+   PASS: 14 test files passed.
+   PASS: 45 tests passed.
+   Coverage added:
+   - OPEN, QUEUED, BACKED, and SEALED Candidate opportunity signal mapping.
+   - Employer Attention Slot, waiting Interest, and review-debt aggregation.
+   - Mutual-intent Home promise and role-aware brand lockup rendering.
+
+Aggregate verification
+3. pnpm check
+   PASS: Prettier check.
+   PASS: ESLint with zero warnings.
+   PASS: repository and test TypeScript checks.
+   PASS: Unit — 43 files, 235 tests.
+   PASS: Integration — 11 files passed, 1 conditionally skipped; 39 tests passed, 2 conditionally skipped.
+   PASS: Security — 6 files, 25 tests.
+   PASS: Replay — 2 files, 7 tests.
+   PASS: documentation contracts — 48 + 38 + 86 assertions.
+
+4. pnpm build
+   PASS: Next.js optimized production build compiled and completed TypeScript, page-data collection,
+   static generation, and route finalization.
+
+5. Live server rendering
+   PASS: public `/` returned HTTP 200 and contained the mutual-intent promise and both role signals.
+   INITIAL FAILURE: authenticated `/candidate` and `/employer` returned HTTP 500 because Docker
+   Desktop and PostgreSQL were stopped; the server reported ECONNREFUSED 127.0.0.1:5432.
+   RECOVERY: started Docker Desktop, ran `pnpm infra:up`, and restarted the Web/Worker development
+   processes without resetting data.
+   PASS: Avery (`candidate-27`) `/candidate` returned HTTP 200 and contained all four expected
+   Candidate identity/exchange markers.
+   PASS: Sarah (`reviewer-sarah-chen`) `/employer` returned HTTP 200 and contained all four expected
+   Employer identity/exchange markers.
+
+6. Repository hygiene
+   PASS: git diff --check.
+   PASS: no `.only(` or `.skip(` markers under tests, apps, or packages.
+
+Not run
+- Interactive browser screenshot inspection: BLOCKED because the in-app browser control interface
+  was not available in this session. This is not reported as passed.
+- Destructive PostgreSQL integration suites.
+- Dedicated MinIO integration suites.
+- Playwright journeys.
+- LIVE OpenAI evaluations.
+
+Operational note
+- PostgreSQL 16 and MinIO were restored on loopback with the existing persistent volumes.
+- The development service is restarted separately after the production build.
+- No API key, signed Session token, cookie value, or other secret is present in this report.

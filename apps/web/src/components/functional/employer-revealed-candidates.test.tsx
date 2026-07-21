@@ -38,13 +38,11 @@ describe("role-aware navigation and Resume reveal workspace", () => {
     const recruiterBreadcrumb = renderToStaticMarkup(
       createElement(RoleBreadcrumb, { role: "EMPLOYER" }),
     );
-    expect(candidateBreadcrumb).toContain(
-      'OnlyBoth</strong><span aria-hidden="true">/</span><span>Candidate',
-    );
+    expect(candidateBreadcrumb).toContain("Mutual-intent hiring");
+    expect(candidateBreadcrumb).toContain("Candidate</span>");
     expect(candidateBreadcrumb).toContain('href="/candidate"');
-    expect(recruiterBreadcrumb).toContain(
-      'OnlyBoth</strong><span aria-hidden="true">/</span><span>Recruiter',
-    );
+    expect(recruiterBreadcrumb).toContain("Mutual-intent hiring");
+    expect(recruiterBreadcrumb).toContain("Recruiter</span>");
     expect(recruiterBreadcrumb).toContain('href="/employer"');
   });
 

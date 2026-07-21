@@ -12,7 +12,10 @@ import { describe, expect, it } from "vitest";
 describe("rolling blind-review contracts", () => {
   it("keeps lightweight Interest distinct from a formal Application", () => {
     const interest = {
-      schema_version: "candidate-interest-command@1",
+      schema_version: "candidate-interest-command@2",
+      background_access_basis: "OPEN_TO_ALL",
+      eligibility_match_ref: null,
+      eligibility_match_version: null,
       hard_facts: [
         {
           fact_ref: "fact-work-authorization",

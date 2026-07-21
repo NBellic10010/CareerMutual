@@ -30,6 +30,7 @@ import {
   CandidateAnswerSessionProjectionSchema,
   CandidateSandboxActivityReceiptSchema,
   CandidateApplicationCreditProjectionSchema,
+  CandidateEligibilityProjectionSchema,
   CandidateAssistantTurnProjectionSchema,
   CandidateResumeSnapshotSchema,
   CompleteAnswerArtifactUploadReceiptSchema,
@@ -1474,6 +1475,7 @@ export class PostgresFunctionalProductStore
         allowed_assumptions: draft.allowed_assumptions,
         hard_predicates: draft.hard_predicates.map(contractPredicate),
         capability_areas: draft.capability_areas,
+        eligibility_match_policy: draft.eligibility_match_policy,
         candidate_effort_limit_minutes: draft.maximum_candidate_minutes,
         candidate_ai_policy: draft.candidate_ai_policy,
         terms_version: draft.terms_version,
@@ -1537,6 +1539,30 @@ export class PostgresFunctionalProductStore
            contract_version_ref, opportunity_ref, contract_hash, contract_json, sealed_at
          ) VALUES ($1, $2, $3, $4::jsonb, $5)`,
         [contractRef, opportunityRef, contractHash, JSON.stringify(contractJson), now],
+      );
+      const eligibilityPolicyRef = `eligibility-policy:${opportunityRef}`;
+      const acceptedTags =
+        draft.eligibility_match_policy.access_mode === "EVIDENCE_MATCH_REQUIRED"
+          ? draft.eligibility_match_policy.accepted_tags
+          : [];
+      const eligibilityPolicyHash = hash(JSON.stringify(draft.eligibility_match_policy));
+      await client.query(
+        `INSERT INTO job_eligibility_match_policies (
+           policy_ref, opportunity_ref, contract_version_ref, policy_version,
+           access_mode, taxonomy_version, accepted_tags_json, policy_hash, sealed_at
+         ) VALUES ($1, $2, $3, 'eligibility-match-policy@1', $4, $5, $6::jsonb, $7, $8)`,
+        [
+          eligibilityPolicyRef,
+          opportunityRef,
+          contractRef,
+          draft.eligibility_match_policy.access_mode,
+          draft.eligibility_match_policy.access_mode === "EVIDENCE_MATCH_REQUIRED"
+            ? draft.eligibility_match_policy.taxonomy_version
+            : null,
+          JSON.stringify(acceptedTags),
+          eligibilityPolicyHash,
+          now,
+        ],
       );
       await client.query(
         `INSERT INTO label_policy_versions (
@@ -1728,6 +1754,84 @@ export class PostgresFunctionalProductStore
           }),
         ],
       );
+      if (draft.eligibility_match_policy.access_mode === "EVIDENCE_MATCH_REQUIRED") {
+        const snapshots = await client.query<{
+          candidate_ref: string;
+          snapshot_ref: string;
+        }>(
+          `SELECT DISTINCT ON (candidate_ref) candidate_ref, snapshot_ref
+             FROM candidate_evidence_passport_snapshots
+            ORDER BY candidate_ref, snapshot_version DESC`,
+        );
+        for (const snapshot of snapshots.rows) {
+          const matchSetRef = `eligibility-match-set:${opportunityRef}:${snapshot.snapshot_ref}`;
+          const jobSetHash = hash(
+            JSON.stringify([{ opportunity_ref: opportunityRef, contract_hash: contractHash }]),
+          );
+          await client.query(
+            `INSERT INTO candidate_eligibility_match_sets (
+               match_set_ref, candidate_ref, passport_snapshot_ref, job_set_hash,
+               status, created_at
+             ) VALUES ($1, $2, $3, $4, 'MATCHING', $5)`,
+            [matchSetRef, snapshot.candidate_ref, snapshot.snapshot_ref, jobSetHash, now],
+          );
+          const currentProjection = await client.query<{
+            projection_version: number;
+          }>(
+            `SELECT projection_version FROM candidate_eligibility_projections
+              WHERE candidate_ref = $1 FOR UPDATE`,
+            [snapshot.candidate_ref],
+          );
+          const projection = CandidateEligibilityProjectionSchema.parse({
+            schema_version: "candidate-eligibility-projection@1",
+            candidate_ref: snapshot.candidate_ref,
+            status: "MATCHING",
+            passport_snapshot_ref: snapshot.snapshot_ref,
+            projection_version: (currentProjection.rows[0]?.projection_version ?? 0) + 1,
+            reason_code: null,
+            updated_at: now.toISOString(),
+          });
+          await client.query(
+            `INSERT INTO candidate_eligibility_projections (
+               candidate_ref, projection_version, passport_snapshot_ref, status,
+               reason_code, projection_json, updated_at
+             ) VALUES ($1, $2, $3, 'MATCHING', NULL, $4::jsonb, $5)
+             ON CONFLICT (candidate_ref) DO UPDATE
+               SET projection_version = EXCLUDED.projection_version,
+                   passport_snapshot_ref = EXCLUDED.passport_snapshot_ref,
+                   status = EXCLUDED.status,
+                   reason_code = EXCLUDED.reason_code,
+                   projection_json = EXCLUDED.projection_json,
+                   updated_at = EXCLUDED.updated_at`,
+            [
+              snapshot.candidate_ref,
+              projection.projection_version,
+              snapshot.snapshot_ref,
+              JSON.stringify(projection),
+              now,
+            ],
+          );
+          await client.query(
+            `INSERT INTO outbox_messages (
+               message_id, message_type, message_version, event_id, idempotency_key,
+               correlation_id, payload, available_at
+             ) VALUES ($1, 'CandidateEligibilityRequested', 1, $2, $3, $4, $5::jsonb, $6)`,
+            [
+              input.ids.nextId("outbox"),
+              eventId,
+              `CandidateEligibilityRequested:${matchSetRef}`,
+              input.correlationId,
+              JSON.stringify({
+                matchSetRef,
+                candidateRef: snapshot.candidate_ref,
+                snapshotRef: snapshot.snapshot_ref,
+                opportunityRefs: [opportunityRef],
+              }),
+              now,
+            ],
+          );
+        }
+      }
       for (const slotRef of slotRefs) {
         await client.query(
           `INSERT INTO outbox_messages (

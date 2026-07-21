@@ -15,9 +15,12 @@ export async function GET(
     const actor = await requireReadActor("CANDIDATE");
     const { id: encodedId } = await context.params;
     const id = decodeRouteRef(encodedId);
-    const detail = await getFunctionalServices().store.getCandidateJobDetail(actor.actorId, id);
+    const detail = await getFunctionalServices().candidateEligibilityStore.getCandidateJobDetail(
+      actor.actorId,
+      id,
+    );
     if (detail === null) {
-      return NextResponse.json({ error: { code: "OPPORTUNITY_NOT_FOUND" } }, { status: 422 });
+      return NextResponse.json({ error: { code: "OPPORTUNITY_NOT_FOUND" } }, { status: 404 });
     }
     return NextResponse.json(detail, { headers: { "Cache-Control": "no-store" } });
   } catch (error: unknown) {
