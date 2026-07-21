@@ -1,0 +1,48 @@
+Timestamp (UTC): 2026-07-21T21:45:27Z
+Scope: Add a GitHub-renderable CareerMutual technical architecture diagram to README.md.
+Git branch / base commit: main / dac9ec9
+Environment / runtime mode: local documentation validation; no application runtime or external service mutation.
+
+Implementation:
+- Added a Mermaid flowchart under `## Technical architecture`.
+- The diagram covers Candidate and Recruiter browsers, Next.js Web, Application Commands, Domain
+  aggregates, PostgreSQL state/events/outbox/projections/private data boundaries, the continuous
+  Worker, private S3-compatible Object Storage, and Worker-only OpenAI access.
+- The diagram explicitly routes Worker business mutations back through Application Commands and
+  exposes only role-scoped projections to Web.
+
+Command: pnpm exec prettier --write README.md
+Exit code: 0
+Relevant output: README.md formatted successfully and was already conformant.
+
+Command: pnpm test:docs (initial run)
+Exit code: 1
+Relevant output:
+- All new architecture clauses were present.
+- The README English-prose guard treated a middle-dot separator in one Mermaid edge label as Han
+  script. The separator was replaced with an ASCII slash; no architecture semantics changed.
+
+Command: pnpm test:docs (final run)
+Exit code: 0
+Relevant output:
+- Agent/README contract: 52 passed, 0 failed.
+- AI engineering design contract: 40 passed, 0 failed.
+- Product doctrine/design contract: 87 passed, 0 failed.
+
+Command: git diff --check
+Exit code: 0
+Relevant output: none.
+
+Command: rg -n '\.(only|skip)\(' tests apps packages
+Exit code: 1, expected clean scan result.
+Relevant output: no prohibited .only/.skip markers found.
+
+Summary:
+- Passed: README formatting, architecture contract assertions, all documentation contracts, diff
+  check, and prohibited test-marker scan.
+- Failed then corrected: one script-classification false positive caused by a middle-dot separator.
+- Skipped: application, database, object-store, browser, Replay, and LIVE AI suites; this change is
+  documentation-only and does not alter runtime behavior.
+- Blocked: none.
+- Known pre-existing failures: none relevant to this README change.
+- Deployment, environment, migration, and remote-repository changes: none.

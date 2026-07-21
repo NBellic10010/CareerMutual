@@ -102,6 +102,9 @@ require_text "test-reports/README.md" "Never report Not Run, Skipped, or Blocked
 require_text "AGENTS.md" "pnpm check" "AGENTS defines a stable aggregate check command"
 require_text "AGENTS.md" "Operational logs are diagnostic only" "AGENTS separates operational logs from domain audit"
 require_text "AGENTS.md" 'every `README.md` in this repository MUST be written in English' "AGENTS preserves the English documentation rule"
+require_text "README.md" "## Technical architecture" "README includes the technical architecture section"
+require_text "README.md" "CareerMutual modular monolith" "README architecture preserves the modular-monolith boundary"
+require_text "README.md" "Worker-only API key" "README architecture keeps the OpenAI key in the Worker"
 
 require_balanced_fences "AGENTS.md"
 require_balanced_fences "HANDOFF.md"

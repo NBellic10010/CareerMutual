@@ -113,6 +113,70 @@ This file records CareerMutual’s current implementation state and development 
 
 ---
 
+## 2026-07-21 — README technical architecture diagram
+
+**Status:** Complete
+
+### Goal
+
+Add a concise technical architecture diagram to the root README that explains the current runnable
+CareerMutual system without presenting planned components as implemented.
+
+### Actual outcome
+
+- Added a GitHub-renderable Mermaid `flowchart LR` under `## Technical architecture`.
+- The diagram shows Candidate and Recruiter browsers entering the authenticated Next.js Web layer,
+  business changes passing through Application Commands and Domain aggregates, and one atomic
+  PostgreSQL boundary for state, ledgers, events, Outbox/Inbox, projections, and private résumé data.
+- It shows the continuous Worker leasing jobs, reusing Commands for business mutations, managing
+  derived private artifacts, and being the only runtime that receives the OpenAI API key.
+- It distinguishes PostgreSQL metadata and immutable refs from rich text, audio, transcripts, and
+  GPT traces held in private S3-compatible Object Storage.
+
+### Files changed
+
+- `README.md`
+- `tests/docs/agents-contract.sh`
+- `HANDOFF.md`
+- `test-reports/20260721T214527Z-readme-technical-architecture.log`
+
+### Product and engineering decisions
+
+- The diagram documents the existing modular-monolith and two-runtime design. It does not introduce
+  microservices, Kafka, WebSockets, an Agent workflow, or a separate database service per package.
+- Role-scoped projections remain the only browser read surface; the Private Label Vault and OpenAI
+  provider remain inaccessible to browsers.
+
+### Tests and verification
+
+- Added documentation assertions for the architecture section, modular-monolith boundary, and
+  Worker-only OpenAI key placement.
+- Final `pnpm test:docs`: 52 Agent/README, 40 AI-design, and 87 doctrine/design checks passed.
+- `git diff --check`: passed.
+- Prohibited `.only/.skip` marker scan: clean.
+- Full evidence: `test-reports/20260721T214527Z-readme-technical-architecture.log`.
+
+### Corrected validation issue
+
+- The first documentation run treated a middle-dot separator in a Mermaid label as Han script. It
+  was replaced with an ASCII slash, and the final English and structure checks pass.
+
+### Checks not run
+
+- Runtime, PostgreSQL, MinIO, browser E2E, Replay, and LIVE AI suites were not rerun because this is
+  a README-only visualization change with no runtime behavior change.
+
+### Known issues, risks, and blockers
+
+- No blocker remains. GitHub Mermaid rendering is the intended presentation surface.
+- No environment variable, migration, deployment, or remote repository changed.
+
+### Next action
+
+Keep the README diagram synchronized if runtime ownership or persistence boundaries change.
+
+---
+
 ## 2026-07-21 — CareerMutual English documentation migration
 
 **Status:** Complete

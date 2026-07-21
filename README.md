@@ -148,6 +148,50 @@ functional acceptance surface and neither appears in the primary navigation. Leg
 Matching-to-Challenge code remains a regression asset; its pre-answer Claim-derived selector is
 not the target product mechanism.
 
+## Technical architecture
+
+```mermaid
+flowchart LR
+    C["Candidate browser"] --> WEB
+    R["Recruiter browser"] --> WEB
+
+    subgraph RUNTIME["CareerMutual modular monolith"]
+        WEB["Next.js Web<br/>Role UI + authenticated Command API"]
+        APP["Application Commands<br/>authorization + idempotency + concurrency"]
+        DOMAIN["Domain aggregates<br/>Attention, Credit, Answer, Review, Reveal"]
+        WORKER["Continuous Worker<br/>Outbox jobs + deadlines + SLA settlement"]
+        STORE[("Private S3-compatible Object Storage<br/>rich text + voice + transcripts + GPT traces")]
+
+        subgraph PG["PostgreSQL 16"]
+            STATE[("Aggregate state + immutable ledgers")]
+            EVENTS[("Domain events + transactional outbox/inbox")]
+            PROJ[("Role-scoped Candidate / Recruiter projections")]
+            VAULT[("Private labels + pinned Resume snapshots")]
+        end
+    end
+
+    WEB --> APP
+    APP --> DOMAIN
+    DOMAIN -->|"one atomic transaction"| STATE
+    STATE --> EVENTS
+    STATE --> PROJ
+    PROJ -->|"minimum role-specific DTOs"| WEB
+    EVENTS -->|"leased jobs"| WORKER
+    WORKER -->|"business changes reuse Commands"| APP
+
+    WEB <-->|"presigned upload + authorized read"| STORE
+    WORKER <-->|"derived and sealed artifacts"| STORE
+    VAULT -->|"authorized Reveal only"| PROJ
+
+    WORKER -->|"Responses API / store:false / no tools"| AI["OpenAI GPT-5.6 + transcription<br/>Worker-only API key"]
+```
+
+Browsers never connect directly to PostgreSQL, the Private Label Vault, or OpenAI. Web and Worker
+share the same Application Commands for business changes; PostgreSQL transactions keep aggregate
+state, ledgers, events, Outbox messages, and role projections consistent. Object Storage holds
+private answer bodies and media, while PostgreSQL stores their owner-bound immutable references and
+hashes.
+
 ## Product routes
 
 - `/login` — demo-only `Start as` actor selector for seven Candidates and Sarah, plus explicit
